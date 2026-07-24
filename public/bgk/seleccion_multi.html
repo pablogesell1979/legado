@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multijugador Online - Legado Asimétrico</title>
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background-color: #0b0c10; color: #c5c6c7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; padding: 15px;
+        }
+        .contenedor {
+            background-color: #1a1d24; padding: 25px 20px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7); border: 2px solid #c5a059;
+            text-align: center; width: 100%; max-width: 700px;
+        }
+        .logo { width: 100%; max-width: 350px; height: auto; margin-bottom: 20px; }
+        
+        .panel-info-online {
+            background-color: #0b0c10; padding: 12px; border-radius: 8px;
+            border: 1px dashed #2980b9; margin-bottom: 20px; color: #3498db;
+            font-weight: bold; font-size: 0.95rem;
+        }
+
+        .area-seleccion { 
+            display: flex; flex-direction: row; gap: 30px; margin-bottom: 20px; 
+            align-items: flex-start;
+        }
+        .columna { flex: 1; display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        
+        .vista-previa { 
+            width: 100%; height: 260px; background-color: #0b0c10; 
+            border: 2px solid #333; border-radius: 8px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .vista-previa img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        select {
+            width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #454a52;
+            background-color: #0b0c10; color: #fff; font-size: 1rem; outline: none; cursor: pointer;
+        }
+        select:focus { border-color: #c5a059; }
+        
+        .info-faccion {
+            background-color: #22252a; border: 1px solid #333; border-radius: 6px;
+            padding: 12px; font-size: 0.85rem; text-align: left; min-height: 110px;
+            color: #bdc3c7; display: flex; flex-direction: column; gap: 6px;
+        }
+        .info-faccion strong { color: #f1c40f; }
+        .info-derrota { color: #e74c3c !important; font-weight: bold; }
+
+        .caja-conexion {
+            background-color: #0f1116; padding: 20px; border-radius: 8px;
+            border: 1px solid #333; display: flex; flex-direction: column; gap: 15px;
+            height: 100%; justify-content: center; align-items: center;
+        }
+
+        .btn-buscar {
+            width: 100%; padding: 16px; font-size: 1.2rem;
+            background-color: #27ae60; color: white; border: none; border-radius: 8px;
+            cursor: pointer; font-weight: bold; transition: background 0.2s;
+        }
+        .btn-buscar:hover { background-color: #2ecc71; }
+
+        /* PANTALLA DE ESPERA AUTOMÁTICA */
+        #pantalla-espera {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(11, 12, 16, 0.95); z-index: 1000; flex-direction: column; 
+            align-items: center; justify-content: center; text-align: center;
+        }
+        .spinner {
+            border: 5px solid #333; border-top: 5px solid #c5a059; border-radius: 50%;
+            width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #espera-mensaje { font-size: 1.5rem; color: #fff; }
+
+        @media (max-width: 768px) {
+            .area-seleccion { flex-direction: column; gap: 20px; }
+            .vista-previa { height: 200px; }
+            .info-faccion { min-height: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pantalla superpuesta de búsqueda -->
+    <div id="pantalla-espera">
+        <div class="spinner"></div>
+        <h2 id="espera-mensaje">Buscando oponente...</h2>
+        <p style="color: #bdc3c7;">Conectando con el próximo jugador disponible en la red.</p>
+    </div>
+
+    <div class="contenedor">
+        <img src="LogoSolo.PNG" alt="Legado Asymmetric Chess" class="logo" onerror="corregirExtension(this)">
+
+        <div class="panel-info-online">
+            🌐 MODO ONLINE AUTOMÁTICO - Duelo Rápido
+        </div>
+
+        <div class="area-seleccion">
+            <div class="columna">
+                <h3 style="margin:0; color:#c5a059;">1. Elige tu Facción</h3>
+                <div class="vista-previa"><img id="img-mio" src="SelectMago1.PNG" alt="Mi Faccion" onerror="corregirExtension(this)"></div>
+                <select id="mi-faccion" onchange="actualizarImagen()">
+                    <option value="Mago">Magos</option>
+                    <option value="Elfo">Elfos</option>
+                    <option value="Humano">Humanos</option>
+                    <option value="Coloso">Colosos</option>
+                </select>
+                <div class="info-faccion" id="info-mio"></div>
+            </div>
+
+            <div class="columna">
+                <h3 style="margin:0; color:#c5a059;">2. Partida Rápida</h3>
+                <div class="caja-conexion">
+                    <p style="margin:0; font-size:0.9rem; color:#bdc3c7;">Sin códigos ni complicaciones. Presioná para entrar directo a la cola de batalla.</p>
+                    <button class="btn-buscar" onclick="buscarPartida()">Buscar Partida</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io('http://localhost:3000');
+        let configOnlinePendiente = null;
+
+        const arrancarJuego = (faccionesServer) => {
+            if (configOnlinePendiente) {
+                if (faccionesServer) {
+                    if (faccionesServer.j1Faccion) configOnlinePendiente.jugador1Faccion = faccionesServer.j1Faccion;
+                    if (faccionesServer.j2Faccion) configOnlinePendiente.jugador2Faccion = faccionesServer.j2Faccion;
+                    if (faccionesServer.salaId) configOnlinePendiente.salaId = faccionesServer.salaId;
+                    if (faccionesServer.rol) configOnlinePendiente.rol = faccionesServer.rol;
+                }
+                localStorage.setItem('configuracionOnline', JSON.stringify(configOnlinePendiente));
+                window.location.href = 'tablero_multi.html';
+            }
+        };
+
+        socket.on('iniciar_partida_multi', arrancarJuego);
+        socket.on('estado_espera', (mensaje) => {
+            document.getElementById('espera-mensaje').innerText = mensaje;
+        });
+
+        socket.onAny((evento, data) => {
+            console.log(`📡 Evento recibido: [${evento}]`, data);
+        });
+
+        const datosFacciones = {
+            'Mago': { pros: "Pueden lanzar conjuros poderosos, crear muros y teletransportarse.", contras: "Tienen poca movilidad base y son pocas piezas.", derrota: "Pierden al morir los Grandes Magos (Fuego y Hielo)." },
+            'Elfo': { pros: "Alta movilidad, ataques a distancia y pueden revivir aliados caídos.", contras: "Dependen de la posición de sus árboles para protegerse.", derrota: "Pierden si su Árbol Sagrado es destruido." },
+            'Humano': { pros: "Evolucionan cada 3 turnos, volviéndose extremadamente poderosos.", contras: "Inician muy débiles (movimiento de 1 casilla) y vulnerables.", derrota: "Pierden si el Comandante muere." },
+            'Coloso': { pros: "Mucha movilidad, su torso no puede ser destruido y lanza piedras.", contras: "Movimiento rígido, requiere que sus partes se mantengan juntas.", derrota: "Pierde cuando eliminan todas sus extremidades." }
+        };
+
+        function corregirExtension(img) {
+            if (!img.getAttribute('reintentado')) {
+                img.setAttribute('reintentado', '1');
+                if (img.src.endsWith('.PNG')) img.src = img.src.replace('.PNG', '.png');
+                else if (img.src.endsWith('.png')) img.src = img.src.replace('.png', '.PNG');
+                else if (img.src.endsWith('.JPG')) img.src = img.src.replace('.JPG', '.jpg');
+                else if (img.src.endsWith('.jpg')) img.src = img.src.replace('.jpg', '.JPG');
+            }
+        }
+
+        function actualizarImagen() {
+            const faccion = document.getElementById('mi-faccion').value;
+            const imagen = document.getElementById('img-mio');
+            const panelInfo = document.getElementById('info-mio');
+            
+            imagen.removeAttribute('reintentado');
+            imagen.src = `Select${faccion}1.PNG`;
+
+            const info = datosFacciones[faccion];
+            panelInfo.innerHTML = `
+                <div><strong>Pros:</strong> ${info.pros}</div>
+                <div><strong>Contras:</strong> ${info.contras}</div>
+                <div class="info-derrota">Derrota: ${info.derrota}</div>
+            `;
+        }
+
+        function buscarPartida() {
+            const faccionElegida = document.getElementById('mi-faccion').value.toLowerCase() + 's';
+            
+            document.getElementById('pantalla-espera').style.display = 'flex';
+
+            configOnlinePendiente = { 
+                tiempoMinutos: 6,
+                jugador1Faccion: faccionElegida
+            };
+            
+            socket.emit('buscar_partida', { faccion: faccionElegida });
+        }
+
+        window.onload = function() {
+            actualizarImagen();
+        };
+    </script>
+</body>
+</html>

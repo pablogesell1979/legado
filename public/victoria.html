@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Victoria! - Legado Asimétrico</title>
+    <!-- Importamos una fuente épica para el texto de victoria -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0b0c10; color: #c5c6c7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; padding: 20px; text-align: center;
+            background-image: radial-gradient(circle at center, #1a1d24 0%, #0b0c10 100%);
+        }
+        
+        /* Ajuste responsivo del logo */
+        .logo { max-width: 80%; width: 300px; margin-bottom: 10px; height: auto; }
+        
+        /* El tamaño de la fuente se adapta entre 2.5rem (celular) y 4rem (PC) */
+        .titulo-victoria {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            color: #c5a059;
+            text-shadow: 0 0 20px rgba(197, 160, 89, 0.5);
+            margin: 10px 0;
+            letter-spacing: 2px;
+        }
+
+        .subtitulo {
+            font-size: clamp(1.2rem, 4vw, 1.5rem); 
+            color: #f39c12; margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        /* Contenedor adaptable que mantiene la proporción cuadrada */
+        .contenedor-imagen {
+            width: 90%; 
+            max-width: 400px;
+            aspect-ratio: 1 / 1;
+            background-color: #0b0c10;
+            border: 3px solid #c5a059; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(197, 160, 89, 0.3);
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 30px;
+        }
+        .contenedor-imagen img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        .botones { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        
+        .btn {
+            padding: 15px 30px; font-size: 1.1rem; border: none; border-radius: 6px;
+            cursor: pointer; font-weight: bold; transition: all 0.2s; text-decoration: none;
+            display: inline-block;
+        }
+        .btn-menu { background-color: #3498db; color: white; }
+        .btn-menu:hover { background-color: #2980b9; transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <!-- Extensión corregida a minúsculas -->
+    <img src="LogoSolo.png" alt="Legado Asymmetric Chess" class="logo">
+    
+    <h1 class="titulo-victoria">¡VICTORIA!</h1>
+    <div class="subtitulo" id="texto-ganador">Cargando resultado...</div>
+
+    <div class="contenedor-imagen">
+        <img id="img-ganador" src="" alt="Faccion Ganadora">
+    </div>
+
+    <div class="botones">
+        <a href="index.html" class="btn btn-menu">Volver al Menú</a>
+    </div>
+
+    <script>
+        let datosPartida = null;
+
+        window.onload = function() {
+            // Leemos los datos que nos mandó el tablero
+            const datosGuardados = localStorage.getItem('resultadoPartida');
+            if (datosGuardados) {
+                datosPartida = JSON.parse(datosGuardados);
+                
+                // Actualizamos el texto
+                document.getElementById('texto-ganador').innerText = 
+                    `¡EL JUGADOR ${datosPartida.ganador} HA DOMINADO EL CAMPO DE BATALLA!`;
+                
+                // Forzamos que la extensión enviada pase de .PNG (si lo estuviera) a .png
+                let rutaCorregida = datosPartida.imgGanador.replace('.PNG', '.png');
+                
+                // Actualizamos la imagen con la ruta corregida
+                document.getElementById('img-ganador').src = rutaCorregida;
+                
+            } else {
+                document.getElementById('texto-ganador').innerText = "No se encontraron datos de la partida.";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablero - Legado Asimétrico MULTIJUGADOR</title>
+    <style>
+        :root { 
+            --bg-color: #0b0c10; 
+            --panel-color: #1a1d24; 
+            --text-color: #c5c6c7; 
+            --accent-gold: #c5a059; 
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            margin: 0; padding: 15px; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
+            min-height: 100vh; user-select: none; 
+        }
+        
+        .turno-alerta { 
+            font-size: 1.2rem; font-weight: bold; text-align: center; padding: 12px 20px; 
+            background-color: var(--panel-color); border-radius: 8px; border-bottom: 3px solid #c5a059; 
+            letter-spacing: 1px; width: 100%; max-width: 950px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); 
+            margin-bottom: 15px; transition: all 0.3s ease; display: flex; flex-direction: column; gap: 4px;
+        }
+        .turno-sub { font-size: 0.85rem; font-weight: normal; color: #f39c12; }
+        .es-mi-turno { animation: brillarTurno 2s infinite alternate; }
+        
+        @keyframes brillarTurno {
+            0% { box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+            100% { box-shadow: 0 4px 20px rgba(197, 160, 89, 0.6); }
+        }
+        
+        .mesa-de-juego { 
+            display: flex; flex-direction: row; gap: 20px; 
+            justify-content: center; align-items: flex-start; 
+            width: 100%; max-width: 950px;
+        }
+        
+        .tablero-contenedor { 
+            background-image: url('TABLERO 9x9_2.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; 
+            padding: 6px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); border: 2px solid #2a2d32; 
+            display: flex; flex-direction: column; align-items: center; background-color: #000;
+        }
+        
+        #tablero { 
+            display: grid; 
+            grid-template-columns: repeat(9, 62px); 
+            grid-template-rows: repeat(9, 62px); 
+            width: 558px; height: 558px; position: relative; 
+        }
+        
+        .celda { border: 1px solid rgba(255, 255, 255, 0.0); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; transition: background-color 0.2s; }
+        .celda:hover { background-color: rgba(197, 160, 89, 0.2); cursor: pointer; }
+        .celda.seleccionada { background-color: rgba(52, 152, 219, 0.4) !important; box-shadow: inset 0 0 8px #3498db; }
+        .celda.destino-valido { background-color: rgba(128, 128, 128, 0.3) !important; box-shadow: inset 0 0 6px #888888; }
+        .celda.destino-valido::after { content: ''; width: 25%; height: 25%; background-color: var(--accent-gold); border-radius: 50%; position: absolute; z-index: 20; }
+        .celda.captura-valida { background-color: rgba(231, 76, 60, 0.4) !important; box-shadow: inset 0 0 6px #e74c3c; }
+
+        .muro-fuego { background-color: rgba(231, 76, 60, 0.6) !important; box-shadow: inset 0 0 15px #c0392b; }
+        .muro-fuego::before { content: '🔥'; position: absolute; font-size: 1.2rem; z-index: 5; opacity: 0.8; pointer-events: none; }
+        .muro-hielo { background-color: rgba(52, 152, 219, 0.6) !important; box-shadow: inset 0 0 15px #2980b9; }
+        .muro-hielo::before { content: '🧊'; position: absolute; font-size: 1.2rem; z-index: 5; opacity: 0.8; pointer-events: none; }
+        .zona-prohibida { background-color: rgba(155, 89, 182, 0.5) !important; box-shadow: inset 0 0 15px #8e44ad; }
+        .zona-prohibida::before { content: '☠️'; position: absolute; font-size: 1.2rem; z-index: 5; opacity: 0.8; pointer-events: none; }
+        .muro-arbol { background-color: rgba(39, 174, 96, 0.4) !important; box-shadow: inset 0 0 10px #27ae60; }
+        .muro-arbol::before { content: '🌲'; position: absolute; font-size: 1.4rem; z-index: 5; opacity: 0.9; pointer-events: none; }
+
+        .pieza-contenedor { width: 90%; height: 90%; display: flex; align-items: center; justify-content: center; position: relative; pointer-events: none; }
+        .pieza-contenedor img { width: 100%; height: 100%; object-fit: contain; display: none; z-index: 10; transform: scale(1.35); transform-origin: bottom center; }
+        
+        .ficha-texto { width: 75%; height: 75%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: #ffffff; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); box-shadow: 0 4px 8px rgba(0,0,0,0.6); border: 2px solid #ffffff; z-index: 5; position: absolute; text-align: center;}
+        
+        .elfos .ficha-texto { background: radial-gradient(circle, #2ecc71, #27ae60); }
+        .magos .ficha-texto { background: radial-gradient(circle, #3498db, #2980b9); }
+        .elemental .ficha-texto { background: radial-gradient(circle, #e67e22, #d35400); }
+        .humanos .ficha-texto { background: radial-gradient(circle, #f39c12, #d35400); }
+        .coloso .ficha-texto { background: radial-gradient(circle, #95a5a6, #7f8c8d); }
+
+        .estado-inmovilizado::after { content: '❄️'; position: absolute; top: -3px; right: -3px; font-size: 0.8rem; z-index: 30; }
+        .estado-inmune::after { content: '🛡️'; position: absolute; top: -3px; left: -3px; font-size: 0.8rem; z-index: 30; }
+
+        .columna-paneles { display: flex; flex-direction: column; gap: 15px; width: 340px; flex-shrink: 0; }
+        .panel-info { background-color: var(--panel-color); padding: 15px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); border: 1px solid #25282e; }
+        .panel-info h2 { margin-top: 0; border-bottom: 2px solid var(--accent-gold); padding-bottom: 6px; font-size: 1.2rem; color: var(--accent-gold); letter-spacing: 0.5px; }
+        
+        .contenedor-conjuros { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .btn-conjuro { width: 100%; padding: 12px; background-color: #2980b9; border: none; border-radius: 6px; color: white; font-weight: bold; text-align: left; cursor: pointer; transition: background 0.2s; font-size: 0.95rem; display: flex; flex-direction: column; gap: 3px; }
+        .btn-conjuro .sub { font-size: 0.75rem; font-weight: normal; opacity: 0.85; }
+        .btn-conjuro:hover:not(:disabled), .btn-conjuro:active:not(:disabled) { background-color: #3498db; }
+        .btn-conjuro:disabled { background-color: #2c3e50; color: #7f8c8d; cursor: not-allowed; }
+        
+        #btn-cancelar { display: none; width: 100%; margin-top: 15px; padding: 14px; background-color: #c0392b; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; font-size: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
+        #btn-cancelar:hover, #btn-cancelar:active { background-color: #e74c3c; }
+        .info-vacia { font-style: italic; color: #7f8c8d; font-size: 0.9rem; text-align: center; padding: 10px 0; }
+        
+        .panel-humanos { border-left: 4px solid #f39c12; display: none; }
+        .nivel-caja { background: #2c3e50; padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid #34495e; }
+        .nivel-titulo { font-size: 1rem; color: #f1c40f; font-weight: bold; }
+        .nivel-desc { font-size: 0.85rem; color: #bdc3c7; margin-top: 4px; }
+        .progreso-bar { width: 100%; background: #111; height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .progreso-fill { background: #f39c12; height: 100%; width: 0%; transition: width 0.3s; }
+
+        .panel-coloso { border-left: 4px solid #95a5a6; display: none; }
+
+        .reloj-jugador {
+            background-color: var(--panel-color); border: 2px solid #333; padding: 10px 15px;
+            border-radius: 6px; font-size: 1.1rem; font-weight: bold; width: 100%;
+            display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease;
+        }
+        .reloj-arriba { margin-bottom: 8px; }
+        .reloj-abajo { margin-top: 8px; }
+        .reloj-activo { border-color: var(--accent-gold); color: var(--accent-gold); box-shadow: 0 0 15px rgba(197, 160, 89, 0.4); }
+        .reloj-inactivo { border-color: #2a2d32; color: #555; opacity: 0.7; }
+        .reloj-peligro { color: #e74c3c !important; animation: latido 1s infinite; border-color: #e74c3c; box-shadow: 0 0 15px rgba(231, 76, 60, 0.5); }
+        
+        @keyframes latido { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        .tiempo-display { font-family: monospace; font-size: 1.4rem; letter-spacing: 1px; }
+
+        @keyframes muerteEfecto {
+            0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 5px #e74c3c); }
+            50% { transform: scale(1.5) translateY(-10px); opacity: 0.8; filter: drop-shadow(0 0 20px #e74c3c) brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(5); }
+            100% { transform: scale(0.5) translateY(-30px); opacity: 0; filter: drop-shadow(0 0 30px #c0392b) brightness(0); }
+        }
+        .animacion-muerte {
+            animation: muerteEfecto 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+            pointer-events: none;
+            z-index: 100 !important;
+        }
+        @keyframes flashSangre {
+            0% { background-color: rgba(231, 76, 60, 0.8) !important; box-shadow: inset 0 0 20px #c0392b !important; }
+            100% { background-color: transparent; box-shadow: none; }
+        }
+        .flash-sangre { animation: flashSangre 0.5s ease-out forwards; }
+
+        #overlay-espera {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000; display: none;
+            align-items: center; justify-content: center; pointer-events: none;
+        }
+        #overlay-espera span {
+            background: #1a1d24; color: #f39c12; padding: 15px 30px; border-radius: 8px;
+            border: 2px solid #f39c12; font-size: 1.5rem; font-weight: bold; text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(243, 156, 18, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .mesa-de-juego { flex-direction: column; align-items: center; gap: 15px; }
+            .columna-paneles { width: 100%; max-width: 380px; }
+            #tablero { grid-template-columns: repeat(9, 38px); grid-template-rows: repeat(9, 38px); width: 342px; height: 342px; }
+            .ficha-texto { font-size: 0.65rem; border-width: 1px; }
+            .turno-alerta { font-size: 1rem; padding: 10px; }
+            .reloj-jugador { font-size: 0.95rem; padding: 8px 12px; }
+            .tiempo-display { font-size: 1.2rem; }
+        }
+
+        @media (min-width: 769px) and (max-width: 980px) {
+            #tablero { grid-template-columns: repeat(9, 48px); grid-template-rows: repeat(9, 48px); width: 432px; height: 432px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlay-espera"><span>Esperando movimiento del rival...</span></div>
+
+    <div class="turno-alerta" id="indicador-turno">
+        <span id="indicador-principal">INICIALIZANDO PARTIDA...</span>
+        <span class="turno-sub" id="indicador-sub"></span>
+    </div>
+
+    <div class="mesa-de-juego">
+        <div class="tablero-contenedor">
+            <div id="panel-reloj-j2" class="reloj-jugador reloj-arriba reloj-inactivo">
+                <span id="etiqueta-j2">Jugador 2 (Arriba)</span><span id="reloj-j2" class="tiempo-display">00:00</span>
+            </div>
+            
+            <div id="tablero"></div>
+            
+            <div id="panel-reloj-j1" class="reloj-jugador reloj-abajo reloj-activo">
+                <span id="etiqueta-j1">Jugador 1 (Abajo)</span><span id="reloj-j1" class="tiempo-display">00:00</span>
+            </div>
+        </div>
+
+        <div class="columna-paneles">
+            <div class="panel-info panel-humanos" id="panel-humanos">
+                <h2>Evolución Humana</h2>
+                <div class="nivel-caja">
+                    <div class="nivel-titulo" id="hum-nivel-titulo">Nivel I: Era Primitiva</div>
+                    <div class="nivel-desc" id="hum-nivel-desc">Todas las piezas mueven solo 1 casilla.</div>
+                    <div class="progreso-bar">
+                        <div class="progreso-fill" id="hum-progreso"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-info panel-coloso" id="panel-coloso">
+                <h2>Anatomía del Coloso</h2>
+                <div class="nivel-caja" style="background:#22252a; border-color:#4a525d;">
+                    <div class="nivel-titulo" style="color:#bdc3c7; font-size:1rem;">Extremidades Vivas</div>
+                    <div id="coloso-estatus" style="font-size: 0.85rem; color: #a6b8ca; margin-top: 6px; line-height: 1.4;"></div>
+                </div>
+            </div>
+
+            <div class="panel-info" id="panel-acciones">
+                <h2>Acciones <span id="nombre-pieza-activa" style="color:#fff; font-size:1rem;"></span></h2>
+                <div id="conjuros-dinamicos" class="info-vacia">
+                    Selecciona una pieza en su turno para ver sus opciones.
+                </div>
+                <button id="btn-cancelar" onclick="cancelarModoTarget()">❌ Cancelar Acción</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+
+    <script>
+        const casillasAgua = ['4-4', '4-0', '4-8', '0-4', '8-4'];
+        
+        let jugador1Faccion = 'coloso'; 
+        let jugador2Faccion = 'humanos'; 
+        let turnoActual = 1; 
+        
+        let celdaSeleccionada = null;
+        let modoTargetConjuro = null; 
+        let memoriaConjuro = null; 
+        
+        let mapaPiezas = {}; 
+        let celdasBloqueadas = {};
+        
+        let cementerioElfos = { 1: [], 2: [] }; 
+        let conjurosUsados = {
+            1: { 'MR_bola_fuego': false, 'MR_teletransporte': false, 'MR_muro_fuego': false, 'MR_rayo': false, 'MA_muro_hielo': false, 'MA_zona_prohibida': false, 'MA_elemental': false, 'MA_mov_veloz': false, 'AP_telequinesis': false, 'AP_piel_piedra': false, 'AP_inmovilizar': false, 'DR_usos_revivir': 0 },
+            2: { 'MR_bola_fuego': false, 'MR_teletransporte': false, 'MR_muro_fuego': false, 'MR_rayo': false, 'MA_muro_hielo': false, 'MA_zona_prohibida': false, 'MA_elemental': false, 'MA_mov_veloz': false, 'AP_telequinesis': false, 'AP_piel_piedra': false, 'AP_inmovilizar': false, 'DR_usos_revivir': 0 }
+        };
+
+        let turnoGlobalHumano = 0; let nivelHumano = 1; let evolucionTerminada = false;
+        const descripcionesNivelHumano = { 1: "Todas las piezas se mueven solo 1 casilla.", 2: "Los Centinelas (CE) obtienen movimiento completo de Alfil.", 3: "Los Guerreros (GU) obtienen movimiento completo de Torre.", 4: "¡El Comandante (CO) adquiere el movimiento completo de Dama!" };
+        let turnoExtraProgramado = { 1: 0, 2: 0 }; let turnoExtraActivo = { 1: 0, 2: 0 };
+        let tiempoJ1 = 0; let tiempoJ2 = 0; let intervaloReloj = null;
+
+        // --- VARIABLES DE RED Y MULTIJUGADOR ---
+        let salaActual = 'LOCAL';
+        let miNumeroDeJugador = 1; 
+        let esPartidaLocal = true;
+        let socket;
+
+        function formatearTiempo(segundos) {
+            let m = Math.floor(segundos / 60); let s = segundos % 60;
+            return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+        }
+
+        function actualizarVistaReloj() {
+            const r1 = document.getElementById("reloj-j1"); const r2 = document.getElementById("reloj-j2");
+            r1.innerText = formatearTiempo(tiempoJ1); r2.innerText = formatearTiempo(tiempoJ2);
+            if (tiempoJ1 <= 30 && tiempoJ1 > 0) r1.parentElement.classList.add('reloj-peligro'); else r1.parentElement.classList.remove('reloj-peligro');
+            if (tiempoJ2 <= 30 && tiempoJ2 > 0) r2.parentElement.classList.add('reloj-peligro'); else r2.parentElement.classList.remove('reloj-peligro');
+        }
+
+        function tickReloj() {
+            if (turnoActual === 1) {
+                tiempoJ1--; if (tiempoJ1 <= 0) { tiempoJ1 = 0; clearInterval(intervaloReloj); actualizarVistaReloj(); declararVictoria(2); return; }
+            } else {
+                tiempoJ2--; if (tiempoJ2 <= 0) { tiempoJ2 = 0; clearInterval(intervaloReloj); actualizarVistaReloj(); declararVictoria(1); return; }
+            }
+            actualizarVistaReloj();
+        }
+
+        function inicializarRelojes(minutos) {
+            tiempoJ1 = minutos * 60; tiempoJ2 = minutos * 60; actualizarVistaReloj();
+            if (intervaloReloj) clearInterval(intervaloReloj);
+            intervaloReloj = setInterval(tickReloj, 1000);
+        }
+
+        function actualizarUITurnoTiempo() {
+            const p1 = document.getElementById('panel-reloj-j1'); const p2 = document.getElementById('panel-reloj-j2');
+            if (turnoActual === 1) { p1.classList.add('reloj-activo'); p1.classList.remove('reloj-inactivo'); p2.classList.add('reloj-inactivo'); p2.classList.remove('reloj-activo'); } 
+            else { p2.classList.add('reloj-activo'); p2.classList.remove('reloj-inactivo'); p1.classList.add('reloj-inactivo'); p1.classList.remove('reloj-activo'); }
+        }
+
+        const nombresPiezas = { 'GU': 'Guerrero', 'EX': 'Explorador', 'AR': 'Arquero', 'DR': 'Druida', 'AS': 'Árbol Sagrado', 'MR': 'Gran Mago Fuego', 'MA': 'Gran Mago Hielo', 'AP': 'Aprendiz', 'EL': 'Elemental', 'CO': 'Comandante', 'CI': 'Científico', 'MI': 'Miliciano', 'CE': 'Centinela', 'TO': 'Torso', 'BI': 'Brazo Izquierdo', 'BD': 'Brazo Derecho', 'PI': 'Pierna Izquierda', 'PD': 'Pierna Derecha', 'RO': 'Roca' };
+
+        const tableroHTML = document.getElementById('tablero');
+        for (let f = 0; f < 9; f++) {
+            for (let c = 0; c < 9; c++) {
+                const celda = document.createElement('div');
+                celda.className = 'celda'; celda.id = `c-${f}-${c}`;
+                celda.addEventListener('click', () => manejarClickCelda(f, c));
+                tableroHTML.appendChild(celda);
+            }
+        }
+
+        function colocarPiezaBase(fila, col, faccion, texto, prefijoImagen, orientacion, jugador, inmune = 0, inmovilizado = 0) {
+            const id = `${fila}-${col}`; const celda = document.getElementById(`c-${id}`);
+            if (!celda) return;
+            const archivoImg = `${prefijoImagen} ${orientacion}.png`;
+            celda.innerHTML = '';
+            const contenedor = document.createElement('div'); contenedor.className = `pieza-contenedor ${faccion} j${jugador}`; contenedor.id = `pieza-${id}`;
+            const span = document.createElement('span'); span.className = 'ficha-texto'; span.innerText = texto; contenedor.appendChild(span);
+
+            if (archivoImg) {
+                const img = document.createElement('img'); img.src = archivoImg; img.alt = texto;
+                img.onload = function() { span.style.display = 'none'; this.style.display = 'block'; };
+                img.onerror = function() {
+                    if (!this.getAttribute('reintentado')) { this.setAttribute('reintentado', 'true'); this.src = archivoImg.replace('.png', '.PNG'); } 
+                    else { span.style.display = 'flex'; this.remove(); }
+                };
+                contenedor.appendChild(img);
+            }
+            celda.appendChild(contenedor);
+            mapaPiezas[id] = { faccion, texto, prefijoImagen, orientacion, jugador, inmune, inmovilizado };
+            actualizarClasesEstado(id);
+        }
+
+        function matarPieza(id) {
+            if (!mapaPiezas[id]) return; const p = mapaPiezas[id];
+            if (p.inmune > 0) return; 
+            if (p.faccion === 'elfos' && !p.texto.startsWith('Árbol') && p.texto !== 'AS') { cementerioElfos[p.jugador].push(p.texto); }
+            if (p.texto === 'CI' && p.faccion === 'humanos') { evolucionTerminada = true; actualizarPanelHumanos(); }
+
+            const celda = document.getElementById(`c-${id}`); const piezaVisual = celda.querySelector('.pieza-contenedor');
+            let fantasma = null;
+            if (piezaVisual) {
+                fantasma = piezaVisual.cloneNode(true); fantasma.classList.add('animacion-muerte');
+                fantasma.style.position = 'absolute'; fantasma.style.top = '0'; fantasma.style.left = '0'; fantasma.style.width = '100%'; fantasma.style.height = '100%';
+                celda.classList.add('flash-sangre'); setTimeout(() => { celda.classList.remove('flash-sangre'); }, 500);
+            }
+            celda.innerHTML = ''; delete mapaPiezas[id];
+            if (fantasma) { celda.appendChild(fantasma); setTimeout(() => { if(fantasma.parentNode) fantasma.remove(); }, 600); }
+        }
+
+        function manejarClickCelda(f, c) {
+            if (!esPartidaLocal && turnoActual !== miNumeroDeJugador) { return; } // Bloqueo de turno enemigo
+
+            const idClickeado = `${f}-${c}`;
+
+            if (modoTargetConjuro) {
+                const celdaTarget = document.getElementById(`c-${idClickeado}`);
+                if (celdaTarget.classList.contains('destino-valido') || celdaTarget.classList.contains('captura-valida')) {
+                    if (modoTargetConjuro === 'MR_teletransporte_paso1') {
+                        memoriaConjuro = { origen: idClickeado, pieza: mapaPiezas[idClickeado] };
+                        modoTargetConjuro = 'MR_teletransporte_paso2';
+                        limpiarDestacados();
+                        for (let r = 0; r < 9; r++) {
+                            for (let col = 0; col < 9; col++) {
+                                let idDest = `${r}-${col}`;
+                                if (!casillasAgua.includes(idDest) && !celdasBloqueadas[idDest] && !mapaPiezas[idDest]) document.getElementById(`c-${idDest}`).classList.add('destino-valido');
+                            }
+                        }
+                        return;
+                    }
+                    if (modoTargetConjuro === 'AP_telequinesis_paso1') {
+                        memoriaConjuro = { origen: idClickeado, esArbol: (!mapaPiezas[idClickeado]) }; 
+                        modoTargetConjuro = 'AP_telequinesis_paso2'; limpiarDestacados(); iluminarRango(parseInt(idClickeado.split('-')[0]), parseInt(idClickeado.split('-')[1]), 2, true); 
+                        return;
+                    }
+                    if (modoTargetConjuro === 'AP_piel_piedra_paso1') {
+                        memoriaConjuro = { origen: idClickeado }; modoTargetConjuro = 'AP_piel_piedra_ejecutar';
+                    }
+                    ejecutarEfectoConjuro(f, c);
+                }
+                return;
+            }
+
+            const piezaEnCelda = mapaPiezas[idClickeado];
+
+            if (piezaEnCelda && piezaEnCelda.jugador === turnoActual) {
+                if (piezaEnCelda.inmovilizado > 0) { alert("Esta pieza está inmovilizada."); return; }
+                if (piezaEnCelda.texto === 'CI' && piezaEnCelda.faccion === 'humanos') { alert("El Científico está concentrado en su laboratorio."); return; }
+                if (piezaEnCelda.texto === 'RO' && piezaEnCelda.faccion === 'coloso') {
+                    if (!tieneBrazoAdyacente(f, c, piezaEnCelda.jugador)) { alert("Necesita un Brazo del Coloso adyacente para arrojarse."); return; }
+                }
+
+                limpiarDestacados();
+                celdaSeleccionada = { fila: f, col: c, pieza: piezaEnCelda };
+                document.getElementById(`c-${idClickeado}`).classList.add('seleccionada');
+                document.getElementById('nombre-pieza-activa').innerText = ` - ${nombresPiezas[piezaEnCelda.texto] || piezaEnCelda.texto}`;
+                calcularYMostrarMovimientos(f, c, piezaEnCelda); actualizarPanelAcciones(celdaSeleccionada);
+                return;
+            }
+
+            if (celdaSeleccionada) {
+                const objetivo = document.getElementById(`c-${idClickeado}`);
+                if (objetivo.classList.contains('destino-valido') || objetivo.classList.contains('captura-valida')) {
+                    const idOrigen = `${celdaSeleccionada.fila}-${celdaSeleccionada.col}`;
+                    const p = celdaSeleccionada.pieza;
+                    
+                    if (mapaPiezas[idClickeado]) matarPieza(idClickeado); 
+
+                    document.getElementById(`c-${idOrigen}`).innerHTML = ''; delete mapaPiezas[idOrigen];
+                    colocarPiezaBase(f, c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
+                    
+                    if (!esPartidaLocal && socket) {
+                        socket.emit("jugada", { sala: salaActual, tipo: 'movimiento', origen: idOrigen, destino: idClickeado });
+                    }
+                    finalizarTurno();
+                } else {
+                    cancelarModoTarget();
+                }
+            }
+        }
+
+        // ---- LÓGICA INTERNA DE TABLERO MANTENIDA IGUAL ----
+        function tieneBrazoAdyacente(fila, col, jugador) {
+            for (let df = -1; df <= 1; df++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (df === 0 && dc === 0) continue;
+                    let f = fila + df, c = col + dc;
+                    if (f >= 0 && f <= 8 && c >= 0 && c <= 8) { let p = mapaPiezas[`${f}-${c}`]; if (p && p.jugador === jugador && (p.texto === 'BI' || p.texto === 'BD')) return true; }
+                }
+            } return false;
+        }
+
+        function esAnatomiaValidaColoso(idOrigen, idDestino, piezaMoviendo) {
+            let simPiezas = Object.assign({}, mapaPiezas);
+            delete simPiezas[idOrigen]; simPiezas[idDestino] = piezaMoviendo;
+            let torsoPos = null; let biPos = null, bdPos = null, piPos = null, pdPos = null;
+
+            for (let id in simPiezas) {
+                let p = simPiezas[id];
+                if (p.jugador === piezaMoviendo.jugador && p.faccion === 'coloso') {
+                    let [f, c] = id.split('-').map(Number);
+                    if (p.texto === 'TO') torsoPos = { f, c };
+                    if (p.texto === 'BI') biPos = { f, c };
+                    if (p.texto === 'BD') bdPos = { f, c };
+                    if (p.texto === 'PI') piPos = { f, c };
+                    if (p.texto === 'PD') pdPos = { f, c };
+                }
+            }
+            if (!torsoPos) return false;
+            const extremidades = [biPos, bdPos, piPos, pdPos];
+            for (let ext of extremidades) { if (ext) { if (Math.abs(torsoPos.f - ext.f) > 4 || Math.abs(torsoPos.c - ext.c) > 4) return false; } }
+            if (biPos && biPos.c > torsoPos.c) return false;
+            if (piPos && piPos.c > torsoPos.c) return false;
+            if (bdPos && bdPos.c < torsoPos.c) return false;
+            if (pdPos && pdPos.c < torsoPos.c) return false;
+            return true;
+        }
+
+        function calcularYMostrarMovimientos(fila, col, pieza) {
+            for (let f = 0; f < 9; f++) {
+                for (let c = 0; c < 9; c++) {
+                    if (f === fila && c === col) continue;
+                    const idDestino = `${f}-${c}`;
+                    if (casillasAgua.includes(idDestino) || (celdasBloqueadas[idDestino] && celdasBloqueadas[idDestino].tipo.includes('muro'))) continue;
+                    
+                    let esValido = false; const diffF = Math.abs(f - fila); const diffC = Math.abs(c - col); const orientacion = pieza.orientacion; const piezaDestino = mapaPiezas[idDestino];
+
+                    if (pieza.faccion === 'coloso') {
+                        if (pieza.texto === 'TO') { if (diffF <= 1 && diffC <= 1) esValido = true; }
+                        else if (pieza.texto === 'BI' || pieza.texto === 'BD') { if (diffF === diffC && diffF <= 3) esValido = lineaDespejada(fila, col, f, c); }
+                        else if (pieza.texto === 'PI' || pieza.texto === 'PD') { if ((diffF === 0 || diffC === 0) && (diffF <= 2 && diffC <= 2)) esValido = lineaDespejada(fila, col, f, c); }
+                        else if (pieza.texto === 'RO') { if (tieneBrazoAdyacente(fila, col, pieza.jugador)) { if (diffF === diffC || diffF === 0 || diffC === 0) esValido = lineaDespejada(fila, col, f, c); } }
+
+                        if (esValido && ['TO', 'BI', 'BD', 'PI', 'PD'].includes(pieza.texto)) {
+                            if (!esAnatomiaValidaColoso(`${fila}-${col}`, idDestino, pieza)) esValido = false; 
+                        }
+                    }
+                    else if (pieza.faccion === 'humanos') {
+                        if (pieza.texto === 'MI') {
+                            let dirAdelante = (orientacion === 'Atras') ? -1 : 1;
+                            if (!piezaDestino && c === col && f === fila + dirAdelante) esValido = true;
+                            if (piezaDestino && piezaDestino.jugador !== pieza.jugador && piezaDestino.inmune <= 0 && diffC === 1 && f === fila + dirAdelante) esValido = true;
+                        }
+                        else if (pieza.texto === 'CE') { if (diffF === diffC) { if (nivelHumano === 1) { if (diffF === 1) esValido = true; } else { esValido = lineaDespejada(fila, col, f, c); } } }
+                        else if (pieza.texto === 'GU') { if (diffF === 0 || diffC === 0) { if (nivelHumano <= 2) { if (diffF <= 1 && diffC <= 1) esValido = true; } else { esValido = lineaDespejada(fila, col, f, c); } } }
+                        else if (pieza.texto === 'CO') {
+                            if (nivelHumano <= 3) { if (diffF <= 1 && diffC <= 1) esValido = true; }
+                            else { if (diffF === diffC || diffF === 0 || diffC === 0) { esValido = lineaDespejada(fila, col, f, c); } }
+                        }
+                    } 
+                    else {
+                        if (pieza.texto === 'GU' || pieza.texto === 'AP') { if (diffF <= 1 && diffC <= 1) esValido = true; } 
+                        else if (pieza.texto === 'EX' || pieza.texto === 'EL') { if ((diffF === 2 && diffC === 1) || (diffF === 1 && diffC === 2)) esValido = true; } 
+                        else if (pieza.texto === 'AR') { if (diffF <= 2 && diffC <= 2) esValido = true; } 
+                        else if (pieza.texto === 'DR') { if ((diffF === diffC && diffF <= 3) || ((diffF === 0 || diffC === 0) && diffF <= 1 && diffC <= 1)) esValido = true; }
+                        else if (pieza.texto === 'MR') { if ((diffF === diffC && diffF <= 2) || ((diffF === 0 || diffC === 0) && diffF <= 1 && diffC <= 1)) esValido = true; } 
+                        else if (pieza.texto === 'MA') { if (((diffF === 0 || diffC === 0) && (diffF <= 2 && diffC <= 2)) || (diffF === diffC && diffF <= 1)) esValido = true; } 
+                    }
+
+                    if (esValido) {
+                        if (!piezaDestino) { document.getElementById(`c-${idDestino}`).classList.add('destino-valido'); } 
+                        else if (piezaDestino.jugador !== pieza.jugador && piezaDestino.inmune <= 0) { 
+                            if (piezaDestino.texto !== 'TO') {
+                                if (pieza.faccion !== 'humanos' || pieza.texto !== 'MI' || diffC === 1) {
+                                    document.getElementById(`c-${idDestino}`).classList.add('captura-valida'); 
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function lineaDespejada(f1, c1, f2, c2) {
+            let dirF = Math.sign(f2 - f1); let dirC = Math.sign(c2 - c1); let curF = f1 + dirF; let curC = c1 + dirC;
+            while (curF !== f2 || curC !== c2) { let id = `${curF}-${curC}`; if (mapaPiezas[id] || (celdasBloqueadas[id] && (celdasBloqueadas[id].tipo.startsWith('muro') || celdasBloqueadas[id].tipo === 'muro-arbol'))) return false; curF += dirF; curC += dirC; } return true;
+        }
+
+        function obtenerBlancosArquero(fila, col, orientacion, jugadorDueno) {
+            let blancos = []; const direccion = (orientacion === 'Atras') ? -1 : 1; let f = fila + direccion; let dist = 1;
+            while(f >= 0 && f <= 8 && dist <= 5) {
+                const id = `${f}-${col}`;
+                if (celdasBloqueadas[id] && (celdasBloqueadas[id].tipo.startsWith('muro') || celdasBloqueadas[id].tipo === 'muro-arbol')) break; 
+                if (mapaPiezas[id]) {
+                    if (mapaPiezas[id].jugador !== jugadorDueno && mapaPiezas[id].inmune <= 0 && mapaPiezas[id].texto !== 'TO') blancos.push(id);
+                    if (mapaPiezas[id].texto !== 'AS' && !mapaPiezas[id].texto.startsWith('Árbol')) break; 
+                } f += direccion; dist++;
+            } return blancos;
+        }
+
+        function actualizarPanelAcciones(seleccion) {
+            const contenedor = document.getElementById('conjuros-dinamicos');
+            if (!seleccion) {
+                contenedor.innerHTML = 'Selecciona una pieza en su turno para ver sus opciones.'; contenedor.className = 'info-vacia'; document.getElementById('nombre-pieza-activa').innerText = ''; return;
+            }
+
+            contenedor.className = 'contenedor-conjuros'; contenedor.innerHTML = '';
+            const tipo = seleccion.pieza.texto; const f = seleccion.fila; const c = seleccion.col; const j = seleccion.pieza.jugador; const conj = conjurosUsados[j];
+
+            if (tipo === 'MR') {
+                contenedor.appendChild(crearBotonConjuro("Bola de Fuego", "Destruye pieza a rango 3", conj['MR_bola_fuego'], () => entrarModoTarget('MR_bola_fuego')));
+                contenedor.appendChild(crearBotonConjuro("Teletransporte", "Mueve un mago a cualquier lado", conj['MR_teletransporte'], () => entrarModoTarget('MR_teletransporte_paso1')));
+                contenedor.appendChild(crearBotonConjuro("Muro de Fuego", "Línea de 3 casillas (5 turnos)", conj['MR_muro_fuego'], () => entrarModoTarget('MR_muro_fuego')));
+                contenedor.appendChild(crearBotonConjuro("Rayo Arcano", "Rayo fulminante recto", conj['MR_rayo'], () => entrarModoTarget('MR_rayo')));
+            } 
+            else if (tipo === 'MA') {
+                contenedor.appendChild(crearBotonConjuro("Velocidad", "Doble acción en tu próximo turno", conj['MA_mov_veloz'], () => { conj['MA_mov_veloz'] = true; turnoExtraProgramado[turnoActual] = 1; ejecutarEfectoConjuro(-1, -1); }));
+                contenedor.appendChild(crearBotonConjuro("Muro de Hielo", "Bloquea 2 casillas (4 turnos)", conj['MA_muro_hielo'], () => entrarModoTarget('MA_muro_hielo')));
+                contenedor.appendChild(crearBotonConjuro("Zona Prohibida", "Área letal 2x2 (2 turnos)", conj['MA_zona_prohibida'], () => entrarModoTarget('MA_zona_prohibida')));
+                let adyacentes = []; for(let af = Math.max(0,f-1); af<=Math.min(8,f+1); af++) { for(let ac=Math.max(0,c-1); ac<=Math.min(8,c+1); ac++) { if(casillasAgua.includes(`${af}-${ac}`)) adyacentes.push(`${af}-${ac}`); } }
+                const puedeInvocar = adyacentes.length > 0 && !conj['MA_elemental'];
+                contenedor.appendChild(crearBotonConjuro("Elemental de Agua", adyacentes.length > 0 ? "Invocar en orilla" : "Requiere estar junto al agua", !puedeInvocar, () => { entrarModoTarget('MA_elemental'); }));
+            }
+            else if (tipo === 'AP') {
+                contenedor.appendChild(crearBotonConjuro("Telequinesis", "Mueve piezas / árboles (rango 2)", conj['AP_telequinesis'], () => entrarModoTarget('AP_telequinesis_paso1')));
+                contenedor.appendChild(crearBotonConjuro("Piel de Piedra", "Inmunidad total aliado (2 turnos)", conj['AP_piel_piedra'], () => entrarModoTarget('AP_piel_piedra_paso1')));
+                contenedor.appendChild(crearBotonConjuro("Inmovilizar", "Congela a un enemigo (2 turnos)", conj['AP_inmovilizar'], () => entrarModoTarget('AP_inmovilizar')));
+            }
+            else if (tipo === 'DR') {
+                contenedor.appendChild(crearBotonConjuro("Teletransportar Árbol", "Mueve TU árbol a tu lado", false, () => entrarModoTarget('DR_teletransporte_as')));
+                const contadorRevivir = conj['DR_usos_revivir'];
+                contenedor.appendChild(crearBotonConjuro(`Revivir (${contadorRevivir}/3)`, "Revive último elfo caído", contadorRevivir >= 3, () => entrarModoTarget('DR_revivir')));
+            }
+            else if (tipo === 'AR') {
+                const blancos = obtenerBlancosArquero(f, c, seleccion.pieza.orientacion, seleccion.pieza.jugador);
+                contenedor.appendChild(crearBotonConjuro("Disparar Flecha", blancos.length > 0 ? "Fuego a discreción (Max 5)" : "Sin línea de visión", blancos.length === 0, () => {
+                    modoTargetConjuro = 'AR_disparo'; document.getElementById('btn-cancelar').style.display = 'block'; blancos.forEach(id => document.getElementById(`c-${id}`).classList.add('captura-valida'));
+                }));
+            }
+            else if (tipo === 'GU' && seleccion.pieza.faccion === 'elfos') {
+                contenedor.appendChild(crearBotonConjuro("Plantar Árbol", "Crea obstáculo natural (4 rondas)", false, () => entrarModoTarget('GU_arbol')));
+            }
+            else { contenedor.innerHTML = `<p class="info-vacia">Esta pieza realiza acciones normales.</p>`; }
+        }
+
+        function crearBotonConjuro(nombre, descripcion, deshabilitado, callback) {
+            const btn = document.createElement('button'); btn.className = 'btn-conjuro'; btn.disabled = deshabilitado; btn.innerHTML = `<span>${nombre}</span><span class="sub">${descripcion}</span>`;
+            if (callback) btn.onclick = callback; return btn;
+        }
+
+        function entrarModoTarget(conjuroKey) {
+            modoTargetConjuro = conjuroKey; memoriaConjuro = null; limpiarDestacados(); document.getElementById('btn-cancelar').style.display = 'block';
+            const p = celdaSeleccionada.pieza; const f = celdaSeleccionada.fila; const c = celdaSeleccionada.col;
+
+            if (['DR_teletransporte_as', 'DR_revivir'].includes(modoTargetConjuro)) { iluminarRango(f, c, 1, false); } 
+            else if (modoTargetConjuro === 'MA_elemental') { iluminarRango(f, c, 1, true); } 
+            else if (modoTargetConjuro === 'GU_arbol') { iluminarRango(f, c, 3, true); } 
+            else if (modoTargetConjuro === 'MR_rayo') {
+                const dir = (p.jugador === 1) ? -1 : 1;  const opciones = [ [f + dir, c], [f, c - 1], [f, c + 1] ];
+                opciones.forEach(([rf, rc]) => { if (rf >= 0 && rf <= 8 && rc >= 0 && rc <= 8) document.getElementById(`c-${rf}-${rc}`).classList.add('destino-valido'); });
+            }
+            else if (modoTargetConjuro === 'MR_teletransporte_paso1') {
+                for (let id in mapaPiezas) { let m = mapaPiezas[id]; if (m.jugador === p.jugador && ['MR', 'MA', 'AP'].includes(m.texto)) document.getElementById(`c-${id}`).classList.add('destino-valido'); }
+            }
+            else if (modoTargetConjuro === 'AP_telequinesis_paso1') {
+                for(let i=Math.max(0,f-2); i<=Math.min(8,f+2); i++) { for(let j=Math.max(0,c-2); j<=Math.min(8,c+2); j++) {
+                    let id = `${i}-${j}`; if (i===f && j===c) continue;
+                    if (mapaPiezas[id] || (celdasBloqueadas[id] && celdasBloqueadas[id].tipo === 'muro-arbol')) document.getElementById(`c-${id}`).classList.add('destino-valido');
+                }}
+            }
+            else if (modoTargetConjuro === 'AP_piel_piedra_paso1') {
+                document.getElementById(`c-${f}-${c}`).classList.add('destino-valido'); 
+                for(let i=Math.max(0,f-3); i<=Math.min(8,f+3); i++) { for(let j=Math.max(0,c-3); j<=Math.min(8,c+3); j++) {
+                    let id = `${i}-${j}`; if (mapaPiezas[id] && mapaPiezas[id].jugador === p.jugador) document.getElementById(`c-${id}`).classList.add('destino-valido');
+                }}
+            } else { iluminarRango(f, c, 3, false); }
+        }
+
+        function iluminarRango(fila, col, rango, soloVacios) {
+            for (let f = Math.max(0, fila - rango); f <= Math.min(8, fila + rango); f++) {
+                for (let c = Math.max(0, col - rango); c <= Math.min(8, col + rango); c++) {
+                    const id = `${f}-${c}`; if (f === fila && c === col) continue; if (casillasAgua.includes(id)) continue;
+                    if (soloVacios) {
+                        if (!mapaPiezas[id] && !celdasBloqueadas[id]) document.getElementById(`c-${id}`).classList.add('destino-valido');
+                    } else {
+                        const piezaDestino = mapaPiezas[id];
+                        if (piezaDestino && piezaDestino.inmune > 0 && modoTargetConjuro !== 'AP_piel_piedra_paso1') continue;
+                        if (piezaDestino && piezaDestino.texto === 'TO' && ['MR_bola_fuego', 'MR_rayo', 'AR_disparo'].includes(modoTargetConjuro)) continue;
+                        if (['DR_teletransporte_as', 'MA_elemental', 'DR_revivir', 'MR_muro_fuego', 'MA_muro_hielo', 'MA_zona_prohibida', 'GU_arbol'].includes(modoTargetConjuro)) {
+                            if (!piezaDestino) document.getElementById(`c-${id}`).classList.add('destino-valido');
+                        } else { document.getElementById(`c-${id}`).classList.add('destino-valido'); }
+                    }
+                }
+            }
+        }
+
+        function ejecutarEfectoConjuro(tf, tc, vieneDeRed = false) {
+            const idTarget = `${tf}-${tc}`;
+            const p = celdaSeleccionada ? celdaSeleccionada.pieza : {jugador: turnoActual};
+            const conj = conjurosUsados[p.jugador];
+
+            if (modoTargetConjuro === 'AR_disparo') { matarPieza(idTarget); }
+            else if (modoTargetConjuro === 'GU_arbol') { celdasBloqueadas[idTarget] = { tipo: 'muro-arbol', turnos: 8 }; }
+            else if (modoTargetConjuro === 'DR_teletransporte_as') {
+                let origenAS = Object.keys(mapaPiezas).find(key => mapaPiezas[key].texto === 'AS' && mapaPiezas[key].jugador === p.jugador);
+                if (origenAS) { const piezaAS = mapaPiezas[origenAS]; document.getElementById(`c-${origenAS}`).innerHTML = ''; delete mapaPiezas[origenAS]; colocarPiezaBase(tf, tc, piezaAS.faccion, piezaAS.texto, piezaAS.prefijoImagen, piezaAS.orientacion, piezaAS.jugador); }
+            } 
+            else if (modoTargetConjuro === 'DR_revivir') {
+                let tipoRevivir = 'GU'; if (cementerioElfos[p.jugador].length > 0) tipoRevivir = cementerioElfos[p.jugador].pop();
+                colocarPiezaBase(tf, tc, 'elfos', tipoRevivir, `Elfo - ${nombresPiezas[tipoRevivir]}`, p.orientacion, p.jugador);
+                conj['DR_usos_revivir']++;
+            } 
+            else if (modoTargetConjuro === 'MA_elemental') { colocarPiezaBase(tf, tc, 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador); conj['MA_elemental'] = true; } 
+            else if (modoTargetConjuro === 'MR_bola_fuego') { matarPieza(idTarget); conj['MR_bola_fuego'] = true; } 
+            else if (modoTargetConjuro === 'MR_rayo') {
+                let dirF = tf - celdaSeleccionada.fila; let dirC = tc - celdaSeleccionada.col; let curF = celdaSeleccionada.fila + dirF; let curC = celdaSeleccionada.col + dirC;
+                while(curF >= 0 && curF <= 8 && curC >= 0 && curC <= 8) {
+                    let idRay = `${curF}-${curC}`;
+                    if (casillasAgua.includes(idRay) || (celdasBloqueadas[idRay] && celdasBloqueadas[idRay].tipo === 'muro-arbol')) break;
+                    if (mapaPiezas[idRay]) { let pr = mapaPiezas[idRay]; if (!(pr.jugador === p.jugador && pr.faccion === 'magos') && pr.texto !== 'TO') matarPieza(idRay); }
+                    curF += dirF; curC += dirC;
+                } conj['MR_rayo'] = true;
+            }
+            else if (modoTargetConjuro === 'MR_teletransporte_paso2') {
+                const idOrig = memoriaConjuro.origen; const pMago = memoriaConjuro.pieza;
+                document.getElementById(`c-${idOrig}`).innerHTML = ''; delete mapaPiezas[idOrig];
+                colocarPiezaBase(tf, tc, pMago.faccion, pMago.texto, pMago.prefijoImagen, pMago.orientacion, pMago.jugador, pMago.inmune, pMago.inmovilizado);
+                conj['MR_teletransporte'] = true;
+            }
+            else if (modoTargetConjuro === 'MR_muro_fuego') { [[tf, tc-1], [tf, tc], [tf, tc+1]].forEach(([f, c]) => { if (c >= 0 && c <= 8) celdasBloqueadas[`${f}-${c}`] = { tipo: 'muro-fuego', turnos: 10 }; }); conj['MR_muro_fuego'] = true; }
+            else if (modoTargetConjuro === 'MA_muro_hielo') { [[tf, tc], [tf, tc+1]].forEach(([f, c]) => { if (c <= 8 && !mapaPiezas[`${f}-${c}`] && !casillasAgua.includes(`${f}-${c}`)) celdasBloqueadas[`${f}-${c}`] = { tipo: 'muro-hielo', turnos: 8 }; }); conj['MA_muro_hielo'] = true; }
+            else if (modoTargetConjuro === 'MA_zona_prohibida') { [[tf, tc], [tf, tc+1], [tf+1, tc], [tf+1, tc+1]].forEach(([f, c]) => { if (f <= 8 && c <= 8) celdasBloqueadas[`${f}-${c}`] = { tipo: 'zona-prohibida', turnos: 4 }; }); conj['MA_zona_prohibida'] = true; }
+            else if (modoTargetConjuro === 'AP_piel_piedra_ejecutar') { if (mapaPiezas[memoriaConjuro.origen]) { mapaPiezas[memoriaConjuro.origen].inmune = 4; actualizarClasesEstado(memoriaConjuro.origen); } conj['AP_piel_piedra'] = true; }
+            else if (modoTargetConjuro === 'AP_inmovilizar') { if (mapaPiezas[idTarget]) { mapaPiezas[idTarget].inmovilizado = 4; actualizarClasesEstado(idTarget); } conj['AP_inmovilizar'] = true; }
+            else if (modoTargetConjuro === 'AP_telequinesis_paso2') {
+                let idOrig = memoriaConjuro.origen;
+                if (memoriaConjuro.esArbol) { celdasBloqueadas[idTarget] = celdasBloqueadas[idOrig]; delete celdasBloqueadas[idOrig]; } 
+                else { let pObj = mapaPiezas[idOrig]; document.getElementById(`c-${idOrig}`).innerHTML = ''; delete mapaPiezas[idOrig]; colocarPiezaBase(tf, tc, pObj.faccion, pObj.texto, pObj.prefijoImagen, pObj.orientacion, pObj.jugador, pObj.inmune, pObj.inmovilizado); }
+                conj['AP_telequinesis'] = true;
+            }
+
+            if (!vieneDeRed && !esPartidaLocal && socket) {
+                socket.emit("jugada", {
+                    sala: salaActual,
+                    tipo: 'conjuro',
+                    modo: modoTargetConjuro,
+                    celdaF: celdaSeleccionada ? celdaSeleccionada.fila : -1,
+                    celdaC: celdaSeleccionada ? celdaSeleccionada.col : -1,
+                    memoria: memoriaConjuro,
+                    destino: idTarget
+                });
+            }
+
+            finalizarTurno();
+        }
+
+        function cancelarModoTarget() { modoTargetConjuro = null; memoriaConjuro = null; limpiarDestacados(); document.getElementById('btn-cancelar').style.display = 'none'; }
+        function limpiarDestacados() { document.querySelectorAll('.celda').forEach(c => c.classList.remove('seleccionada', 'destino-valido', 'captura-valida')); }
+
+        function actualizarClasesEstado(idCelda) {
+            const pieza = mapaPiezas[idCelda]; const divPieza = document.getElementById(`pieza-${idCelda}`);
+            if (!pieza || !divPieza) return;
+            if (pieza.inmovilizado > 0) divPieza.classList.add('estado-inmovilizado'); else divPieza.classList.remove('estado-inmovilizado');
+            if (pieza.inmune > 0) divPieza.classList.add('estado-inmune'); else divPieza.classList.remove('estado-inmune');
+        }
+
+        function procesarEstadosPorTurno() {
+            for (let id in mapaPiezas) {
+                let p = mapaPiezas[id];
+                if (p.jugador === turnoActual) { let b = celdasBloqueadas[id]; if (b && (b.tipo === 'muro-fuego' || b.tipo === 'zona-prohibida') && p.texto !== 'TO') matarPieza(id); }
+            }
+            for (let id in celdasBloqueadas) { celdasBloqueadas[id].turnos--; if (celdasBloqueadas[id].turnos <= 0) delete celdasBloqueadas[id]; }
+            for (let id in mapaPiezas) { if (mapaPiezas[id].inmovilizado > 0) { mapaPiezas[id].inmovilizado--; actualizarClasesEstado(id); } if (mapaPiezas[id].inmune > 0) { mapaPiezas[id].inmune--; actualizarClasesEstado(id); } }
+            document.querySelectorAll('.celda').forEach(celda => {
+                const idCelda = celda.id.substring(2); celda.classList.remove('muro-fuego', 'muro-hielo', 'zona-prohibida', 'muro-arbol');
+                if (celdasBloqueadas[idCelda]) celda.classList.add(celdasBloqueadas[idCelda].tipo);
+            });
+        }
+
+        function declararVictoria(jugadorGanador) {
+            const formatearNombre = (fac) => { let f = fac.replace(/s$/, '').replace(/o$/, 'o'); if (f === 'colos') f = 'coloso'; return f.charAt(0).toUpperCase() + f.slice(1); };
+            const faccionGanadora = (jugadorGanador === 1) ? jugador1Faccion : jugador2Faccion;
+            const resultado = { ganador: jugadorGanador, j1: jugador1Faccion, j2: jugador2Faccion, imgGanador: `Select${formatearNombre(faccionGanadora)}${jugadorGanador}.PNG` };
+            localStorage.setItem('resultadoPartida', JSON.stringify(resultado)); window.location.href = 'victoria.html';
+        }
+
+        function verificarVictoria() {
+            let j1Vivo = false; let j2Vivo = false; let j1EsColoso = (jugador1Faccion === 'coloso'); let j2EsColoso = (jugador2Faccion === 'coloso'); let extremidadesJ1 = 0, extremidadesJ2 = 0;
+
+            for (const key in mapaPiezas) {
+                const p = mapaPiezas[key];
+                if (p.jugador === 1) { if (j1EsColoso) { if (['BI', 'BD', 'PI', 'PD'].includes(p.texto)) extremidadesJ1++; } else { if (['AS', 'MR', 'MA', 'CO'].includes(p.texto)) j1Vivo = true; } }
+                if (p.jugador === 2) { if (j2EsColoso) { if (['BI', 'BD', 'PI', 'PD'].includes(p.texto)) extremidadesJ2++; } else { if (['AS', 'MR', 'MA', 'CO'].includes(p.texto)) j2Vivo = true; } }
+            }
+
+            if (j1EsColoso && extremidadesJ1 > 0) j1Vivo = true; if (j2EsColoso && extremidadesJ2 > 0) j2Vivo = true;
+
+            if (!j1Vivo) { declararVictoria(2); return true; }
+            if (!j2Vivo) { declararVictoria(1); return true; }
+            return false;
+        }
+
+        function actualizarPanelHumanos() {
+            const panel = document.getElementById('panel-humanos');
+            if (jugador1Faccion === 'humanos' || jugador2Faccion === 'humanos') {
+                panel.style.display = 'block'; document.getElementById('hum-nivel-titulo').innerText = `Nivel ${nivelHumano}: ${nombresNivel(nivelHumano)}`;
+                if (evolucionTerminada) {
+                    document.getElementById('hum-nivel-desc').innerText = "⚠️ CIENTÍFICO ELIMINADO: Evolución estancada."; document.getElementById('hum-nivel-desc').style.color = '#e74c3c'; document.getElementById('hum-progreso').style.background = '#c0392b';
+                } else if (nivelHumano === 4) {
+                    document.getElementById('hum-nivel-desc').innerText = "✨ ¡EVOLUCIÓN MÁXIMA! Comandante = Dama."; document.getElementById('hum-nivel-desc').style.color = '#2ecc71'; document.getElementById('hum-progreso').style.width = '100%'; document.getElementById('hum-progreso').style.background = '#2ecc71';
+                } else {
+                    document.getElementById('hum-nivel-desc').innerText = descripcionesNivelHumano[nivelHumano]; document.getElementById('hum-nivel-desc').style.color = '#bdc3c7';
+                    let porcentaje = ((turnoGlobalHumano % 3) / 3) * 100; if (turnoGlobalHumano > 0 && (turnoGlobalHumano % 3 === 0)) porcentaje = 100;
+                    document.getElementById('hum-progreso').style.width = `${porcentaje}%`; document.getElementById('hum-progreso').style.background = '#f39c12';
+                }
+            } else { panel.style.display = 'none'; }
+        }
+
+        function actualizarPanelColoso() {
+            const panel = document.getElementById('panel-coloso');
+            let colosoJugador = (jugador1Faccion === 'coloso') ? 1 : (jugador2Faccion === 'coloso') ? 2 : 0;
+            if (colosoJugador > 0) {
+                panel.style.display = 'block'; let vivas = [];
+                for (let key in mapaPiezas) { let p = mapaPiezas[key]; if (p.jugador === colosoJugador && p.faccion === 'coloso') { if (['BI', 'BD', 'PI', 'PD'].includes(p.texto)) vivas.push(nombresPiezas[p.texto]); } }
+                let html = vivas.length > 0 ? vivas.map(v => `🔹 ${v}`).join('<br>') : `<span style="color:#e74c3c; font-weight:bold;">¡COLOSO DESTRUIDO!</span>`;
+                document.getElementById('coloso-estatus').innerHTML = html;
+            } else { panel.style.display = 'none'; }
+        }
+
+        function nombresNivel(n) { return {1: "Primitivo", 2: "Centinelas Alfil", 3: "Guerreros Torre", 4: "Comandante Dama"}[n]; }
+
+        function finalizarTurno() {
+            cancelarModoTarget(); celdaSeleccionada = null; procesarEstadosPorTurno();
+            
+            if (verificarVictoria()) { document.getElementById('indicador-turno').firstElementChild.innerHTML = "¡JUEGO TERMINADO!"; actualizarPanelAcciones(null); return; }
+            
+            let esTurnoExtra = false;
+
+            if (turnoExtraActivo[turnoActual] > 0) {
+                turnoExtraActivo[turnoActual]--; esTurnoExtra = true;
+            } else {
+                let faccionSaliente = (turnoActual === 1) ? jugador1Faccion : jugador2Faccion;
+                if (faccionSaliente === 'humanos' && !evolucionTerminada && nivelHumano < 4) {
+                    turnoGlobalHumano++;
+                    if (turnoGlobalHumano % 3 === 0) {
+                        nivelHumano++;
+                        if (esPartidaLocal || turnoActual === miNumeroDeJugador) {
+                            alert(`¡EVOLUCIÓN HUMANA! Los humanos alcanzan el NIVEL ${nivelHumano}:\n${descripcionesNivelHumano[nivelHumano]}`);
+                        }
+                    }
+                }
+                turnoActual = (turnoActual === 1) ? 2 : 1;
+                turnoExtraActivo[turnoActual] = turnoExtraProgramado[turnoActual]; turnoExtraProgramado[turnoActual] = 0;
+            }
+
+            actualizarIndicadorTurno(esTurnoExtra); actualizarUITurnoTiempo(); actualizarPanelHumanos(); actualizarPanelColoso(); actualizarPanelAcciones(null);
+        }
+
+        function actualizarIndicadorTurno(esTurnoExtra = false) {
+            const indicador = document.getElementById('indicador-turno'); 
+            const spanPrincipal = document.getElementById('indicador-principal'); 
+            const spanSub = document.getElementById('indicador-sub');
+            
+            const faccionNombre = (turnoActual === 1) ? jugador1Faccion : jugador2Faccion;
+            let extraText = esTurnoExtra ? " ⚡ [¡ACCIÓN EXTRA!]" : "";
+            
+            const esMiTurno = esPartidaLocal || (turnoActual === miNumeroDeJugador);
+            const overlay = document.getElementById('overlay-espera');
+
+            if (esMiTurno) {
+                spanPrincipal.innerHTML = `¡ES TU TURNO! - JUGADOR ${turnoActual} (${faccionNombre.toUpperCase()})${extraText}`;
+                indicador.classList.add('es-mi-turno');
+                overlay.style.display = 'none'; 
+            } else {
+                spanPrincipal.innerHTML = `ESPERANDO AL RIVAL... (Turno de Jugador ${turnoActual})`;
+                indicador.classList.remove('es-mi-turno');
+            }
+            
+            if (faccionNombre === 'humanos') spanSub.innerText = `Nivel Tech: ${nivelHumano}/4 (${nombresNivel(nivelHumano)})` + (evolucionTerminada ? " [ESTANCADO]" : "");
+            else if (faccionNombre === 'coloso') spanSub.innerText = `Cuerpo unido: El Torso no puede destruirse`;
+            else spanSub.innerText = "";
+
+            if (esTurnoExtra) { indicador.style.backgroundColor = 'rgba(155, 89, 182, 0.9)'; indicador.style.color = '#fff'; } 
+            else { indicador.style.backgroundColor = 'var(--panel-color)'; indicador.style.color = 'var(--text-color)'; }
+
+            if (faccionNombre === 'elfos') indicador.style.borderBottomColor = '#2ecc71';
+            else if (faccionNombre === 'magos') indicador.style.borderBottomColor = '#3498db';
+            else if (faccionNombre === 'humanos') indicador.style.borderBottomColor = '#f39c12';
+            else if (faccionNombre === 'coloso') indicador.style.borderBottomColor = '#95a5a6';
+        }
+
+        function colocarFaccion(faccion, posicion) {
+            const orientacion = (posicion === 1) ? 'Atras' : 'Frente';
+            const fFrente = (posicion === 1) ? 6 : 2; const fMedio = (posicion === 1) ? 7 : 1; const fAtras = (posicion === 1) ? 8 : 0;
+
+            if (faccion === 'elfos') {
+                colocarPiezaBase(fFrente, 1, 'elfos', 'EX', 'Elfo - Explorador', orientacion, posicion); colocarPiezaBase(fFrente, 2, 'elfos', 'GU', 'Elfo - Guerrero', orientacion, posicion); colocarPiezaBase(fFrente, 4, 'elfos', 'GU', 'Elfo - Guerrero', orientacion, posicion); colocarPiezaBase(fFrente, 6, 'elfos', 'GU', 'Elfo - Guerrero', orientacion, posicion); colocarPiezaBase(fFrente, 7, 'elfos', 'EX', 'Elfo - Explorador', orientacion, posicion); colocarPiezaBase(fMedio, 1, 'elfos', 'DR', 'Elfo - Druida', orientacion, posicion); colocarPiezaBase(fMedio, 4, 'elfos', 'AS', 'Elfo - ÁrbolSagrado', orientacion, posicion); colocarPiezaBase(fMedio, 6, 'elfos', 'DR', 'Elfo - Druida', orientacion, posicion); colocarPiezaBase(fAtras, 3, 'elfos', 'AR', 'Elfo - Arquero', orientacion, posicion); colocarPiezaBase(fAtras, 5, 'elfos', 'AR', 'Elfo - Arquero', orientacion, posicion);
+            } 
+            else if (faccion === 'magos') {
+                const f0 = (posicion === 1) ? 8 : 0; const f1 = (posicion === 1) ? 7 : 1;
+                colocarPiezaBase(f1, 4, 'magos', 'MR', 'Mago - Fuego', orientacion, posicion); colocarPiezaBase(f0, 3, 'magos', 'AP', 'Mago - Aprendiza', orientacion, posicion); colocarPiezaBase(f0, 5, 'magos', 'MA', 'Mago - Hielo', orientacion, posicion); 
+            }
+            else if (faccion === 'humanos') {
+                for (let col = 0; col < 9; col++) { colocarPiezaBase(fMedio, col, 'humanos', 'MI', 'Humano - Miliciano', orientacion, posicion); }
+                colocarPiezaBase(fAtras, 0, 'humanos', 'CE', 'Humano - Centinela', orientacion, posicion); colocarPiezaBase(fAtras, 1, 'humanos', 'CE', 'Humano - Centinela', orientacion, posicion); colocarPiezaBase(fAtras, 2, 'humanos', 'GU', 'Humano - Guardián', orientacion, posicion); colocarPiezaBase(fAtras, 6, 'humanos', 'GU', 'Humano - Guardián', orientacion, posicion); colocarPiezaBase(fAtras, 7, 'humanos', 'CO', 'Humano - Comandante', orientacion, posicion); colocarPiezaBase(fAtras, 8, 'humanos', 'CI', 'Humano - Científico', orientacion, posicion);
+            }
+            else if (faccion === 'coloso') {
+                const fRocas = (posicion === 1) ? 5 : 3; const fBrazos = (posicion === 1) ? 6 : 2; const fTorso = (posicion === 1) ? 7 : 1; const fPiernas = (posicion === 1) ? 8 : 0;
+                colocarPiezaBase(fRocas, 1, 'coloso', 'RO', 'Coloso - Piedra', orientacion, posicion); colocarPiezaBase(fRocas, 7, 'coloso', 'RO', 'Coloso - Piedra', orientacion, posicion); colocarPiezaBase(fBrazos, 3, 'coloso', 'BI', 'Coloso - ManoIzquierda', orientacion, posicion); colocarPiezaBase(fBrazos, 5, 'coloso', 'BD', 'Coloso - ManoDerecha', orientacion, posicion); colocarPiezaBase(fTorso, 1, 'coloso', 'RO', 'Coloso - Piedra', orientacion, posicion); colocarPiezaBase(fTorso, 4, 'coloso', 'TO', 'Coloso - Torso', orientacion, posicion); colocarPiezaBase(fTorso, 7, 'coloso', 'RO', 'Coloso - Piedra', orientacion, posicion); colocarPiezaBase(fPiernas, 3, 'coloso', 'PI', 'Coloso - PieIzquierdo', orientacion, posicion); colocarPiezaBase(fPiernas, 5, 'coloso', 'PD', 'Coloso - PieDerecho', orientacion, posicion);
+            }
+        }
+
+        // --- INICIALIZACIÓN NUEVA MULTIJUGADOR ---
+        function inicializarJuegoMulti() {
+            const dataGuardada = localStorage.getItem('configuracionOnline');
+            let minutosSeleccionados = 6; 
+
+            if (dataGuardada) {
+                const config = JSON.parse(dataGuardada);
+                
+                esPartidaLocal = false;
+                salaActual = config.salaId;
+                miNumeroDeJugador = config.rol === 'crear' ? 1 : 2;
+                minutosSeleccionados = config.tiempoMinutos || 6;
+
+                // Formateamos las facciones para no arrastrar las "s" o "os"
+                const formatear = (f) => f.replace(/s$/, '').replace(/o$/, 'o');
+                let j1Temp = formatear(config.jugador1Faccion || 'coloso');
+                let j2Temp = formatear(config.jugador2Faccion || 'humanos');
+
+                if (j1Temp === 'mago') j1Temp = 'magos'; if (j1Temp === 'elfo') j1Temp = 'elfos'; if (j1Temp === 'humano') j1Temp = 'humanos'; if (j1Temp === 'colos') j1Temp = 'coloso';
+                if (j2Temp === 'mago') j2Temp = 'magos'; if (j2Temp === 'elfo') j2Temp = 'elfos'; if (j2Temp === 'humano') j2Temp = 'humanos'; if (j2Temp === 'colos') j2Temp = 'coloso';
+                
+                jugador1Faccion = j1Temp;
+                jugador2Faccion = j2Temp;
+
+            } else {
+                alert("No se encontró sala. Volviendo al inicio.");
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            document.getElementById('etiqueta-j1').innerText = `Jugador 1 (${jugador1Faccion.toUpperCase()}) ${miNumeroDeJugador === 1 ? '[TÚ]' : ''}`;
+            document.getElementById('etiqueta-j2').innerText = `Jugador 2 (${jugador2Faccion.toUpperCase()}) ${miNumeroDeJugador === 2 ? '[TÚ]' : ''}`;
+            
+            colocarFaccion(jugador1Faccion, 1); colocarFaccion(jugador2Faccion, 2);
+            turnoActual = 1; 
+            
+            inicializarRelojes(minutosSeleccionados); actualizarUITurnoTiempo(); actualizarIndicadorTurno(); actualizarPanelHumanos(); actualizarPanelColoso();
+
+            // CONECTAR SOCKET AL TABLERO
+            if (typeof io !== 'undefined') {
+                socket = io("http://localhost:3000");
+                socket.on('connect', () => {
+                    socket.emit('unirse_sala', { salaId: salaActual, reingreso: true });
+                });
+
+                socket.on("jugada_recibida", (data) => {
+                    if (data.tipo === 'movimiento') {
+                        const fDest = parseInt(data.destino.split('-')[0]);
+                        const cDest = parseInt(data.destino.split('-')[1]);
+                        const p = mapaPiezas[data.origen];
+                        
+                        if (mapaPiezas[data.destino]) matarPieza(data.destino); 
+                        document.getElementById(`c-${data.origen}`).innerHTML = ''; delete mapaPiezas[data.origen];
+                        
+                        colocarPiezaBase(fDest, cDest, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
+                        finalizarTurno();
+
+                    } else if (data.tipo === 'conjuro') {
+                        modoTargetConjuro = data.modo;
+                        if (data.celdaF !== -1 && data.celdaC !== -1) {
+                            celdaSeleccionada = { fila: data.celdaF, col: data.celdaC, pieza: mapaPiezas[`${data.celdaF}-${data.celdaC}`] };
+                        } else { celdaSeleccionada = null; }
+                        memoriaConjuro = data.memoria;
+                        
+                        const fDest = data.destino ? parseInt(data.destino.split('-')[0]) : -1;
+                        const cDest = data.destino ? parseInt(data.destino.split('-')[1]) : -1;
+                        
+                        ejecutarEfectoConjuro(fDest, cDest, true); 
+                    }
+                });
+            }
+        }
+
+        inicializarJuegoMulti();
+    </script>
+</body>
+</html>

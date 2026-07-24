@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legado: Asymmetric Chess</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --accent-gold: #c5a059;
+            --text-color: #c5c6c7;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        #pantalla-inicio {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .logo-container img {
+            max-width: 600px;
+            width: 100%;
+            height: auto;
+            box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        /* Contenedor nuevo para alinear los botones */
+        .botones-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .btn-jugar {
+            background: linear-gradient(45deg, #8a6f3e, var(--accent-gold));
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            text-decoration: none; 
+            width: 100%; 
+            max-width: 350px;
+            box-sizing: border-box;
+        }
+
+        .btn-jugar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--accent-gold);
+        }
+
+        /* Estilo sutil para diferenciar el botón Multijugador */
+        .btn-online {
+            background: linear-gradient(45deg, #1f3b4d, #2980b9);
+            color: #fff;
+        }
+
+        .btn-online:hover {
+            box-shadow: 0 0 20px #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="pantalla-inicio">
+        <div class="logo-container">
+            <img src="Legado_logo.png" alt="Legado: Asymmetric Chess Logo">
+        </div>
+        
+        <div class="botones-container">
+            <!-- Flujo actual (Local) que lleva a tu seleccion.html de siempre -->
+            <a href="seleccion.html" class="btn-jugar">Jugar en el Dispositivo</a>
+            
+            <!-- Nuevo flujo (Online) que lleva a la futura pantalla de creación de sala -->
+            <a href="seleccion_multi.html" class="btn-jugar btn-online">Multijugador Online</a>
+        </div>
+    </div>
+
+</body>
+</html>
