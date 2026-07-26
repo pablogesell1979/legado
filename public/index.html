@@ -102,21 +102,22 @@
             <div id="fac-coloso" class="circulo-faccion faccion-coloso bloqueada" title="Coloso">C</div>
         </div>
 
-        <!-- Botones de Menú -->
-        <button class="menu-btn btn-tienda" onclick="irA('tienda.html')">
+        <!-- Botones de Menú Actualizados -->
+        <button class="menu-btn btn-tienda" onclick="irA('galeria.html')">
             <span>🛒 Conseguir Facciones</span>
         </button>
 
-        <button class="menu-btn btn-destacado btn-historia" onclick="irA('historia.html')">
+        <button class="menu-btn btn-destacado btn-historia" onclick="irA('seleccion_historia.html')">
             <span>📖 Modo Historia</span>
+            <div class="reward">🪙 +200</div>
         </button>
 
-        <button class="menu-btn btn-destacado btn-online" onclick="irA('online.html')">
+        <button class="menu-btn btn-destacado btn-online" onclick="irA('seleccion_multi.html')">
             <span>🌐 Jugar Online</span>
-            <div class="reward">🪙 +25</div>
+            <div class="reward">🪙 +200</div>
         </button>
 
-        <button class="menu-btn" onclick="irA('seleccion.html')">
+        <button class="menu-btn" onclick="irA('seleccion_1vs1.html')">
             <span>⚔️ 1vs1 Local</span>
         </button>
 
@@ -129,7 +130,7 @@
     </div>
 
     <script>
-// Variables globales para usar en otros HTML
+        // Variables globales para usar en otros HTML
         window.estadoJugador = {
             id: null,
             nombre: 'Jugador',
