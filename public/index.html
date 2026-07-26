@@ -141,7 +141,7 @@
 
         // --- FUNCIONES DE AUTENTICACIÓN ---
         async function iniciarSesion() {
-            const { data, error } = await clienteSupabase.auth.signInWithOAuth({
+            const { data, error } = await window.clienteSupabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.origin + window.location.pathname }
             });
@@ -149,23 +149,22 @@
         }
 
         async function cerrarSesion() {
-            await clienteSupabase.auth.signOut();
+            await window.clienteSupabase.auth.signOut();
             localStorage.removeItem('legados_estado');
             window.location.reload();
         }
 
         // --- CARGAR DATOS AL INICIO ---
         async function verificarSesion() {
-            // Escondemos ambos temporalmente
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-screen').style.display = 'none';
 
-            // Usamos clienteSupabase en lugar de supabase
-            const { data: { session } } = await clienteSupabase.auth.getSession();
+            // Verificamos si existe la sesión en Supabase
+            const { data: { session } } = await window.clienteSupabase.auth.getSession();
 
             if (session) {
-                // Si hay sesión, buscamos el perfil en la base de datos
-                const { data: perfil, error } = await clienteSupabase
+                // Si hay sesión, buscamos el perfil
+                const { data: perfil, error } = await window.clienteSupabase
                     .from('perfiles')
                     .select('*')
                     .eq('id', session.user.id)
@@ -178,7 +177,7 @@
                     document.getElementById('main-screen').style.display = 'flex';
                 }
             } else {
-                // No hay sesión, mostramos login
+                // Si no hay sesión, mostramos el login
                 document.getElementById('login-screen').style.display = 'flex';
             }
         }
@@ -189,7 +188,6 @@
             document.getElementById('ui-elo').innerText = perfil.elo;
             document.getElementById('ui-oro').innerText = perfil.monedas;
 
-            // Iluminar círculos de facciones desbloqueadas
             const facciones = perfil.facciones_desbloqueadas;
             if (facciones.includes('humanos')) document.getElementById('fac-humanos').classList.remove('bloqueada');
             if (facciones.includes('magos')) document.getElementById('fac-magos').classList.remove('bloqueada');
@@ -197,12 +195,10 @@
             if (facciones.includes('coloso')) document.getElementById('fac-coloso').classList.remove('bloqueada');
         }
 
-        // --- NAVEGACIÓN ---
         function irA(url) {
             window.location.href = url;
         }
 
-        // Inicializar al cargar la página
         window.onload = verificarSesion;
     </script>
 </body>
