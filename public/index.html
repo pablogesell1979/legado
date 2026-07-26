@@ -129,7 +129,7 @@
     </div>
 
     <script>
-        // Variables globales para usar en otros HTML
+// Variables globales para usar en otros HTML
         window.estadoJugador = {
             id: null,
             nombre: 'Jugador',
@@ -141,7 +141,7 @@
 
         // --- FUNCIONES DE AUTENTICACIÓN ---
         async function iniciarSesion() {
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const { data, error } = await clienteSupabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.origin + window.location.pathname }
             });
@@ -149,7 +149,7 @@
         }
 
         async function cerrarSesion() {
-            await supabase.auth.signOut();
+            await clienteSupabase.auth.signOut();
             localStorage.removeItem('legados_estado');
             window.location.reload();
         }
@@ -160,24 +160,21 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-screen').style.display = 'none';
 
-            const { data: { session } } = await supabase.auth.getSession();
+            // Usamos clienteSupabase en lugar de supabase
+            const { data: { session } } = await clienteSupabase.auth.getSession();
 
             if (session) {
                 // Si hay sesión, buscamos el perfil en la base de datos
-                const { data: perfil, error } = await supabase
+                const { data: perfil, error } = await clienteSupabase
                     .from('perfiles')
                     .select('*')
                     .eq('id', session.user.id)
                     .single();
 
                 if (perfil) {
-                    // Guardamos en memoria
                     window.estadoJugador = perfil;
-                    // Guardamos en LocalStorage para que tienda.html y tablero.html lo lean fácil
                     localStorage.setItem('legados_estado', JSON.stringify(perfil));
-
                     actualizarInterfaz(perfil);
-                    
                     document.getElementById('main-screen').style.display = 'flex';
                 }
             } else {
@@ -207,7 +204,6 @@
 
         // Inicializar al cargar la página
         window.onload = verificarSesion;
-
     </script>
 </body>
 </html>
