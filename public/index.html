@@ -3,104 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Legado: Asymmetric Chess</title>
+    <title>LEGADOS - Menú Principal</title>
+    
+    <!-- Librería de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
     <style>
-        :root {
-            --bg-color: #0b0c10;
-            --accent-gold: #c5a059;
-            --text-color: #c5c6c7;
+        :root { 
+            --bg: #0b0c10; --panel: #1a1d24; --text: #c5c6c7; 
+            --gold: #f1c40f; --elo: #3498db; --humanos: #2980b9; 
+            --magos: #8e44ad; --elfos: #27ae60; --coloso: #c0392b;
         }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; position: relative; }
+        
+        /* Indicador sutil de conectados */
+        .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #7f8c8d; display: flex; align-items: center; gap: 5px; }
+        .dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
 
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
+        .logo { font-size: 2rem; font-weight: 900; letter-spacing: 4px; color: #fff; margin: 30px 0 10px 0; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
-        #pantalla-inicio {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px;
-        }
+        /* Pantalla Login */
+        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; }
+        .btn-google { background: #ea4335; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s; }
+        .btn-google:hover { background: #c0392b; }
 
-        .logo-container img {
-            max-width: 600px;
-            width: 100%;
-            height: auto;
-            box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
+        /* Pantalla Principal (Oculta hasta loguear) */
+        #main-screen { display: none; width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
 
-        /* Contenedor nuevo para alinear los botones */
-        .botones-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
-            width: 100%;
-        }
+        /* Estado del Jugador */
+        .player-status { background: var(--panel); width: 100%; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; }
+        .player-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: #fff; }
+        .stats-row { display: flex; gap: 20px; }
+        .stat-badge { display: flex; align-items: center; gap: 5px; font-size: 1.2rem; font-weight: bold; background: #000; padding: 5px 15px; border-radius: 20px; border: 1px solid #333; }
+        .stat-elo { color: var(--elo); }
+        .stat-gold { color: var(--gold); }
 
-        .btn-jugar {
-            background: linear-gradient(45deg, #8a6f3e, var(--accent-gold));
-            color: #000;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            text-decoration: none; 
-            width: 100%; 
-            max-width: 350px;
-            box-sizing: border-box;
-        }
+        /* Facciones */
+        .facciones-container { display: flex; gap: 15px; margin-bottom: 25px; }
+        .circulo-faccion { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.3s; }
+        .faccion-humanos { background: var(--humanos); }
+        .faccion-magos { background: var(--magos); }
+        .faccion-elfos { background: var(--elfos); }
+        .faccion-coloso { background: var(--coloso); }
+        .bloqueada { filter: grayscale(100%) opacity(0.3); border: 2px dashed #666; background: #222 !important; box-shadow: none; }
 
-        .btn-jugar:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px var(--accent-gold);
-        }
+        /* Botones Menú */
+        .menu-btn { width: 100%; padding: 14px; margin: 6px 0; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; background: #2c3e50; color: white; }
+        .menu-btn:hover { background: #34495e; }
+        
+        .btn-destacado { transform: scale(1.02); margin: 10px 0; border: 2px solid; }
+        .btn-historia { background: #8e44ad; border-color: #9b59b6; }
+        .btn-historia:hover { background: #9b59b6; }
+        .btn-online { background: #d35400; border-color: #e67e22; }
+        .btn-online:hover { background: #e67e22; }
+        .btn-tienda { background: #27ae60; }
+        .btn-tienda:hover { background: #2ecc71; }
 
-        /* Estilo sutil para diferenciar el botón Multijugador */
-        .btn-online {
-            background: linear-gradient(45deg, #1f3b4d, #2980b9);
-            color: #fff;
-        }
-
-        .btn-online:hover {
-            box-shadow: 0 0 20px #2980b9;
-        }
+        .reward { font-size: 0.9rem; color: var(--gold); background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 10px; display: flex; align-items: center; gap: 4px; }
+        
+        .btn-logout { margin-top: 20px; background: transparent; border: 1px solid #c0392b; color: #c0392b; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="pantalla-inicio">
-        <div class="logo-container">
-            <img src="Legado_logo.png" alt="Legado: Asymmetric Chess Logo">
-        </div>
-        
-        <div class="botones-container">
-            <!-- Flujo actual (Local) que lleva a tu seleccion.html de siempre -->
-            <a href="seleccion.html" class="btn-jugar">Jugar en el Dispositivo</a>
-            
-            <!-- Nuevo flujo (Online) que lleva a la futura pantalla de creación de sala -->
-            <a href="seleccion_multi.html" class="btn-jugar btn-online">Multijugador Online</a>
-        </div>
+    <div class="online-indicator">
+        <div class="dot"></div> <span id="online-count">12 Conectados</span>
     </div>
 
+    <div class="logo">LEGADOS</div>
+
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-screen">
+        <p style="text-align: center; max-width: 300px; margin-bottom: 20px; color: #888;">Debes iniciar sesión para guardar tu progreso, ELO y Monedas.</p>
+        <button class="btn-google" onclick="iniciarSesion()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
+            Entrar con Google
+        </button>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL -->
+    <div id="main-screen">
+        
+        <!-- Dashboard Jugador -->
+        <div class="player-status">
+            <div class="player-name" id="ui-nombre">Cargando...</div>
+            <div class="stats-row">
+                <div class="stat-badge stat-elo">🏆 <span id="ui-elo">--</span></div>
+                <div class="stat-badge stat-gold">🪙 <span id="ui-oro">--</span></div>
+            </div>
+        </div>
+
+        <!-- Círculos de Facciones -->
+        <div class="facciones-container">
+            <div id="fac-humanos" class="circulo-faccion faccion-humanos bloqueada" title="Humanos">H</div>
+            <div id="fac-magos" class="circulo-faccion faccion-magos bloqueada" title="Magos">M</div>
+            <div id="fac-elfos" class="circulo-faccion faccion-elfos bloqueada" title="Elfos">E</div>
+            <div id="fac-coloso" class="circulo-faccion faccion-coloso bloqueada" title="Coloso">C</div>
+        </div>
+
+        <!-- Botones de Menú -->
+        <button class="menu-btn btn-tienda" onclick="irA('tienda.html')">
+            <span>🛒 Conseguir Facciones</span>
+        </button>
+
+        <button class="menu-btn btn-destacado btn-historia" onclick="irA('historia.html')">
+            <span>📖 Modo Historia</span>
+        </button>
+
+        <button class="menu-btn btn-destacado btn-online" onclick="irA('online.html')">
+            <span>🌐 Jugar Online</span>
+            <div class="reward">🪙 +25</div>
+        </button>
+
+        <button class="menu-btn" onclick="irA('seleccion.html')">
+            <span>⚔️ 1vs1 Local</span>
+        </button>
+
+        <button class="menu-btn" onclick="irA('seleccion_cpu.html')">
+            <span>🤖 Entrenamiento Vs CPU</span>
+            <div class="reward">🪙 +5</div>
+        </button>
+
+        <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+    </div>
+
+    <script>
+        // Variables globales para usar en otros HTML
+        window.estadoJugador = {
+            id: null,
+            nombre: 'Jugador',
+            monedas: 0,
+            elo: 1000,
+            facciones_desbloqueadas: [],
+            personajes_comprados: []
+        };
+
+        // --- FUNCIONES DE AUTENTICACIÓN ---
+        async function iniciarSesion() {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin + window.location.pathname }
+            });
+            if (error) alert("Error al iniciar sesión: " + error.message);
+        }
+
+        async function cerrarSesion() {
+            await supabase.auth.signOut();
+            localStorage.removeItem('legados_estado');
+            window.location.reload();
+        }
+
+        // --- CARGAR DATOS AL INICIO ---
+        async function verificarSesion() {
+            // Escondemos ambos temporalmente
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-screen').style.display = 'none';
+
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session) {
+                // Si hay sesión, buscamos el perfil en la base de datos
+                const { data: perfil, error } = await supabase
+                    .from('perfiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (perfil) {
+                    // Guardamos en memoria
+                    window.estadoJugador = perfil;
+                    // Guardamos en LocalStorage para que tienda.html y tablero.html lo lean fácil
+                    localStorage.setItem('legados_estado', JSON.stringify(perfil));
+
+                    actualizarInterfaz(perfil);
+                    
+                    document.getElementById('main-screen').style.display = 'flex';
+                }
+            } else {
+                // No hay sesión, mostramos login
+                document.getElementById('login-screen').style.display = 'flex';
+            }
+        }
+
+        // --- ACTUALIZAR UI ---
+        function actualizarInterfaz(perfil) {
+            document.getElementById('ui-nombre').innerText = perfil.nombre;
+            document.getElementById('ui-elo').innerText = perfil.elo;
+            document.getElementById('ui-oro').innerText = perfil.monedas;
+
+            // Iluminar círculos de facciones desbloqueadas
+            const facciones = perfil.facciones_desbloqueadas;
+            if (facciones.includes('humanos')) document.getElementById('fac-humanos').classList.remove('bloqueada');
+            if (facciones.includes('magos')) document.getElementById('fac-magos').classList.remove('bloqueada');
+            if (facciones.includes('elfos')) document.getElementById('fac-elfos').classList.remove('bloqueada');
+            if (facciones.includes('coloso')) document.getElementById('fac-coloso').classList.remove('bloqueada');
+        }
+
+        // --- NAVEGACIÓN ---
+        function irA(url) {
+            window.location.href = url;
+        }
+
+        // Inicializar al cargar la página
+        window.onload = verificarSesion;
+
+    </script>
 </body>
 </html>
