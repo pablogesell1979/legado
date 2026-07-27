@@ -206,14 +206,7 @@
                     if (faccionesServer.salaId) configOnlinePendiente.salaId = faccionesServer.salaId;
                     if (faccionesServer.rol) configOnlinePendiente.rol = faccionesServer.rol;
                 }
-                
-                // Si el rol es 'anfitrion' eres el Jugador 1, sino el Jugador 2
-                const miNumeroJugador = (configOnlinePendiente.rol === 'anfitrion') ? 1 : 2;
-
-                // Guardamos esto en una clave que el tablero no borra
-                localStorage.setItem('jugador_rol_partida', miNumeroJugador.toString());
-                localStorage.setItem('modoJuego', 'online');
-
+                localStorage.setItem('configuracionOnline', JSON.stringify(configOnlinePendiente));
                 window.location.href = 'tablero_multi.html';
             }
         };
