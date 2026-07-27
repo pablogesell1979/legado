@@ -206,7 +206,16 @@
                     if (faccionesServer.salaId) configOnlinePendiente.salaId = faccionesServer.salaId;
                     if (faccionesServer.rol) configOnlinePendiente.rol = faccionesServer.rol;
                 }
+                
+                // Determinamos si somos el jugador 1 o 2 basándonos en el rol recibido del servidor
+                const miNumeroDeJugador = (configOnlinePendiente.rol === 'anfitrion') ? 1 : 2;
+                configOnlinePendiente.miNumeroDeJugador = miNumeroDeJugador;
+
                 localStorage.setItem('configuracionOnline', JSON.stringify(configOnlinePendiente));
+                
+                // Forzamos el modo juego a 'online' para que victoria.html sepa qué recompensas aplicar
+                localStorage.setItem('modoJuego', 'online');
+
                 window.location.href = 'tablero_multi.html';
             }
         };
