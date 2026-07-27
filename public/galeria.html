@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería - Legados</title>
+    
+    <!-- Librería de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
+    <style>
+        :root { 
+            --bg: #0b0c10; --panel: #1a1d24; --text: #c5c6c7; 
+            --gold: #f1c40f; --humanos: #2980b9; 
+            --magos: #8e44ad; --elfos: #27ae60; --coloso: #c0392b;
+        }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 20px; 
+            box-sizing: border-box;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 20px;
+        }
+
+        .btn-volver {
+            background: #2c3e50; color: white; padding: 10px 20px; 
+            border: none; border-radius: 6px; font-weight: bold; 
+            cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s;
+        }
+        .btn-volver:hover { background: #34495e; }
+
+        .monedas-display {
+            background: var(--panel); padding: 10px 20px; 
+            border-radius: 20px; font-size: 1.2rem; font-weight: bold; 
+            color: var(--gold); border: 1px solid #333;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        }
+
+        .logo-img {
+            max-width: 250px;
+            margin: 10px 0 30px 0;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));
+        }
+
+        /* Círculos de Facciones */
+        .facciones-container { 
+            display: flex; gap: 20px; margin-bottom: 40px; 
+        }
+        .circulo-faccion { 
+            width: 60px; height: 60px; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; 
+            font-size: 1.5rem; font-weight: bold; color: white; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.3s; 
+        }
+        .faccion-humanos { background: var(--humanos); }
+        .faccion-magos { background: var(--magos); }
+        .faccion-elfos { background: var(--elfos); }
+        .faccion-coloso { background: var(--coloso); }
+        .bloqueada { 
+            filter: grayscale(100%) opacity(0.3); 
+            border: 2px dashed #666; background: #222 !important; box-shadow: none; 
+        }
+
+        /* Galería */
+        .galeria-container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .fila-faccion {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            border-left: 5px solid;
+        }
+        .fila-faccion.magos { border-color: var(--magos); }
+        .fila-faccion.elfos { border-color: var(--elfos); }
+        .fila-faccion.coloso { border-color: var(--coloso); }
+
+        .titulo-faccion {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .estado-desbloqueado {
+            font-size: 1rem;
+            color: #2ecc71;
+            font-style: italic;
+            font-weight: normal;
+        }
+
+        .piezas-grid {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .pieza-card {
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            width: 120px;
+            height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .pieza-card:hover { border-color: var(--gold); transform: translateY(-5px); }
+        
+        .pieza-img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .pieza-bloqueada .pieza-img {
+            filter: grayscale(100%) opacity(0.5);
+        }
+        
+        .pieza-nombre {
+            font-size: 0.85rem;
+            margin-top: 10px;
+            text-align: center;
+            color: #ccc;
+        }
+
+        /* Modal de Compra */
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; 
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-box {
+            background: var(--panel); padding: 30px; border-radius: 12px;
+            text-align: center; border: 1px solid #444; max-width: 350px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .modal-box h3 { margin-top: 0; color: #fff; }
+        .modal-precio { font-size: 1.5rem; color: var(--gold); font-weight: bold; margin: 15px 0; }
+        .btn-comprar {
+            background: #27ae60; color: white; padding: 12px 25px; 
+            border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem;
+            cursor: pointer; margin-right: 10px; transition: 0.2s;
+        }
+        .btn-comprar:hover:not(:disabled) { background: #2ecc71; }
+        .btn-comprar:disabled { background: #555; color: #888; cursor: not-allowed; }
+        
+        .btn-cerrar {
+            background: #c0392b; color: white; padding: 12px 25px; 
+            border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem;
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-cerrar:hover { background: #e74c3c; }
+
+        /* Loader */
+        #pantalla-carga {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); display: flex; justify-content: center; 
+            align-items: center; z-index: 2000; color: var(--gold); font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="pantalla-carga">Sincronizando con la base de datos...</div>
+
+    <div class="header-top">
+        <button class="btn-volver" onclick="window.location.href='index.html'">← Volver al Menú</button>
+        <div class="monedas-display">🪙 <span id="ui-oro">0</span></div>
+    </div>
+
+    <!-- Imagen obligatoria según instrucción del prompt -->
+    <img src="LogoSolo.jpg" alt="Legados" class="logo-img">
+
+    <div class="facciones-container">
+        <div id="fac-humanos" class="circulo-faccion faccion-humanos" title="Humanos (Desbloqueado por Defecto)">H</div>
+        <div id="fac-magos" class="circulo-faccion faccion-magos bloqueada" title="Magos">M</div>
+        <div id="fac-elfos" class="circulo-faccion faccion-elfos bloqueada" title="Elfos">E</div>
+        <div id="fac-coloso" class="circulo-faccion faccion-coloso bloqueada" title="Coloso">C</div>
+    </div>
+
+    <div class="galeria-container" id="galeria-renders">
+        <!-- Las filas se renderizan vía JS -->
+    </div>
+
+    <!-- Modal Dinámico -->
+    <div id="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modal-titulo">Nombre Pieza</h3>
+            <img id="modal-img" src="" alt="Pieza" style="width:120px; height:120px; object-fit:contain; margin: 10px 0;">
+            <div id="modal-estado"></div>
+            <div class="modal-precio" id="modal-precio">🪙 0</div>
+            
+            <div style="margin-top: 20px;">
+                <button id="btn-comprar-accion" class="btn-comprar">Comprar</button>
+                <button class="btn-cerrar" onclick="cerrarModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let perfilJugador = { monedas: 0, facciones_desbloqueadas: ['humanos'], personajes_comprados: [] };
+        let piezaSeleccionada = null;
+
+        // Estructura de la tienda con datos exactos extraídos de tablero.html
+        const tiendaDatos = {
+            elfos: {
+                id: 'elfos', nombre: 'Elfos', precio: 20,
+                piezas: [
+                    { id: 'elfo_explorador', nombre: 'Explorador', img: 'Elfo - Explorador Frente.png' },
+                    { id: 'elfo_guerrero', nombre: 'Guerrero', img: 'Elfo - Guerrero Frente.png' },
+                    { id: 'elfo_druida', nombre: 'Druida', img: 'Elfo - Druida Frente.png' },
+                    { id: 'elfo_arbol', nombre: 'Árbol Sagrado', img: 'Elfo - ÁrbolSagrado Frente.png' },
+                    { id: 'elfo_arquero', nombre: 'Arquero', img: 'Elfo - Arquero Frente.png' }
+                ]
+            },
+            magos: {
+                id: 'magos', nombre: 'Magos', precio: 50,
+                piezas: [
+                    { id: 'mago_fuego', nombre: 'Fuego', img: 'Mago - Fuego Frente.png' },
+                    { id: 'mago_hielo', nombre: 'Hielo', img: 'Mago - Hielo Frente.png' },
+                    { id: 'mago_aprendiza', nombre: 'Aprendiza', img: 'Mago - Aprendiza Frente.png' }
+                ]
+            },
+            coloso: {
+                id: 'coloso', nombre: 'Coloso', precio: 25,
+                piezas: [
+                    { id: 'coloso_piedra', nombre: 'Piedra', img: 'Coloso - Piedra Frente.png' },
+                    { id: 'coloso_torso', nombre: 'Torso', img: 'Coloso - Torso Frente.png' },
+                    { id: 'coloso_mano_izq', nombre: 'Mano Izquierda', img: 'Coloso - ManoIzquierda Frente.png' },
+                    { id: 'coloso_mano_der', nombre: 'Mano Derecha', img: 'Coloso - ManoDerecha Frente.png' },
+                    { id: 'coloso_pie_izq', nombre: 'Pie Izquierdo', img: 'Coloso - PieIzquierdo Frente.png' },
+                    { id: 'coloso_pie_der', nombre: 'Pie Derecho', img: 'Coloso - PieDerecho Frente.png' }
+                ]
+            }
+        };
+
+        async function verificarSesion() {
+            const { data: { session }, error: errorSesion } = await window.clienteSupabase.auth.getSession();
+            
+            if (!session) {
+                alert("Debes iniciar sesión para usar la galería.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Descargar perfil usando ID de la sesión
+            const { data: perfil, error } = await window.clienteSupabase
+                .from('perfiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            if (perfil) {
+                // Sanitizamos los datos para evitar nulos
+                perfilJugador.id = session.user.id;
+                perfilJugador.monedas = perfil.monedas || 0;
+                perfilJugador.personajes_comprados = perfil.personajes_comprados || [];
+                // Se valida la lógica de compatibilidad de nombre de columna de index.html
+                perfilJugador.facciones_desbloqueadas = perfil.facciones_facciones_desbloqueadas || perfil.facciones_desbloqueadas || ['humanos'];
+                
+                if(!perfilJugador.facciones_desbloqueadas.includes('humanos')){
+                    perfilJugador.facciones_desbloqueadas.push('humanos');
+                }
+
+                actualizarUI();
+            } else {
+                alert("Error al cargar tu perfil desde la base de datos.");
+            }
+            
+            document.getElementById('pantalla-carga').style.display = 'none';
+        }
+
+        function actualizarUI() {
+            document.getElementById('ui-oro').innerText = perfilJugador.monedas;
+            
+            // Actualizar Círculos Superiores
+            const facciones = perfilJugador.facciones_desbloqueadas;
+            ['magos', 'elfos', 'coloso'].forEach(fac => {
+                const circulo = document.getElementById(`fac-${fac}`);
+                if (facciones.includes(fac)) {
+                    circulo.classList.remove('bloqueada');
+                } else {
+                    circulo.classList.add('bloqueada');
+                }
+            });
+
+            renderizarGaleria();
+        }
+
+        function renderizarGaleria() {
+            const contenedor = document.getElementById('galeria-renders');
+            contenedor.innerHTML = '';
+
+            Object.values(tiendaDatos).forEach(faccion => {
+                const faccionDesbloqueada = perfilJugador.facciones_desbloqueadas.includes(faccion.id);
+                const tituloExtra = faccionDesbloqueada ? `<span class="estado-desbloqueado">(¡Desbloqueado! ✨)</span>` : '';
+
+                let htmlFilas = `
+                    <div class="fila-faccion ${faccion.id}">
+                        <h2 class="titulo-faccion">${faccion.nombre} ${tituloExtra}</h2>
+                        <div class="piezas-grid">
+                `;
+
+                faccion.piezas.forEach(pieza => {
+                    const comprada = perfilJugador.personajes_comprados.includes(pieza.id);
+                    const claseCard = comprada ? 'pieza-card' : 'pieza-card pieza-bloqueada';
+                    
+                    htmlFilas += `
+                        <div class="${claseCard}" onclick="abrirModal('${faccion.id}', '${pieza.id}')">
+                            <img src="${pieza.img}" alt="${pieza.nombre}" class="pieza-img" 
+                                onerror="this.src='${pieza.img.replace('.png', '.PNG')}'">
+                            <span class="pieza-nombre">${pieza.nombre}</span>
+                        </div>
+                    `;
+                });
+
+                htmlFilas += `</div></div>`;
+                contenedor.innerHTML += htmlFilas;
+            });
+        }
+
+        function abrirModal(faccionId, piezaId) {
+            const faccion = tiendaDatos[faccionId];
+            const pieza = faccion.piezas.find(p => p.id === piezaId);
+            const yaComprada = perfilJugador.personajes_comprados.includes(pieza.id);
+            const tieneMonedas = perfilJugador.monedas >= faccion.precio;
+
+            piezaSeleccionada = { faccionId, pieza, precio: faccion.precio };
+
+            document.getElementById('modal-titulo').innerText = `${faccion.nombre} - ${pieza.nombre}`;
+            document.getElementById('modal-img').src = pieza.img;
+            
+            const btnComprar = document.getElementById('btn-comprar-accion');
+            const modalEstado = document.getElementById('modal-estado');
+            const modalPrecio = document.getElementById('modal-precio');
+
+            if (yaComprada) {
+                modalEstado.innerHTML = `<span style="color:#2ecc71; font-weight:bold;">¡Ya tienes esta pieza!</span>`;
+                modalPrecio.style.display = 'none';
+                btnComprar.style.display = 'none';
+            } else {
+                modalEstado.innerHTML = '';
+                modalPrecio.style.display = 'block';
+                modalPrecio.innerText = `🪙 ${faccion.precio}`;
+                btnComprar.style.display = 'inline-block';
+                
+                if (!tieneMonedas) {
+                    btnComprar.disabled = true;
+                    btnComprar.innerText = 'Monedas Insuficientes';
+                } else {
+                    btnComprar.disabled = false;
+                    btnComprar.innerText = 'Comprar';
+                    btnComprar.onclick = realizarCompra;
+                }
+            }
+
+            document.getElementById('modal-overlay').style.display = 'flex';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+            piezaSeleccionada = null;
+        }
+
+        async function realizarCompra() {
+            if (!piezaSeleccionada) return;
+            const { faccionId, pieza, precio } = piezaSeleccionada;
+
+            document.getElementById('btn-comprar-accion').innerText = 'Procesando...';
+            document.getElementById('btn-comprar-accion').disabled = true;
+
+            // Transacción local
+            perfilJugador.monedas -= precio;
+            perfilJugador.personajes_comprados.push(pieza.id);
+
+            // Verificar si completó la facción
+            const faccionObj = tiendaDatos[faccionId];
+            const todasCompradas = faccionObj.piezas.every(p => 
+                perfilJugador.personajes_comprados.includes(p.id)
+            );
+
+            let alertaFaccion = false;
+            if (todasCompradas && !perfilJugador.facciones_desbloqueadas.includes(faccionId)) {
+                perfilJugador.facciones_desbloqueadas.push(faccionId);
+                alertaFaccion = true;
+            }
+
+            // Subir a la DB
+            const { error } = await window.clienteSupabase
+                .from('perfiles')
+                .update({ 
+                    monedas: perfilJugador.monedas,
+                    personajes_comprados: perfilJugador.personajes_comprados,
+                    facciones_desbloqueadas: perfilJugador.facciones_desbloqueadas
+                })
+                .eq('id', perfilJugador.id);
+
+            if (error) {
+                alert("Hubo un error al procesar tu compra en la base de datos.");
+                // Revertimos localmente si falla
+                perfilJugador.monedas += precio;
+                perfilJugador.personajes_comprados.pop();
+                if (alertaFaccion) perfilJugador.facciones_desbloqueadas.pop();
+            } else {
+                if (alertaFaccion) {
+                    alert(`¡FELICITACIONES! Has comprado todas las piezas y desbloqueado la facción: ${faccionObj.nombre.toUpperCase()}`);
+                }
+                cerrarModal();
+                actualizarUI();
+                // Actualizar localStorage para mantener sincronía inmediata con el index
+                localStorage.setItem('legados_estado', JSON.stringify(perfilJugador));
+            }
+        }
+
+        // Inicializar
+        window.onload = verificarSesion;
+    </script>
+</body>
+</html>

@@ -17,21 +17,17 @@
         }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; position: relative; }
         
-        /* Indicador sutil de conectados */
         .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #7f8c8d; display: flex; align-items: center; gap: 5px; }
         .dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
 
         .logo { font-size: 2rem; font-weight: 900; letter-spacing: 4px; color: #fff; margin: 30px 0 10px 0; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
-        /* Pantalla Login */
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; }
         .btn-google { background: #ea4335; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s; }
         .btn-google:hover { background: #c0392b; }
 
-        /* Pantalla Principal (Oculta hasta loguear) */
         #main-screen { display: none; width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
 
-        /* Estado del Jugador */
         .player-status { background: var(--panel); width: 100%; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; }
         .player-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: #fff; }
         .stats-row { display: flex; gap: 20px; }
@@ -39,7 +35,6 @@
         .stat-elo { color: var(--elo); }
         .stat-gold { color: var(--gold); }
 
-        /* Facciones */
         .facciones-container { display: flex; gap: 15px; margin-bottom: 25px; }
         .circulo-faccion { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.3s; }
         .faccion-humanos { background: var(--humanos); }
@@ -48,7 +43,6 @@
         .faccion-coloso { background: var(--coloso); }
         .bloqueada { filter: grayscale(100%) opacity(0.3); border: 2px dashed #666; background: #222 !important; box-shadow: none; }
 
-        /* Botones Menú */
         .menu-btn { width: 100%; padding: 14px; margin: 6px 0; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; background: #2c3e50; color: white; }
         .menu-btn:hover { background: #34495e; }
         
@@ -61,7 +55,6 @@
         .btn-tienda:hover { background: #2ecc71; }
 
         .reward { font-size: 0.9rem; color: var(--gold); background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 10px; display: flex; align-items: center; gap: 4px; }
-        
         .btn-logout { margin-top: 20px; background: transparent; border: 1px solid #c0392b; color: #c0392b; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
@@ -84,8 +77,6 @@
 
     <!-- PANTALLA PRINCIPAL -->
     <div id="main-screen">
-        
-        <!-- Dashboard Jugador -->
         <div class="player-status">
             <div class="player-name" id="ui-nombre">Cargando...</div>
             <div class="stats-row">
@@ -94,7 +85,6 @@
             </div>
         </div>
 
-        <!-- Círculos de Facciones -->
         <div class="facciones-container">
             <div id="fac-humanos" class="circulo-faccion faccion-humanos bloqueada" title="Humanos">H</div>
             <div id="fac-magos" class="circulo-faccion faccion-magos bloqueada" title="Magos">M</div>
@@ -102,26 +92,25 @@
             <div id="fac-coloso" class="circulo-faccion faccion-coloso bloqueada" title="Coloso">C</div>
         </div>
 
-        <!-- Botones de Menú Actualizados -->
         <button class="menu-btn btn-tienda" onclick="irA('galeria.html')">
             <span>🛒 Conseguir Facciones</span>
         </button>
 
-        <button class="menu-btn btn-destacado btn-historia" onclick="irA('seleccion_historia.html')">
+        <button class="menu-btn btn-destacado btn-historia" onclick="irA('seleccion_historia.html', 'historia')">
             <span>📖 Modo Historia</span>
-            <div class="reward">🪙 +200</div>
+            <div class="reward">🪙 +10</div>
         </button>
 
-        <button class="menu-btn btn-destacado btn-online" onclick="irA('seleccion_multi.html')">
+        <button class="menu-btn btn-destacado btn-online" onclick="irA('seleccion_multi.html', 'online')">
             <span>🌐 Jugar Online</span>
             <div class="reward">🪙 +25</div>
         </button>
 
-        <button class="menu-btn" onclick="irA('seleccion_1vs1.html')">
+        <button class="menu-btn" onclick="irA('seleccion_1vs1.html', '1vs1')">
             <span>⚔️ 1vs1 Local</span>
         </button>
 
-        <button class="menu-btn" onclick="irA('seleccion_cpu.html')">
+        <button class="menu-btn" onclick="irA('seleccion_cpu.html', 'cpu')">
             <span>🤖 Entrenamiento Vs CPU</span>
             <div class="reward">🪙 +5</div>
         </button>
@@ -130,17 +119,8 @@
     </div>
 
     <script>
-        // Variables globales para usar en otros HTML
-        window.estadoJugador = {
-            id: null,
-            nombre: 'Jugador',
-            monedas: 0,
-            elo: 1000,
-            facciones_desbloqueadas: [],
-            personajes_comprados: []
-        };
+        window.estadoJugador = { id: null, nombre: 'Jugador', monedas: 0, elo: 1000, facciones_desbloqueadas: [], personajes_comprados: [] };
 
-        // --- FUNCIONES DE AUTENTICACIÓN ---
         async function iniciarSesion() {
             const { data, error } = await window.clienteSupabase.auth.signInWithOAuth({
                 provider: 'google',
@@ -155,16 +135,13 @@
             window.location.reload();
         }
 
-        // --- CARGAR DATOS AL INICIO ---
         async function verificarSesion() {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-screen').style.display = 'none';
 
-            // Verificamos si existe la sesión en Supabase
             const { data: { session } } = await window.clienteSupabase.auth.getSession();
 
             if (session) {
-                // Si hay sesión, buscamos el perfil
                 const { data: perfil, error } = await window.clienteSupabase
                     .from('perfiles')
                     .select('*')
@@ -178,25 +155,29 @@
                     document.getElementById('main-screen').style.display = 'flex';
                 }
             } else {
-                // Si no hay sesión, mostramos el login
                 document.getElementById('login-screen').style.display = 'flex';
             }
         }
 
-        // --- ACTUALIZAR UI ---
         function actualizarInterfaz(perfil) {
             document.getElementById('ui-nombre').innerText = perfil.nombre;
             document.getElementById('ui-elo').innerText = perfil.elo;
             document.getElementById('ui-oro').innerText = perfil.monedas;
 
-            const facciones = perfil.facciones_desbloqueadas;
+            const facciones = perfil.facciones_facciones_desbloqueadas || perfil.facciones_desbloqueadas || [];
             if (facciones.includes('humanos')) document.getElementById('fac-humanos').classList.remove('bloqueada');
             if (facciones.includes('magos')) document.getElementById('fac-magos').classList.remove('bloqueada');
             if (facciones.includes('elfos')) document.getElementById('fac-elfos').classList.remove('bloqueada');
             if (facciones.includes('coloso')) document.getElementById('fac-coloso').classList.remove('bloqueada');
         }
 
-        function irA(url) {
+        // AQUÍ GUARDAMOS EL MODO DE JUEGO EN MEMORIA ANTES DE CAMBIAR DE PÁGINA
+        function irA(url, modo) {
+            if (modo) {
+                localStorage.setItem('modoJuego', modo);
+            } else {
+                localStorage.removeItem('modoJuego');
+            }
             window.location.href = url;
         }
 

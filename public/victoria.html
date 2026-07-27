@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>¡Victoria! - Legado Asimétrico</title>
-    <!-- Importamos una fuente épica para el texto de victoria -->
+    <title>¡Fin de Partida! - Legado Asimétrico</title>
+    
+    <!-- Librería de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -15,10 +19,8 @@
             background-image: radial-gradient(circle at center, #1a1d24 0%, #0b0c10 100%);
         }
         
-        /* Ajuste responsivo del logo */
         .logo { max-width: 80%; width: 300px; margin-bottom: 10px; height: auto; }
         
-        /* El tamaño de la fuente se adapta entre 2.5rem (celular) y 4rem (PC) */
         .titulo-victoria {
             font-family: 'Cinzel', serif;
             font-size: clamp(2.5rem, 8vw, 4rem);
@@ -30,14 +32,19 @@
 
         .subtitulo {
             font-size: clamp(1.2rem, 4vw, 1.5rem); 
-            color: #f39c12; margin-bottom: 20px;
+            color: #f39c12; margin-bottom: 10px;
             padding: 0 10px;
         }
 
-        /* Contenedor adaptable que mantiene la proporción cuadrada */
+        .recompensa-box {
+            background: #1a1d24; border: 2px solid #f1c40f; border-radius: 10px;
+            padding: 12px 20px; margin-bottom: 20px; font-size: 1.1rem; font-weight: bold;
+            color: #f1c40f; box-shadow: 0 0 15px rgba(241, 196, 15, 0.2);
+        }
+
         .contenedor-imagen {
             width: 90%; 
-            max-width: 400px;
+            max-width: 350px;
             aspect-ratio: 1 / 1;
             background-color: #0b0c10;
             border: 3px solid #c5a059; border-radius: 12px;
@@ -60,41 +67,109 @@
 </head>
 <body>
 
-    <!-- Extensión corregida a minúsculas -->
     <img src="LogoSolo.png" alt="Legado Asymmetric Chess" class="logo">
     
-    <h1 class="titulo-victoria">¡VICTORIA!</h1>
+    <h1 class="titulo-victoria">¡FIN DE PARTIDA!</h1>
     <div class="subtitulo" id="texto-ganador">Cargando resultado...</div>
+    
+    <div class="recompensa-box" id="texto-recompensa">Calculando recompensas...</div>
 
     <div class="contenedor-imagen">
         <img id="img-ganador" src="" alt="Faccion Ganadora">
     </div>
 
     <div class="botones">
-        <a href="index.html" class="btn btn-menu">Volver al Menú</a>
+        <a href="index.html" class="btn btn-menu">Volver al Menú Principal</a>
     </div>
 
     <script>
-        let datosPartida = null;
-
-        window.onload = function() {
-            // Leemos los datos que nos mandó el tablero
+        window.onload = async function() {
+            // 1. Recuperar datos del tablero (quién ganó y su imagen)
             const datosGuardados = localStorage.getItem('resultadoPartida');
+            // 2. Recuperar el modo de juego elegido guardado desde el menú principal
+            const modoJuego = localStorage.getItem('modoJuego') || '1vs1';
+
+            let ganador = 1; // Por defecto Jugador 1
             if (datosGuardados) {
-                datosPartida = JSON.parse(datosGuardados);
+                const datosPartida = JSON.parse(datosGuardados);
+                ganador = datosPartida.ganador || 1;
                 
-                // Actualizamos el texto
                 document.getElementById('texto-ganador').innerText = 
-                    `¡EL JUGADOR ${datosPartida.ganador} HA DOMINADO EL CAMPO DE BATALLA!`;
+                    `¡EL JUGADOR ${ganador} HA DOMINADO EL CAMPO DE BATALLA!`;
                 
-                // Forzamos que la extensión enviada pase de .PNG (si lo estuviera) a .png
-                let rutaCorregida = datosPartida.imgGanador.replace('.PNG', '.png');
-                
-                // Actualizamos la imagen con la ruta corregida
-                document.getElementById('img-ganador').src = rutaCorregida;
-                
+                if (datosPartida.imgGanador) {
+                    let rutaCorregida = datosPartida.imgGanador.replace('.PNG', '.png');
+                    document.getElementById('img-ganador').src = rutaCorregida;
+                }
             } else {
-                document.getElementById('texto-ganador').innerText = "No se encontraron datos de la partida.";
+                document.getElementById('texto-ganador').innerText = "Partida finalizada.";
+            }
+
+            // 3. Procesar recompensas y conectar con Supabase
+            try {
+                const { data: { session } } = await window.clienteSupabase.auth.getSession();
+                
+                if (session) {
+                    // Consultar perfil actual del usuario logueado
+                    const { data: perfil, error } = await window.clienteSupabase
+                        .from('perfiles')
+                        .select('*')
+                        .eq('id', session.user.id)
+                        .single();
+
+                    if (perfil) {
+                        let monedasActuales = perfil.monedas || 0;
+                        let eloActual = perfil.elo || 1000;
+                        let mensajeRecompensa = "";
+
+                        // REGLAS SEGÚN EL MODO DE JUEGO Y QUIÉN GANÓ
+                        if (modoJuego === 'cpu') {
+                            // Entrenamiento vs CPU (gana el Jugador 1 / local)
+                            if (ganador == 1) {
+                                monedasActuales += 5;
+                                mensajeRecompensa = "🪙 ¡Victoria en Entrenamiento! Has ganado +5 monedas.";
+                            } else {
+                                mensajeRecompensa = "🤖 Derrota ante la CPU. ¡A seguir practicando!";
+                            }
+                        } 
+                        else if (modoJuego === 'online') {
+                            // Jugar Online (otorga 25 oro / 20 ELO al ganador, 5 oro / -20 ELO al perdedor)
+                            if (ganador == 1) {
+                                monedasActuales += 25;
+                                eloActual += 20;
+                                mensajeRecompensa = "🌐 ¡Victoria Online! +25 🪙 y +20 🏆 ELO";
+                            } else {
+                                monedasActuales += 5;
+                                eloActual = Math.max(0, eloActual - 20); // Evita ELO negativo
+                                mensajeRecompensa = "🌐 Derrota Online. +5 🪙 de consolación y -20 🏆 ELO";
+                            }
+                        } 
+                        else if (modoJuego === 'historia') {
+                            // Modo Historia (+10 monedas por nivel superado)
+                            monedasActuales += 10;
+                            mensajeRecompensa = "📖 ¡Nivel del Modo Historia superado! +10 🪙";
+                        } 
+                        else {
+                            // 1vs1 Local u otros
+                            mensajeRecompensa = "⚔️ Partida Local 1vs1 finalizada.";
+                        }
+
+                        // Guardar cambios en la base de datos de Supabase
+                        await window.clienteSupabase
+                            .from('perfiles')
+                            .update({ monedas: monedasActuales, elo: eloActual })
+                            .eq('id', session.user.id);
+
+                        document.getElementById('texto-recompensa').innerText = mensajeRecompensa;
+                    } else {
+                        document.getElementById('texto-recompensa').innerText = "Partida finalizada (Perfil no encontrado).";
+                    }
+                } else {
+                    document.getElementById('texto-recompensa').innerText = "Inicia sesión en el menú para registrar recompensas y ELO.";
+                }
+            } catch (err) {
+                console.error("Error al actualizar recompensas en Supabase:", err);
+                document.getElementById('texto-recompensa').innerText = "Partida finalizada con éxito.";
             }
         }
     </script>

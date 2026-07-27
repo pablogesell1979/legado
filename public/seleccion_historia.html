@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modo Historia - Legados</title>
+    
+    <!-- Fuente épica para títulos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        
+        body {
+            background: #0b0c10 radial-gradient(circle at center, #1f132b 0%, #0b0c10 100%);
+            color: #c5c6c7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; padding: 15px;
+        }
+
+        .contenedor {
+            background-color: #15131c; padding: 25px 20px; border-radius: 14px;
+            box-shadow: 0 10px 35px rgba(142, 68, 173, 0.3); border: 2px solid #8e44ad;
+            text-align: center; width: 100%; max-width: 500px; /* Reducido para una sola columna */
+            position: relative; overflow: hidden;
+        }
+
+        .logo { 
+            width: 100%; max-width: 300px; height: auto; margin-bottom: 15px; 
+        }
+        
+        /* BANNER DE NIVEL EN MODO HISTORIA */
+        .banner-historia {
+            background: linear-gradient(135deg, #2c163b 0%, #150d1f 100%);
+            border: 2px solid #f1c40f;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 15px rgba(241, 196, 15, 0.2);
+        }
+
+        .titulo-historia {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: #f1c40f;
+            margin: 0 0 5px 0;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .subtitulo-nivel {
+            font-family: 'Cinzel', serif;
+            font-size: 1.3rem;
+            color: #e8e8e8;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .barra-progreso-contenedor {
+            width: 100%;
+            height: 12px;
+            background-color: #0b0c10;
+            border-radius: 6px;
+            border: 1px solid #8e44ad;
+            overflow: hidden;
+        }
+
+        .barra-progreso-fill {
+            height: 100%;
+            width: 5%;
+            background: linear-gradient(90deg, #8e44ad, #f1c40f);
+            transition: width 0.5s ease-in-out;
+            box-shadow: 0 0 8px #f1c40f;
+        }
+
+        .area-seleccion { 
+            display: flex; justify-content: center; margin-bottom: 25px; 
+        }
+
+        .columna { 
+            display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 350px;
+        }
+        
+        .etiqueta-jugador {
+            font-weight: bold; color: #f1c40f; font-size: 1rem;
+            background: rgba(142, 68, 173, 0.2); padding: 8px 10px;
+            border-radius: 6px; border: 1px solid #8e44ad;
+        }
+
+        .vista-previa { 
+            width: 100%; height: 260px; background-color: #0b0c10; 
+            border: 2px solid #8e44ad; border-radius: 8px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .vista-previa img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        select {
+            width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #8e44ad;
+            background-color: #0b0c10; color: #fff; font-size: 1rem; cursor: pointer;
+            outline: none; transition: 0.2s; text-align: center; font-weight: bold;
+        }
+        select:focus { border-color: #f1c40f; box-shadow: 0 0 8px rgba(241, 196, 15, 0.4); }
+        
+        .info-faccion {
+            background-color: #110e17; border: 1px solid #4a2761; border-radius: 6px;
+            padding: 12px; font-size: 0.85rem; text-align: left; min-height: 110px;
+            color: #bdc3c7; display: flex; flex-direction: column; gap: 6px;
+        }
+        .info-faccion strong { color: #f1c40f; }
+        .info-derrota { color: #e74c3c !important; font-weight: bold; }
+
+        .btn-iniciar {
+            width: 100%; padding: 16px; font-size: 1.3rem; margin-top: 10px;
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            color: white; border: none; border-radius: 8px;
+            cursor: pointer; font-weight: bold; font-family: 'Cinzel', serif;
+            letter-spacing: 1px; transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(142, 68, 173, 0.5);
+            border: 1px solid #f1c40f;
+        }
+        .btn-iniciar:hover { 
+            background: linear-gradient(135deg, #9b59b6 0%, #a569bd 100%);
+            transform: translateY(-2px); box-shadow: 0 6px 20px rgba(241, 196, 15, 0.4);
+        }
+
+        .btn-volver {
+            background: transparent; border: 1px solid #7f8c8d; color: #95a5a6;
+            padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 15px;
+            transition: 0.2s; font-size: 0.9rem;
+        }
+        .btn-volver:hover { color: white; border-color: white; }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; justify-content: flex-start; }
+            .contenedor { padding: 15px; }
+            .logo { max-width: 220px; }
+            .titulo-historia { font-size: 1.4rem; }
+            .subtitulo-nivel { font-size: 1.1rem; }
+            .vista-previa { height: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor">
+        <img src="LogoSolo.PNG" alt="Legado Asymmetric Chess" class="logo" onerror="corregirExtension(this)">
+
+        <!-- HEADER DEL MODO HISTORIA Y NIVEL -->
+        <div class="banner-historia">
+            <div class="titulo-historia">⚔️ MODO HISTORIA ⚔️</div>
+            <div class="subtitulo-nivel">Nivel Actual: <span id="lbl-nivel">1</span> / 20</div>
+            <div class="barra-progreso-contenedor">
+                <div id="barra-progreso" class="barra-progreso-fill"></div>
+            </div>
+        </div>
+
+        <div class="area-seleccion">
+            <!-- JUGADOR 1: El usuario elige de sus facciones desbloqueadas -->
+            <div class="columna">
+                <div class="etiqueta-jugador">👤 Selecciona tu Facción</div>
+                <div class="vista-previa"><img id="img-j1" src="SelectMago1.PNG" alt="J1" onerror="corregirExtension(this)"></div>
+                <select id="fac-j1" onchange="actualizarImagen()">
+                    <!-- Carga dinámicamente según facciones desbloqueadas -->
+                </select>
+                <div class="info-faccion" id="info-j1"></div>
+            </div>
+        </div>
+
+        <button class="btn-iniciar" onclick="iniciarBatallaHistoria()">Ir a la historia</button>
+        <button class="btn-volver" onclick="window.location.href='index.html'">⬅ Volver al Menú Principal</button>
+    </div>
+
+    <script>
+        const datosFacciones = {
+            'Mago': {
+                pros: "Pueden lanzar conjuros poderosos, crear muros y teletransportarse.",
+                contras: "Tienen poca movilidad base y son pocas piezas.",
+                derrota: "Pierden al morir los Grandes Magos (Fuego y Hielo)."
+            },
+            'Elfo': {
+                pros: "Alta movilidad, ataques a distancia y pueden revivir aliados caídos.",
+                contras: "Dependen de la posición de sus árboles para protegerse.",
+                derrota: "Pierden si su Árbol Sagrado es destruido."
+            },
+            'Humano': {
+                pros: "Evolucionan cada 3 turnos, volviéndose extremadamente poderosos.",
+                contras: "Inician muy débiles (movimiento de 1 casilla) y vulnerables.",
+                derrota: "Pierden si el Comandante muere."
+            },
+            'Coloso': {
+                pros: "Mucha movilidad, su torso no puede ser destruido y lanza piedras.",
+                contras: "Movimiento rígido, requiere que sus partes se mantengan juntas.",
+                derrota: "Pierde cuando eliminan todas sus extremidades."
+            }
+        };
+
+        let nivelActualJugador = 1;
+
+        function corregirExtension(img) {
+            if (!img.getAttribute('reintentado')) {
+                img.setAttribute('reintentado', '1');
+                if (img.src.endsWith('.PNG')) {
+                    img.src = img.src.replace('.PNG', '.png');
+                } else if (img.src.endsWith('.png')) {
+                    img.src = img.src.replace('.png', '.PNG');
+                } else if (img.src.endsWith('.JPG')) {
+                    img.src = img.src.replace('.JPG', '.jpg');
+                } else if (img.src.endsWith('.jpg')) {
+                    img.src = img.src.replace('.jpg', '.JPG');
+                }
+            } else if (img.getAttribute('reintentado') === '1') {
+                img.setAttribute('reintentado', '2');
+                let partes = img.src.split('/');
+                let archivo = partes.pop().toLowerCase();
+                img.src = partes.join('/') + '/' + archivo;
+            }
+        }
+
+        async function cargarDatosUsuario() {
+            let perfil = null;
+
+            // 1. Cargar desde localStorage
+            const localData = localStorage.getItem('legados_estado');
+            if (localData) {
+                try { perfil = JSON.parse(localData); } catch (e) {}
+            }
+
+            // 2. Cargar de Supabase si hay sesión activa
+            if (window.clienteSupabase) {
+                try {
+                    const { data: { session } } = await window.clienteSupabase.auth.getSession();
+                    if (session) {
+                        const { data: dbPerfil } = await window.clienteSupabase
+                            .from('perfiles')
+                            .select('*')
+                            .eq('id', session.user.id)
+                            .single();
+                        if (dbPerfil) perfil = dbPerfil;
+                    }
+                } catch (e) {
+                    console.log("Modo offline o sin conexión a Supabase.");
+                }
+            }
+
+            // 3. Establecer nivel actual (entre 1 y 20)
+            if (perfil && perfil.nivel_historia) {
+                nivelActualJugador = Math.min(Math.max(parseInt(perfil.nivel_historia) || 1, 1), 20);
+            }
+
+            document.getElementById('lbl-nivel').innerText = nivelActualJugador;
+            
+            // Actualizar porcentaje de la barra de progreso
+            const porcentaje = (nivelActualJugador / 20) * 100;
+            document.getElementById('barra-progreso').style.width = `${porcentaje}%`;
+
+            // 4. Cargar facciones desbloqueadas
+            cargarFaccionesDesbloqueadas(perfil);
+        }
+
+        function cargarFaccionesDesbloqueadas(perfil) {
+            const selectJ1 = document.getElementById('fac-j1');
+            selectJ1.innerHTML = '';
+
+            let unlockedKeys = [];
+
+            if (perfil) {
+                unlockedKeys = (perfil.facciones_desbloqueadas || perfil.facciones_facciones_desbloqueadas || []).map(f => f.toLowerCase());
+            }
+
+            if (unlockedKeys.length === 0) {
+                unlockedKeys = ['humano'];
+            }
+
+            const mapaFacciones = [
+                { key: 'humano', label: 'Humanos', value: 'Humano' },
+                { key: 'humanos', label: 'Humanos', value: 'Humano' },
+                { key: 'mago', label: 'Magos', value: 'Mago' },
+                { key: 'magos', label: 'Magos', value: 'Mago' },
+                { key: 'elfo', label: 'Elfos', value: 'Elfo' },
+                { key: 'elfos', label: 'Elfos', value: 'Elfo' },
+                { key: 'coloso', label: 'Colosos', value: 'Coloso' },
+                { key: 'colosos', label: 'Colosos', value: 'Coloso' }
+            ];
+
+            let agregados = new Set();
+
+            mapaFacciones.forEach(f => {
+                if (unlockedKeys.includes(f.key) && !agregados.has(f.value)) {
+                    const opt = document.createElement('option');
+                    opt.value = f.value;
+                    opt.textContent = f.label;
+                    selectJ1.appendChild(opt);
+                    agregados.add(f.value);
+                }
+            });
+
+            if (selectJ1.options.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = 'Humano';
+                opt.textContent = 'Humanos';
+                selectJ1.appendChild(opt);
+            }
+
+            actualizarImagen();
+        }
+
+        function actualizarImagen() {
+            const selector = document.getElementById('fac-j1');
+            const imagen = document.getElementById('img-j1');
+            const panelInfo = document.getElementById('info-j1');
+            const faccion = selector.value;
+            
+            imagen.removeAttribute('reintentado');
+            // Mantenemos el '1' al final de la imagen ya que es el Jugador 1
+            imagen.src = `Select${faccion}1.PNG`;
+
+            const info = datosFacciones[faccion];
+            if (info) {
+                panelInfo.innerHTML = `
+                    <div><strong>Pros:</strong> ${info.pros}</div>
+                    <div><strong>Contras:</strong> ${info.contras}</div>
+                    <div class="info-derrota">Derrota: ${info.derrota}</div>
+                `;
+            }
+        }
+
+        function iniciarBatallaHistoria() {
+            const j1 = document.getElementById('fac-j1').value.toLowerCase() + 's';
+
+            const config = { 
+                jugador1: j1,
+                modoJuego: 'historia',
+                nivelHistoria: nivelActualJugador
+            };
+            
+            localStorage.setItem('configuracionPartida', JSON.stringify(config));
+            localStorage.setItem('modoJuego', 'historia');
+            
+            // Redirige directamente al tablero exclusivo del modo historia
+            window.location.href = 'tablero_historia.html';
+        }
+
+        window.onload = async function() {
+            await cargarDatosUsuario();
+        };
+    </script>
+</body>
+</html>
