@@ -82,13 +82,13 @@
         <a href="index.html" class="btn btn-menu">Volver al Menú Principal</a>
     </div>
 
-<script>
+    <script>
         window.onload = async function() {
             const datosGuardados = localStorage.getItem('resultadoPartida');
             const modoJuego = localStorage.getItem('modoJuego') || '1vs1';
             
-            // Leemos el rol que guardamos en la selección ('1' o '2')
-            const miRolLocal = parseInt(localStorage.getItem('jugador_rol_partida') || '1');
+            // Leemos el rol que guardamos en la pantalla de selección (1 o 2)
+            const miRolLocal = parseInt(localStorage.getItem('legado_rol_navegador') || '1');
 
             let ganadorPartida = 1; 
             let soyElGanador = false;
@@ -98,17 +98,20 @@
                 ganadorPartida = datosPartida.ganador || 1;
                 
                 if (modoJuego === 'online') {
-                    // Comparamos el ganador de la partida con nuestro rol local
+                    // Magia aquí: Comparamos el ganador del tablero con nuestro rol
                     soyElGanador = (ganadorPartida === miRolLocal);
 
                     if (soyElGanador) {
                         document.getElementById('texto-ganador').innerText = "¡VICTORIA! HAS DOMINADO EL CAMPO DE BATALLA";
+                        document.getElementById('texto-ganador').style.color = "#2ecc71"; // Verde
                     } else {
                         document.getElementById('texto-ganador').innerText = "DERROTA. TUS TROPAS HAN CAÍDO";
+                        document.getElementById('texto-ganador').style.color = "#e74c3c"; // Rojo
                     }
                 } else {
                     soyElGanador = (ganadorPartida === 1);
                     document.getElementById('texto-ganador').innerText = `¡EL JUGADOR ${ganadorPartida} HA DOMINADO EL CAMPO DE BATALLA!`;
+                    document.getElementById('texto-ganador').style.color = "#f39c12"; // Naranja default
                 }
                 
                 if (datosPartida.imgGanador) {
@@ -119,7 +122,7 @@
                 document.getElementById('texto-ganador').innerText = "Partida finalizada.";
             }
 
-            // Procesar recompensas y ELO en Supabase de forma independiente
+            // Procesar recompensas y ELO en Supabase
             try {
                 const { data: { session } } = await window.clienteSupabase.auth.getSession();
                 
@@ -136,15 +139,7 @@
                         let mensajeRecompensa = "";
                         let datosUpdate = { monedas: monedasActuales };
 
-                        if (modoJuego === 'cpu') {
-                            if (ganadorPartida == 1) {
-                                monedasActuales += 5;
-                                mensajeRecompensa = "🪙 ¡Victoria en Entrenamiento! Has ganado +5 monedas.";
-                            } else {
-                                mensajeRecompensa = "🤖 Derrota ante la CPU. ¡A seguir practicando!";
-                            }
-                        } 
-                        else if (modoJuego === 'online') {
+                        if (modoJuego === 'online') {
                             if (soyElGanador) {
                                 monedasActuales += 25;
                                 eloActual += 20;
@@ -155,6 +150,14 @@
                                 mensajeRecompensa = "🌐 Derrota Online. +5 🪙 de consolación y -20 🏆 ELO";
                             }
                             datosUpdate.elo = eloActual;
+                        } 
+                        else if (modoJuego === 'cpu') {
+                            if (ganadorPartida == 1) {
+                                monedasActuales += 5;
+                                mensajeRecompensa = "🪙 ¡Victoria en Entrenamiento! Has ganado +5 monedas.";
+                            } else {
+                                mensajeRecompensa = "🤖 Derrota ante la CPU. ¡A seguir practicando!";
+                            }
                         } 
                         else if (modoJuego === 'historia') {
                             monedasActuales += 10;
@@ -180,9 +183,11 @@
                 console.error("Error al actualizar recompensas:", err);
                 document.getElementById('texto-recompensa').innerText = "Partida finalizada con éxito.";
             } finally {
+                // Limpieza final de variables para que no queden basuras en la próxima partida
                 localStorage.removeItem('modoJuego');
                 localStorage.removeItem('configuracionOnline');
-                localStorage.removeItem('jugador_rol_partida');
+                localStorage.removeItem('legado_rol_navegador');
+                localStorage.removeItem('resultadoPartida');
             }
         }
     </script>

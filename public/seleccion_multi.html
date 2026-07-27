@@ -206,13 +206,12 @@
                     if (faccionesServer.rol) configOnlinePendiente.rol = faccionesServer.rol;
                 }
                 
-                // Mantenemos intacto el guardado original de configuración online
                 localStorage.setItem('configuracionOnline', JSON.stringify(configOnlinePendiente));
                 localStorage.setItem('modoJuego', 'online');
 
-                // NUEVO Y SEGURO: Guardamos el rol exacto (1 si es anfitrión, 2 si es invitado)
-                const numeroJugador = (configOnlinePendiente.rol === 'anfitrion') ? 1 : 2;
-                localStorage.setItem('jugador_rol_partida', numeroJugador.toString());
+                // NUEVO: Guardamos el rol de este navegador con un nombre único para evitar crasheos
+                const miNumero = (configOnlinePendiente.rol === 'anfitrion') ? 1 : 2;
+                localStorage.setItem('legado_rol_navegador', miNumero.toString());
 
                 window.location.href = 'tablero_multi.html';
             }
