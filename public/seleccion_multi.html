@@ -143,10 +143,24 @@
         };
 
         async function inicializarFacciones() {
+            // Temporizador de seguridad: Si Supabase no responde en 3.5 segundos, destraba el UI
+            const timeoutSeguridad = setTimeout(() => {
+                const pantallaCarga = document.getElementById('pantalla-carga');
+                if (pantallaCarga && pantallaCarga.style.display !== 'none') {
+                    console.warn("⚠️ Supabase tardó demasiado. Forzando liberación de interfaz.");
+                    pantallaCarga.style.display = 'none';
+                }
+            }, 3500);
+
             try {
+                if (!window.clienteSupabase || !window.clienteSupabase.auth) {
+                    throw new Error("Supabase aún no inicializado");
+                }
+
                 const { data: { session }, error: errorSesion } = await window.clienteSupabase.auth.getSession();
                 
                 if (!session) {
+                    clearTimeout(timeoutSeguridad);
                     alert("Debes iniciar sesión para jugar online.");
                     window.location.href = 'index.html';
                     return;
@@ -181,7 +195,6 @@
                     }
                 });
 
-                // Establecer por defecto "Humano" si está disponible
                 if (faccionesDesbloqueadas.includes('humanos')) {
                     selectFaccion.value = 'Humano';
                 }
@@ -190,10 +203,14 @@
             } catch (err) {
                 console.error("Error al cargar perfil de usuario:", err);
                 const selectFaccion = document.getElementById('mi-faccion');
-                selectFaccion.innerHTML = '<option value="Humano">Humanos</option>';
+                if (selectFaccion) {
+                    selectFaccion.innerHTML = '<option value="Humano">Humanos</option>';
+                }
                 actualizarImagen();
             } finally {
-                document.getElementById('pantalla-carga').style.display = 'none';
+                clearTimeout(timeoutSeguridad);
+                const pantallaCarga = document.getElementById('pantalla-carga');
+                if (pantallaCarga) pantallaCarga.style.display = 'none';
             }
         }
 
@@ -209,9 +226,22 @@
                 localStorage.setItem('configuracionOnline', JSON.stringify(configOnlinePendiente));
                 localStorage.setItem('modoJuego', 'online');
 
-                // NUEVO: Guardamos el rol de este navegador con un nombre único para evitar crasheos
-                const miNumero = (configOnlinePendiente.rol === 'anfitrion') ? 1 : 2;
-                localStorage.setItem('legado_rol_navegador', miNumero.toString());
+                // DETECCIÓN ROBUSTA DE ROL (Normaliza texto, minúsculas y variaciones del servidor)
+                let strRol = "";
+                if (faccionesServer && faccionesServer.rol) strRol = String(faccionesServer.rol).toLowerCase();
+                else if (configOnlinePendiente && configOnlinePendiente.rol) strRol = String(configOnlinePendiente.rol).toLowerCase();
+
+                const esJugador1 = (
+                    strRol.includes('anfitr') || 
+                    strRol.includes('crea') || 
+                    strRol.includes('host') || 
+                    strRol === '1' || 
+                    strRol === 'j1' || 
+                    strRol === 'jugador1'
+                );
+
+                const numeroJugador = esJugador1 ? 1 : 2;
+                localStorage.setItem('legado_rol_navegador', numeroJugador.toString());
 
                 window.location.href = 'tablero_multi.html';
             }
@@ -244,11 +274,13 @@
             const imagen = document.getElementById('img-mio');
             const panelInfo = document.getElementById('info-mio');
             
-            imagen.removeAttribute('reintentado');
-            imagen.src = `Select${faccion}1.PNG`;
+            if (imagen) {
+                imagen.removeAttribute('reintentado');
+                imagen.src = `Select${faccion}1.PNG`;
+            }
 
             const info = datosFacciones[faccion];
-            if (info) {
+            if (info && panelInfo) {
                 panelInfo.innerHTML = `
                     <div><strong>Pros:</strong> ${info.pros}</div>
                     <div><strong>Contras:</strong> ${info.contras}</div>
