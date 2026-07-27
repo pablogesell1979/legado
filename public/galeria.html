@@ -195,8 +195,8 @@
         <div class="monedas-display">🪙 <span id="ui-oro">0</span></div>
     </div>
 
-    <!-- Imagen obligatoria según instrucción del prompt -->
-    <img src="LogoSolo.jpg" alt="Legados" class="logo-img">
+    <!-- Logo con protección automática contra errores de mayúsculas/extensiones en GitHub -->
+    <img src="LogoSolo.jpg" alt="Legados" class="logo-img" onerror="corregirExtension(this)">
 
     <div class="facciones-container">
         <div id="fac-humanos" class="circulo-faccion faccion-humanos" title="Humanos (Desbloqueado por Defecto)">H</div>
@@ -213,7 +213,7 @@
     <div id="modal-overlay">
         <div class="modal-box">
             <h3 id="modal-titulo">Nombre Pieza</h3>
-            <img id="modal-img" src="" alt="Pieza" style="width:120px; height:120px; object-fit:contain; margin: 10px 0;">
+            <img id="modal-img" src="" alt="Pieza" style="width:120px; height:120px; object-fit:contain; margin: 10px 0;" onerror="corregirExtension(this)">
             <div id="modal-estado"></div>
             <div class="modal-precio" id="modal-precio">🪙 0</div>
             
@@ -261,6 +261,17 @@
             }
         };
 
+        // Función para prevenir problemas de mayúsculas/minúsculas y extensiones en GitHub Pages
+        function corregirExtension(img) {
+            if (!img.getAttribute('reintentado')) {
+                img.setAttribute('reintentado', '1');
+                if (img.src.endsWith('.PNG')) img.src = img.src.replace('.PNG', '.png');
+                else if (img.src.endsWith('.png')) img.src = img.src.replace('.png', '.PNG');
+                else if (img.src.endsWith('.JPG')) img.src = img.src.replace('.JPG', '.jpg');
+                else if (img.src.endsWith('.jpg')) img.src = img.src.replace('.jpg', '.JPG');
+            }
+        }
+
         async function verificarSesion() {
             const { data: { session }, error: errorSesion } = await window.clienteSupabase.auth.getSession();
             
@@ -282,7 +293,6 @@
                 perfilJugador.id = session.user.id;
                 perfilJugador.monedas = perfil.monedas || 0;
                 perfilJugador.personajes_comprados = perfil.personajes_comprados || [];
-                // Se valida la lógica de compatibilidad de nombre de columna de index.html
                 perfilJugador.facciones_desbloqueadas = perfil.facciones_facciones_desbloqueadas || perfil.facciones_desbloqueadas || ['humanos'];
                 
                 if(!perfilJugador.facciones_desbloqueadas.includes('humanos')){
@@ -335,7 +345,7 @@
                     htmlFilas += `
                         <div class="${claseCard}" onclick="abrirModal('${faccion.id}', '${pieza.id}')">
                             <img src="${pieza.img}" alt="${pieza.nombre}" class="pieza-img" 
-                                onerror="this.src='${pieza.img.replace('.png', '.PNG')}'">
+                                onerror="corregirExtension(this)">
                             <span class="pieza-nombre">${pieza.nombre}</span>
                         </div>
                     `;
@@ -355,7 +365,9 @@
             piezaSeleccionada = { faccionId, pieza, precio: faccion.precio };
 
             document.getElementById('modal-titulo').innerText = `${faccion.nombre} - ${pieza.nombre}`;
-            document.getElementById('modal-img').src = pieza.img;
+            const imgModal = document.getElementById('modal-img');
+            imgModal.removeAttribute('reintentado');
+            imgModal.src = pieza.img;
             
             const btnComprar = document.getElementById('btn-comprar-accion');
             const modalEstado = document.getElementById('modal-estado');
@@ -434,7 +446,7 @@
                 }
                 cerrarModal();
                 actualizarUI();
-                // Actualizar localStorage para mantener sincronía inmediata con el index
+                // Actualizar localStorage para mantener sincronía inmediata
                 localStorage.setItem('legados_estado', JSON.stringify(perfilJugador));
             }
         }
