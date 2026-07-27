@@ -84,36 +84,33 @@
 
 <script>
         window.onload = async function() {
-            // 1. Recuperar datos del tablero (quién ganó y su imagen)
             const datosGuardados = localStorage.getItem('resultadoPartida');
-            // 2. Recuperar la configuración online para saber qué jugador somos
-            const configOnline = JSON.parse(localStorage.getItem('configuracionOnline') || '{}');
-            // 3. Recuperar el modo de juego elegido
             const modoJuego = localStorage.getItem('modoJuego') || '1vs1';
+            
+            // Leemos directamente el rol que guardamos intacto (retorna '1' o '2')
+            const miRolLocal = parseInt(localStorage.getItem('jugador_rol_partida') || '1');
 
-            let ganador = 1; // Por defecto Jugador 1
-            let soyElGanador = true;
+            let ganadorPartida = 1; 
+            let soyElGanador = false;
 
             if (datosGuardados) {
                 const datosPartida = JSON.parse(datosGuardados);
-                ganador = datosPartida.ganador || 1;
+                ganadorPartida = datosPartida.ganador || 1;
                 
-                // Si es online, determinamos victoria/derrota comparando nuestro rol guardado con el ganador
-                if (modoJuego === 'online' && configOnline.miNumeroDeJugador) {
-                    soyElGanador = (ganador === configOnline.miNumeroDeJugador);
+                if (modoJuego === 'online') {
+                    // Si el ganador del tablero coincide con mi rol, gané. Si no, perdí.
+                    soyElGanador = (ganadorPartida === miRolLocal);
+
                     if (soyElGanador) {
-                        document.getElementById('texto-ganador').innerText = `¡VICTORIA! HAS DOMINADO EL CAMPO DE BATALLA`;
+                        document.getElementById('texto-ganador').innerText = "¡VICTORIA! HAS DOMINADO EL CAMPO DE BATALLA";
                     } else {
-                        document.getElementById('texto-ganador').innerText = `DERROTA. TUS TROPAS HAN CAÍDO`;
+                        document.getElementById('texto-ganador').innerText = "DERROTA. TUS TROPAS HAN CAÍDO";
                     }
                 } else {
-                    // Modo local / clásico 1vs1
-                    document.getElementById('texto-ganador').innerText = `¡EL JUGADOR ${ganador} HA DOMINADO EL CAMPO DE BATALLA!`;
+                    soyElGanador = (ganadorPartida === 1);
+                    document.getElementById('texto-ganador').innerText = `¡EL JUGADOR ${ganadorPartida} HA DOMINADO EL CAMPO DE BATALLA!`;
                 }
                 
-                // Mostrar la imagen de la facción ganadora correspondiente
-                let faccionGanadoraKey = (ganador === 1) ? configOnline.jugador1Faccion : configOnline.jugador2Faccion;
-                // Si viene mapeado desde el tablero, usamos la imagen del tablero o la deducimos
                 if (datosPartida.imgGanador) {
                     let rutaCorregida = datosPartida.imgGanador.replace('.PNG', '.png');
                     document.getElementById('img-ganador').src = rutaCorregida;
@@ -122,12 +119,12 @@
                 document.getElementById('texto-ganador').innerText = "Partida finalizada.";
             }
 
-            // 4. Procesar recompensas y conectar con Supabase
+            // Procesar recompensas en Supabase para el usuario que está logueado en este navegador
             try {
                 const { data: { session } } = await window.clienteSupabase.auth.getSession();
                 
                 if (session) {
-                    const { data: perfil, error } = await window.clienteSupabase
+                    const { data: perfil } = await window.clienteSupabase
                         .from('perfiles')
                         .select('*')
                         .eq('id', session.user.id)
@@ -140,7 +137,7 @@
                         let datosUpdate = { monedas: monedasActuales };
 
                         if (modoJuego === 'cpu') {
-                            if (ganador == 1) {
+                            if (ganadorPartida == 1) {
                                 monedasActuales += 5;
                                 mensajeRecompensa = "🪙 ¡Victoria en Entrenamiento! Has ganado +5 monedas.";
                             } else {
@@ -148,7 +145,6 @@
                             }
                         } 
                         else if (modoJuego === 'online') {
-                            // Usamos nuestra variable precisa `soyElGanador` en lugar del número de jugador bruto
                             if (soyElGanador) {
                                 monedasActuales += 25;
                                 eloActual += 20;
@@ -176,19 +172,18 @@
                             .eq('id', session.user.id);
 
                         document.getElementById('texto-recompensa').innerText = mensajeRecompensa;
-                    } else {
-                        document.getElementById('texto-recompensa').innerText = "Partida finalizada (Perfil no encontrado).";
                     }
                 } else {
                     document.getElementById('texto-recompensa').innerText = "Inicia sesión en el menú para registrar recompensas y ELO.";
                 }
             } catch (err) {
-                console.error("Error al actualizar recompensas en Supabase:", err);
+                console.error("Error al actualizar recompensas:", err);
                 document.getElementById('texto-recompensa').innerText = "Partida finalizada con éxito.";
             } finally {
-                // Limpieza de estados temporales online y de modo de juego
+                // Limpieza final de variables al salir de la pantalla de victoria
                 localStorage.removeItem('modoJuego');
                 localStorage.removeItem('configuracionOnline');
+                localStorage.removeItem('jugador_rol_partida');
             }
         }
     </script>
