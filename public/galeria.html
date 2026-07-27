@@ -36,6 +36,14 @@
             width: 100%;
             max-width: 900px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .btn-volver {
@@ -51,6 +59,49 @@
             color: var(--gold); border: 1px solid #333;
             box-shadow: 0 4px 6px rgba(0,0,0,0.4);
         }
+
+        .perfil-nombre-container {
+            background: var(--panel); 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            border: 1px solid #333;
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        }
+
+        .perfil-nombre-container span {
+            font-size: 0.9rem;
+            color: #888;
+            font-weight: bold;
+        }
+
+        .input-nombre {
+            background: #111; 
+            border: 1px solid #444; 
+            color: #fff; 
+            padding: 6px 10px; 
+            border-radius: 6px; 
+            font-size: 1rem; 
+            width: 130px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .input-nombre:focus { border-color: var(--gold); }
+
+        .btn-guardar-nombre {
+            background: #27ae60; 
+            color: white; 
+            border: none; 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .btn-guardar-nombre:hover { background: #2ecc71; }
 
         .logo-img {
             max-width: 250px;
@@ -192,7 +243,17 @@
 
     <div class="header-top">
         <button class="btn-volver" onclick="window.location.href='index.html'">← Volver al Menú</button>
-        <div class="monedas-display">🪙 <span id="ui-oro">0</span></div>
+        
+        <div class="header-stats">
+            <!-- Campo para editar y guardar el nombre del jugador -->
+            <div class="perfil-nombre-container">
+                <span>Jugador:</span>
+                <input type="text" id="input-nombre-jugador" class="input-nombre" value="jugador" maxlength="20">
+                <button class="btn-guardar-nombre" onclick="guardarNombreJugador()">Guardar</button>
+            </div>
+            
+            <div class="monedas-display">🪙 <span id="ui-oro">0</span></div>
+        </div>
     </div>
 
     <!-- Logo con protección automática contra errores de mayúsculas/extensiones en GitHub -->
@@ -225,10 +286,10 @@
     </div>
 
     <script>
-        let perfilJugador = { monedas: 0, facciones_desbloqueadas: ['humanos'], personajes_comprados: [] };
+        let perfilJugador = { monedas: 0, facciones_desbloqueadas: ['humanos'], personajes_comprados: [], nombre: 'jugador' };
         let piezaSeleccionada = null;
 
-        // Estructura de la tienda con datos exactos extraídos de tablero.html
+        // Estructura de la tienda con datos exactos extraídos de tablero.html[cite: 2]
         const tiendaDatos = {
             elfos: {
                 id: 'elfos', nombre: 'Elfos', precio: 20,
@@ -289,9 +350,10 @@
                 .single();
 
             if (perfil) {
-                // Sanitizamos los datos para evitar nulos
+                // Sanitizamos los datos para evitar nulos y cargamos el nombre por defecto o de la BD
                 perfilJugador.id = session.user.id;
                 perfilJugador.monedas = perfil.monedas || 0;
+                perfilJugador.nombre = perfil.nombre || 'jugador';
                 perfilJugador.personajes_comprados = perfil.personajes_comprados || [];
                 perfilJugador.facciones_desbloqueadas = perfil.facciones_facciones_desbloqueadas || perfil.facciones_desbloqueadas || ['humanos'];
                 
@@ -299,12 +361,43 @@
                     perfilJugador.facciones_desbloqueadas.push('humanos');
                 }
 
+                // Colocar el nombre en el input de la UI
+                document.getElementById('input-nombre-jugador').value = perfilJugador.nombre;
+
                 actualizarUI();
             } else {
                 alert("Error al cargar tu perfil desde la base de datos.");
             }
             
             document.getElementById('pantalla-carga').style.display = 'none';
+        }
+
+        async function guardarNombreJugador() {
+            const nuevoNombre = document.getElementById('input-nombre-jugador').value.trim() || 'jugador';
+            
+            const btn = event.target;
+            const textoOriginal = btn.innerText;
+            btn.innerText = '...';
+            btn.disabled = true;
+
+            perfilJugador.nombre = nuevoNombre;
+
+            // Actualizar en Supabase (tabla perfiles, columna nombre)
+            const { error } = await window.clienteSupabase
+                .from('perfiles')
+                .update({ nombre: nuevoNombre })
+                .eq('id', perfilJugador.id);
+
+            btn.innerText = textoOriginal;
+            btn.disabled = false;
+
+            if (error) {
+                alert("Hubo un error al actualizar el nombre en la base de datos.");
+            } else {
+                alert("¡Nombre actualizado correctamente!");
+                // Guardar en localStorage para sincronización instantánea con el resto de la app (ej. index)
+                localStorage.setItem('legados_estado', JSON.stringify(perfilJugador));
+            }
         }
 
         function actualizarUI() {
