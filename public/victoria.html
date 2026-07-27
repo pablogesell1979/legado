@@ -87,7 +87,7 @@
             const datosGuardados = localStorage.getItem('resultadoPartida');
             const modoJuego = localStorage.getItem('modoJuego') || '1vs1';
             
-            // Leemos directamente el rol que guardamos intacto (retorna '1' o '2')
+            // Leemos el rol que guardamos en la selección ('1' o '2')
             const miRolLocal = parseInt(localStorage.getItem('jugador_rol_partida') || '1');
 
             let ganadorPartida = 1; 
@@ -98,7 +98,7 @@
                 ganadorPartida = datosPartida.ganador || 1;
                 
                 if (modoJuego === 'online') {
-                    // Si el ganador del tablero coincide con mi rol, gané. Si no, perdí.
+                    // Comparamos el ganador de la partida con nuestro rol local
                     soyElGanador = (ganadorPartida === miRolLocal);
 
                     if (soyElGanador) {
@@ -119,7 +119,7 @@
                 document.getElementById('texto-ganador').innerText = "Partida finalizada.";
             }
 
-            // Procesar recompensas en Supabase para el usuario que está logueado en este navegador
+            // Procesar recompensas y ELO en Supabase de forma independiente
             try {
                 const { data: { session } } = await window.clienteSupabase.auth.getSession();
                 
@@ -180,7 +180,6 @@
                 console.error("Error al actualizar recompensas:", err);
                 document.getElementById('texto-recompensa').innerText = "Partida finalizada con éxito.";
             } finally {
-                // Limpieza final de variables al salir de la pantalla de victoria
                 localStorage.removeItem('modoJuego');
                 localStorage.removeItem('configuracionOnline');
                 localStorage.removeItem('jugador_rol_partida');

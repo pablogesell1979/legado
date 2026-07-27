@@ -189,7 +189,6 @@
                 actualizarImagen();
             } catch (err) {
                 console.error("Error al cargar perfil de usuario:", err);
-                // Fallback de emergencia por si falla la red
                 const selectFaccion = document.getElementById('mi-faccion');
                 selectFaccion.innerHTML = '<option value="Humano">Humanos</option>';
                 actualizarImagen();
@@ -206,7 +205,15 @@
                     if (faccionesServer.salaId) configOnlinePendiente.salaId = faccionesServer.salaId;
                     if (faccionesServer.rol) configOnlinePendiente.rol = faccionesServer.rol;
                 }
+                
+                // Mantenemos intacto el guardado original de configuración online
                 localStorage.setItem('configuracionOnline', JSON.stringify(configOnlinePendiente));
+                localStorage.setItem('modoJuego', 'online');
+
+                // NUEVO Y SEGURO: Guardamos el rol exacto (1 si es anfitrión, 2 si es invitado)
+                const numeroJugador = (configOnlinePendiente.rol === 'anfitrion') ? 1 : 2;
+                localStorage.setItem('jugador_rol_partida', numeroJugador.toString());
+
                 window.location.href = 'tablero_multi.html';
             }
         };
