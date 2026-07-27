@@ -83,6 +83,7 @@
     </div>
 
     <script>
+<script>
         window.onload = async function() {
             // 1. Recuperar datos del tablero (quién ganó y su imagen)
             const datosGuardados = localStorage.getItem('resultadoPartida');
@@ -122,6 +123,9 @@
                         let eloActual = perfil.elo || 1000;
                         let mensajeRecompensa = "";
 
+                        // Objeto dinámico para actualizar la base de datos
+                        let datosUpdate = { monedas: monedasActuales };
+
                         // REGLAS SEGÚN EL MODO DE JUEGO Y QUIÉN GANÓ
                         if (modoJuego === 'cpu') {
                             // Entrenamiento vs CPU (gana el Jugador 1 / local)
@@ -143,6 +147,8 @@
                                 eloActual = Math.max(0, eloActual - 20); // Evita ELO negativo
                                 mensajeRecompensa = "🌐 Derrota Online. +5 🪙 de consolación y -20 🏆 ELO";
                             }
+                            // El ELO solo se actualiza si el modo es online
+                            datosUpdate.elo = eloActual;
                         } 
                         else if (modoJuego === 'historia') {
                             // Modo Historia (+10 monedas por nivel superado)
@@ -154,10 +160,13 @@
                             mensajeRecompensa = "⚔️ Partida Local 1vs1 finalizada.";
                         }
 
+                        // Actualizamos las monedas calculadas
+                        datosUpdate.monedas = monedasActuales;
+
                         // Guardar cambios en la base de datos de Supabase
                         await window.clienteSupabase
                             .from('perfiles')
-                            .update({ monedas: monedasActuales, elo: eloActual })
+                            .update(datosUpdate)
                             .eq('id', session.user.id);
 
                         document.getElementById('texto-recompensa').innerText = mensajeRecompensa;
@@ -170,6 +179,9 @@
             } catch (err) {
                 console.error("Error al actualizar recompensas en Supabase:", err);
                 document.getElementById('texto-recompensa').innerText = "Partida finalizada con éxito.";
+            } finally {
+                // IMPORTANTE: Limpiamos el modo de juego para que no persista y afecte a futuras partidas locales o de CPU
+                localStorage.removeItem('modoJuego');
             }
         }
     </script>
