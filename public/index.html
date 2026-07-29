@@ -25,16 +25,24 @@
             width: 100vw;
             height: 100vh;
             background-image: url('portada1.jpg');
-            background-size: cover;
+            background-size: cover; /* Por defecto en celus llena la pantalla */
             background-position: center;
+            background-repeat: no-repeat; /* Evita que la imagen se duplique en PC */
             z-index: 9999;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             align-items: center;
-            padding-bottom: 60px; /* Espacio desde abajo */
-            transition: opacity 0.5s ease; /* Transición suave al desaparecer */
-            background-color: var(--bg); /* Color de fondo por si tarda en cargar la imagen */
+            padding-bottom: 60px;
+            transition: opacity 0.5s ease;
+            background-color: var(--bg); /* Color de fondo a los costados en PC */
+        }
+
+        /* Detecta si es una pantalla de PC o Tablet horizontal y ajusta a lo alto */
+        @media (min-width: 768px) {
+            #loading-screen {
+                background-size: contain; 
+            }
         }
         
         .loader-spinner {
@@ -239,17 +247,14 @@
             window.location.href = url;
         }
 
-        // --- LÓGICA DE LA PANTALLA DE CARGA INICIAL ---
         window.onload = () => {
-            // Espera 3 segundos exactos (3000ms)
             setTimeout(() => {
                 const loader = document.getElementById('loading-screen');
-                loader.style.opacity = '0'; // Comienza la transición CSS de desvanecimiento
+                loader.style.opacity = '0';
                 
-                // Espera medio segundo extra para que termine el desvanecimiento y borra el div
                 setTimeout(() => {
                     loader.style.display = 'none';
-                    verificarSesion(); // Ahora sí, verifica si el usuario está logueado o muestra el login
+                    verificarSesion();
                 }, 500); 
                 
             }, 3000);
