@@ -20,7 +20,8 @@
         .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #7f8c8d; display: flex; align-items: center; gap: 5px; }
         .dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
 
-        .logo { font-size: 2rem; font-weight: 900; letter-spacing: 4px; color: #fff; margin: 30px 0 10px 0; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        /* Estilo actualizado para el Logo en imagen */
+        .logo-img { width: 90%; max-width: 350px; margin: 40px 0 20px 0; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; }
         .btn-google { background: #ea4335; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s; }
@@ -35,13 +36,26 @@
         .stat-elo { color: var(--elo); }
         .stat-gold { color: var(--gold); }
 
+        /* Estilos de Facciones con Imágenes */
         .facciones-container { display: flex; gap: 15px; margin-bottom: 25px; }
-        .circulo-faccion { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.3s; }
-        .faccion-humanos { background: var(--humanos); }
-        .faccion-magos { background: var(--magos); }
-        .faccion-elfos { background: var(--elfos); }
-        .faccion-coloso { background: var(--coloso); }
-        .bloqueada { filter: grayscale(100%) opacity(0.3); border: 2px dashed #666; background: #222 !important; box-shadow: none; }
+        .circulo-faccion { 
+            width: 55px; 
+            height: 55px; 
+            border-radius: 50%; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4); 
+            transition: 0.3s; 
+            background-size: cover; 
+            background-position: center;
+            border: 3px solid; 
+        }
+        
+        .faccion-humanos { background-image: url('caphumano.jpg'); border-color: var(--humanos); }
+        .faccion-magos { background-image: url('capmago.jpg'); border-color: var(--magos); }
+        .faccion-elfos { background-image: url('capelfo.jpg'); border-color: var(--elfos); }
+        .faccion-coloso { background-image: url('capcoloso.jpg'); border-color: var(--coloso); }
+        
+        /* Modificado para que la imagen se vea en escala de grises al estar bloqueada */
+        .bloqueada { filter: grayscale(100%) opacity(0.4); border: 2px dashed #666; box-shadow: none; }
 
         .menu-btn { width: 100%; padding: 14px; margin: 6px 0; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; background: #2c3e50; color: white; }
         .menu-btn:hover { background: #34495e; }
@@ -64,7 +78,8 @@
         <div class="dot"></div> <span id="online-count">12 Conectados</span>
     </div>
 
-    <div class="logo">LEGADOS</div>
+    <!-- Reemplazado texto por la imagen de logo -->
+    <img src="LogoSolo.jpg" alt="Logo Legados" class="logo-img">
 
     <!-- PANTALLA DE LOGIN -->
     <div id="login-screen">
@@ -85,11 +100,12 @@
             </div>
         </div>
 
+        <!-- Se vació el contenido de las letras y se dejaron preparados los divs para los background-image -->
         <div class="facciones-container">
-            <div id="fac-humanos" class="circulo-faccion faccion-humanos bloqueada" title="Humanos">H</div>
-            <div id="fac-magos" class="circulo-faccion faccion-magos bloqueada" title="Magos">M</div>
-            <div id="fac-elfos" class="circulo-faccion faccion-elfos bloqueada" title="Elfos">E</div>
-            <div id="fac-coloso" class="circulo-faccion faccion-coloso bloqueada" title="Coloso">C</div>
+            <div id="fac-humanos" class="circulo-faccion faccion-humanos bloqueada" title="Humanos"></div>
+            <div id="fac-magos" class="circulo-faccion faccion-magos bloqueada" title="Magos"></div>
+            <div id="fac-elfos" class="circulo-faccion faccion-elfos bloqueada" title="Elfos"></div>
+            <div id="fac-coloso" class="circulo-faccion faccion-coloso bloqueada" title="Coloso"></div>
         </div>
 
         <button class="menu-btn btn-tienda" onclick="irA('galeria.html')">
@@ -171,7 +187,6 @@
             if (facciones.includes('coloso')) document.getElementById('fac-coloso').classList.remove('bloqueada');
         }
 
-        // AQUÍ GUARDAMOS EL MODO DE JUEGO EN MEMORIA ANTES DE CAMBIAR DE PÁGINA
         function irA(url, modo) {
             if (modo) {
                 localStorage.setItem('modoJuego', modo);
