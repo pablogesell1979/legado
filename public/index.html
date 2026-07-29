@@ -213,13 +213,7 @@
         }
 // ---------------------------------------------
 
-        async function iniciarSesion() {
-            const { data, error } = await window.clienteSupabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.origin + window.location.pathname }
-            });
-            if (error) alert("Error al iniciar sesión: " + error.message);
-        }
+skipBrowserRedirect: true, // Evita que se abra dentro del WebView y rompa la pantalla completa
 
         async function cerrarSesion() {
             await window.clienteSupabase.auth.signOut();
