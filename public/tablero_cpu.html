@@ -618,34 +618,45 @@
                     const orientacion = pieza.orientacion; 
                     const piezaDestino = mapaPiezas[idDestino];
 
-                    if (pieza.faccion === 'coloso') {
-                        if (pieza.texto === 'TO') {
-                            if (diffF <= 1 && diffC <= 1) esValido = true;
-                        }
-                        else if (pieza.texto === 'BI' || pieza.texto === 'BD') {
-                            if (diffF === diffC && diffF <= 3) {
-                                esValido = lineaDespejada(fila, col, f, c);
-                            }
-                        }
-                        else if (pieza.texto === 'PI' || pieza.texto === 'PD') {
-                            if ((diffF === 0 || diffC === 0) && (diffF <= 2 && diffC <= 2)) {
-                                esValido = lineaDespejada(fila, col, f, c);
-                            }
-                        }
-                        else if (pieza.texto === 'RO') {
-                            if (tieneBrazoAdyacente(fila, col, pieza.jugador)) {
-                                if (diffF === diffC || diffF === 0 || diffC === 0) {
-                                    esValido = lineaDespejada(fila, col, f, c);
-                                }
-                            }
-                        }
+if (pieza.faccion === 'coloso') {
+    // MOVIMIENTO DEL TORSO
+    if (pieza.texto === 'TO') { 
+        let dirAdelante = (pieza.orientacion === 'Atras') ? -1 : 1; 
+        let avance = (f - fila) * dirAdelante; 
 
-                        if (esValido && ['TO', 'BI', 'BD', 'PI', 'PD'].includes(pieza.texto)) {
-                            if (!esAnatomiaValidaColoso(`${fila}-${col}`, idDestino, pieza)) {
-                                esValido = false; 
-                            }
-                        }
-                    }
+        if (avance === 0) {
+            if (diffC <= 2) esValido = true; 
+        } else if (avance > 0) {
+            if (diffC === 0 && avance <= 3) esValido = true; 
+            else if (diffF === diffC && avance <= 2) esValido = true; 
+        } else if (avance < 0) {
+            if (avance === -1 && diffC <= 1) esValido = true; 
+        }
+    }
+    // MOVIMIENTO DE LOS BRAZOS
+    else if (pieza.texto === 'BI' || pieza.texto === 'BD') { 
+        if (diffF === diffC && diffF <= 3) esValido = lineaDespejada(fila, col, f, c); 
+    }
+    // MOVIMIENTO DE LAS PIERNAS (Torre 2 + Caballo)
+    else if (pieza.texto === 'PI' || pieza.texto === 'PD') { 
+        if ((diffF === 0 || diffC === 0) && (diffF <= 2 && diffC <= 2)) {
+            esValido = lineaDespejada(fila, col, f, c); 
+        } else if ((diffF === 2 && diffC === 1) || (diffF === 1 && diffC === 2)) {
+            esValido = true; 
+        }
+    }
+    // MOVIMIENTO DE LA ROCA
+    else if (pieza.texto === 'RO') { 
+        if (tieneBrazoAdyacente(fila, col, pieza.jugador)) { 
+            if (diffF === diffC || diffF === 0 || diffC === 0) esValido = lineaDespejada(fila, col, f, c); 
+        } 
+    }
+
+    if (esValido && ['TO', 'BI', 'BD', 'PI', 'PD'].includes(pieza.texto)) {
+        if (!esAnatomiaValidaColoso(`${fila}-${col}`, idDestino, pieza)) esValido = false; 
+    }
+}
+
                     else if (pieza.faccion === 'humanos') {
                         if (pieza.texto === 'MI') {
                             let dirAdelante = (orientacion === 'Atras') ? -1 : 1;
@@ -1317,12 +1328,10 @@
             misPiezas.forEach(item => {
                 const enPeligro = celdaBajoAmenazaMejorada(item.f, item.c, turnoActual);
                 const p = item.pieza;
-                let tieneHechizosActivos = false;
 
-                // --- MAGOS LOGIC ---
+// --- MAGOS LOGIC ---
                 if (p.faccion === 'magos') {
                     if (p.texto === 'MR' && !conj['MR_bola_fuego']) {
-                        tieneHechizosActivos = true;
                         let targets = obtenerEnemigosEnRango(item.f, item.c, 3, turnoActual);
                         if (targets.length > 0) {
                             targets.sort((a,b) => (valorTactico[b.pieza.texto]||0) - (valorTactico[a.pieza.texto]||0));
@@ -1340,8 +1349,32 @@
                         }
                     }
 
+                    // NUEVO: Lógica para disparar el Rayo Arcano (MR)
+                    if (p.texto === 'MR' && !conj['MR_rayo']) {
+                        let targets = obtenerEnemigosEnRango(item.f, item.c, 4, turnoActual);
+                        if (targets.length > 0) {
+                            let ptos = 75 + (valorTactico[targets[0].pieza.texto] || 0);
+                            if (ptos > mejorPuntuacion) {
+                                mejorPuntuacion = ptos;
+                                mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => {
+                                    let dir = (turnoActual === 1) ? -1 : 1; 
+                                    let curF = item.f + dir; let curC = item.c;
+                                    while(curF >= 0 && curF <= 8 && curC >= 0 && curC <= 8) {
+                                        let idRay = `${curF}-${curC}`;
+                                        if (casillasAgua.includes(idRay) || (celdasBloqueadas[idRay] && celdasBloqueadas[idRay].tipo === 'muro-arbol')) break;
+                                        if (mapaPiezas[idRay]) {
+                                            let pr = mapaPiezas[idRay];
+                                            if (!(pr.jugador === p.jugador && pr.faccion === 'magos') && pr.texto !== 'TO') matarPieza(idRay);
+                                        }
+                                        curF += dir;
+                                    }
+                                    conj['MR_rayo'] = true;
+                                }}];
+                            }
+                        }
+                    }
+
                     if (p.texto === 'AP' && !conj['AP_inmovilizar']) {
-                        tieneHechizosActivos = true;
                         let targets = obtenerEnemigosEnRango(item.f, item.c, 3, turnoActual);
                         if (targets.length > 0) {
                             let target = targets[0];
@@ -1357,7 +1390,6 @@
                     }
 
                     if (p.texto === 'AP' && enPeligro && !conj['AP_piel_piedra']) {
-                        tieneHechizosActivos = true;
                         let ptos = 200; 
                         if (ptos > mejorPuntuacion) {
                             mejorPuntuacion = ptos;
@@ -1369,7 +1401,6 @@
                     }
 
                     if (p.texto === 'MR' && enPeligro && !conj['MR_teletransporte']) {
-                        tieneHechizosActivos = true;
                         let safeSpots = obtenerCasillasSeguras(turnoActual);
                         if (safeSpots.length > 0) {
                             let spot = safeSpots[Math.floor(Math.random()*safeSpots.length)];
@@ -1386,7 +1417,6 @@
                     }
 
                     if (p.texto === 'MA' && !conj['MA_mov_veloz']) {
-                        tieneHechizosActivos = true;
                         let ptos = 85;
                         if (ptos > mejorPuntuacion) {
                             mejorPuntuacion = ptos;
@@ -1394,6 +1424,27 @@
                                 conj['MA_mov_veloz'] = true;
                                 turnoExtraProgramado[turnoActual] = 1;
                             }}];
+                        }
+                    }
+                    
+                    // NUEVO: Lógica para invocar Elemental de Agua (MA)
+                    if (p.texto === 'MA' && !conj['MA_elemental']) {
+                        let adyacentes = [];
+                        for(let af = Math.max(0,item.f-1); af<=Math.min(8,item.f+1); af++) {
+                            for(let ac=Math.max(0,item.c-1); ac<=Math.min(8,item.c+1); ac++) { 
+                                if(casillasAgua.includes(`${af}-${ac}`) && !mapaPiezas[`${af}-${ac}`]) adyacentes.push({f:af, c:ac}); 
+                            }
+                        }
+                        if (adyacentes.length > 0) {
+                            let ptos = 90;
+                            if (ptos > mejorPuntuacion) {
+                                mejorPuntuacion = ptos;
+                                mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => {
+                                    let spot = adyacentes[0];
+                                    colocarPiezaBase(spot.f, spot.c, 'elemental', 'EL', 'Mago - Elemental', p.orientacion, turnoActual);
+                                    conj['MA_elemental'] = true;
+                                }}];
+                            }
                         }
                     }
                 }
@@ -1455,9 +1506,6 @@
                         }
                     }
 
-                    if (p.faccion === 'magos' && tieneHechizosActivos && esAtaque) {
-                        puntuacion -= 100;
-                    }
 
                     const esComandante = p.texto === 'CO' && p.faccion === 'humanos';
                     if (esComandante) {
