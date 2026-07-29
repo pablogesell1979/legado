@@ -5,12 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modo Historia - Legados</title>
     
-    <!-- Fuente épica para títulos -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
-
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
 
@@ -26,330 +23,367 @@
         }
 
         .contenedor {
-            background-color: #15131c; padding: 25px 20px; border-radius: 14px;
-            box-shadow: 0 10px 35px rgba(142, 68, 173, 0.3); border: 2px solid #8e44ad;
-            text-align: center; width: 100%; max-width: 500px; /* Reducido para una sola columna */
-            position: relative; overflow: hidden;
+            background-color: #15131c; 
+            padding: 20px; 
+            border-radius: 16px;
+            box-shadow: 0 10px 35px rgba(142, 68, 173, 0.35); 
+            border: 2px solid #8e44ad;
+            text-align: center; 
+            width: 100%; 
+            max-width: 450px; 
+            position: relative; 
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .logo { 
-            width: 100%; max-width: 300px; height: auto; margin-bottom: 15px; 
+            width: 100%; max-width: 250px; height: auto; margin-bottom: 15px; 
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6));
         }
         
-        /* BANNER DE NIVEL EN MODO HISTORIA */
         .banner-historia {
-            background: linear-gradient(135deg, #2c163b 0%, #150d1f 100%);
-            border: 2px solid #f1c40f;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
+            width: 100%; background: linear-gradient(135deg, #2c163b 0%, #150d1f 100%);
+            border: 2px solid #f1c40f; border-radius: 12px; padding: 12px; margin-bottom: 20px;
             box-shadow: inset 0 0 15px rgba(241, 196, 15, 0.2);
         }
 
         .titulo-historia {
-            font-family: 'Cinzel', serif;
-            font-size: 1.8rem;
-            color: #f1c40f;
-            margin: 0 0 5px 0;
-            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
-            letter-spacing: 2px;
+            font-family: 'Cinzel', serif; font-size: 1.3rem; color: #f1c40f; margin: 0 0 4px 0;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); letter-spacing: 2px;
         }
 
         .subtitulo-nivel {
-            font-family: 'Cinzel', serif;
-            font-size: 1.3rem;
-            color: #e8e8e8;
-            font-weight: 700;
-            margin-bottom: 10px;
+            font-family: 'Cinzel', serif; font-size: 1rem; color: #e8e8e8; font-weight: 700; margin-bottom: 2px;
+        }
+
+        .subtitulo-escenario {
+            font-size: 0.9rem; color: #d6b4fc; font-style: italic; margin-bottom: 8px;
         }
 
         .barra-progreso-contenedor {
-            width: 100%;
-            height: 12px;
-            background-color: #0b0c10;
-            border-radius: 6px;
-            border: 1px solid #8e44ad;
-            overflow: hidden;
+            width: 100%; height: 10px; background-color: #0b0c10; border-radius: 5px;
+            border: 1px solid #8e44ad; overflow: hidden; padding: 1px;
         }
 
         .barra-progreso-fill {
+            height: 100%; width: 5%; background: linear-gradient(90deg, #8e44ad, #f1c40f);
+            border-radius: 3px; transition: width 0.5s ease-in-out; box-shadow: 0 0 8px #f1c40f;
+        }
+
+        /* --- TABLERO MAPA MODO HISTORIA --- */
+        .mapa-contenedor {
+            width: 100%;
+            aspect-ratio: 1 / 1; 
+            background-image: url('tablerohistoria.jpg');
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #4a2761;
+            border-radius: 8px;
+            position: relative;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+        }
+
+        .mapa-grid {
+            display: grid;
+            grid-template-columns: repeat(9, minmax(0, 1fr));
+            grid-template-rows: repeat(9, minmax(0, 1fr));
+            width: 100%;
             height: 100%;
-            width: 5%;
-            background: linear-gradient(90deg, #8e44ad, #f1c40f);
-            transition: width 0.5s ease-in-out;
-            box-shadow: 0 0 8px #f1c40f;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
-        .area-seleccion { 
-            display: flex; justify-content: center; margin-bottom: 25px; 
+        /* Grilla ultra transparente (casi invisible) */
+        .celda-debug {
+            border: 1px dashed rgba(255, 255, 255, 0.04); 
+            pointer-events: none;
         }
 
-        .columna { 
-            display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 350px;
-        }
-        
-        .etiqueta-jugador {
-            font-weight: bold; color: #f1c40f; font-size: 1rem;
-            background: rgba(142, 68, 173, 0.2); padding: 8px 10px;
-            border-radius: 6px; border: 1px solid #8e44ad;
+        .celda-personaje {
+            position: relative; 
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            /* La transición de movimiento la controlaremos con JS */
         }
 
-        .vista-previa { 
-            width: 100%; height: 260px; background-color: #0b0c10; 
-            border: 2px solid #8e44ad; border-radius: 8px; overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
+        .celda-personaje img {
+            position: absolute;
+            bottom: 0; 
+            left: 0;
+            width: 100%; 
+            max-height: 180%; 
+            object-fit: contain;
+            transform-origin: bottom center;
+            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.9));
+            pointer-events: none; 
+            /* Se quitó la animación por defecto para inyectarla desde JS */
         }
-        .vista-previa img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-        select {
-            width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #8e44ad;
-            background-color: #0b0c10; color: #fff; font-size: 1rem; cursor: pointer;
-            outline: none; transition: 0.2s; text-align: center; font-weight: bold;
+        /* --- ANIMACIONES --- */
+        @keyframes flotarAnimacion {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
         }
-        select:focus { border-color: #f1c40f; box-shadow: 0 0 8px rgba(241, 196, 15, 0.4); }
-        
-        .info-faccion {
-            background-color: #110e17; border: 1px solid #4a2761; border-radius: 6px;
-            padding: 12px; font-size: 0.85rem; text-align: left; min-height: 110px;
-            color: #bdc3c7; display: flex; flex-direction: column; gap: 6px;
-        }
-        .info-faccion strong { color: #f1c40f; }
-        .info-derrota { color: #e74c3c !important; font-weight: bold; }
 
+        @keyframes desaparecerMagico {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        @keyframes aparecerMagico {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* BOTONES */
         .btn-iniciar {
-            width: 100%; padding: 16px; font-size: 1.3rem; margin-top: 10px;
-            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
-            color: white; border: none; border-radius: 8px;
-            cursor: pointer; font-weight: bold; font-family: 'Cinzel', serif;
-            letter-spacing: 1px; transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(142, 68, 173, 0.5);
-            border: 1px solid #f1c40f;
+            width: 100%; padding: 16px; font-size: 1.2rem; background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; 
+            font-family: 'Cinzel', serif; letter-spacing: 1px; transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(142, 68, 173, 0.5); border: 1px solid #f1c40f;
         }
-        .btn-iniciar:hover { 
-            background: linear-gradient(135deg, #9b59b6 0%, #a569bd 100%);
-            transform: translateY(-2px); box-shadow: 0 6px 20px rgba(241, 196, 15, 0.4);
+
+        .btn-iniciar:active, .btn-iniciar:hover { 
+            background: linear-gradient(135deg, #9b59b6 100%, #a569bd 100%); transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(241, 196, 15, 0.4);
         }
 
         .btn-volver {
-            background: transparent; border: 1px solid #7f8c8d; color: #95a5a6;
-            padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 15px;
-            transition: 0.2s; font-size: 0.9rem;
+            background: transparent; border: 1px solid #7f8c8d; color: #95a5a6; padding: 10px 18px; 
+            border-radius: 8px; cursor: pointer; margin-top: 15px; transition: 0.2s; font-size: 0.95rem; width: 100%;
         }
-        .btn-volver:hover { color: white; border-color: white; }
 
-        @media (max-width: 768px) {
-            body { padding: 10px; justify-content: flex-start; }
-            .contenedor { padding: 15px; }
-            .logo { max-width: 220px; }
-            .titulo-historia { font-size: 1.4rem; }
-            .subtitulo-nivel { font-size: 1.1rem; }
-            .vista-previa { height: 200px; }
+        .btn-volver:hover, .btn-volver:active { color: white; border-color: white; }
+
+        @media (max-width: 480px) {
+            body { padding: 10px; } .contenedor { padding: 15px; } .logo { max-width: 200px; }
+            .titulo-historia { font-size: 1.15rem; } .btn-iniciar { padding: 14px; font-size: 1.1rem; }
         }
     </style>
 </head>
 <body>
 
     <div class="contenedor">
-        <img src="LogoSolo.PNG" alt="Legado Asymmetric Chess" class="logo" onerror="corregirExtension(this)">
+        <img src="Legado_logo.png" alt="Legado Asymmetric Chess" class="logo" onerror="corregirExtension(this)">
 
-        <!-- HEADER DEL MODO HISTORIA Y NIVEL -->
         <div class="banner-historia">
             <div class="titulo-historia">⚔️ MODO HISTORIA ⚔️</div>
-            <div class="subtitulo-nivel">Nivel Actual: <span id="lbl-nivel">1</span> / 20</div>
+            <div class="subtitulo-nivel">Nivel <span id="lbl-nivel">1</span> / 20</div>
+            <div class="subtitulo-escenario" id="lbl-nombre-escenario">Cargando escenario...</div>
             <div class="barra-progreso-contenedor">
                 <div id="barra-progreso" class="barra-progreso-fill"></div>
             </div>
         </div>
 
-        <div class="area-seleccion">
-            <!-- JUGADOR 1: El usuario elige de sus facciones desbloqueadas -->
-            <div class="columna">
-                <div class="etiqueta-jugador">👤 Selecciona tu Facción</div>
-                <div class="vista-previa"><img id="img-j1" src="SelectMago1.PNG" alt="J1" onerror="corregirExtension(this)"></div>
-                <select id="fac-j1" onchange="actualizarImagen()">
-                    <!-- Carga dinámicamente según facciones desbloqueadas -->
-                </select>
-                <div class="info-faccion" id="info-j1"></div>
+        <div class="mapa-contenedor">
+            <div class="mapa-grid" id="mapa-grid">
+                <!-- La pieza del héroe -->
+                <div class="celda-personaje" id="contenedor-pieza">
+                    <img id="img-heroe-pieza" src="" alt="Pieza Héroe" onerror="corregirExtension(this)">
+                </div>
             </div>
         </div>
 
-        <button class="btn-iniciar" onclick="iniciarBatallaHistoria()">Ir a la historia</button>
+        <button class="btn-iniciar" onclick="iniciarBatallaHistoria()">⚔️ Entrar a la Batalla</button>
         <button class="btn-volver" onclick="window.location.href='index.html'">⬅ Volver al Menú Principal</button>
     </div>
 
     <script>
-        const datosFacciones = {
-            'Mago': {
-                pros: "Pueden lanzar conjuros poderosos, crear muros y teletransportarse.",
-                contras: "Tienen poca movilidad base y son pocas piezas.",
-                derrota: "Pierden al morir los Grandes Magos (Fuego y Hielo)."
-            },
-            'Elfo': {
-                pros: "Alta movilidad, ataques a distancia y pueden revivir aliados caídos.",
-                contras: "Dependen de la posición de sus árboles para protegerse.",
-                derrota: "Pierden si su Árbol Sagrado es destruido."
-            },
-            'Humano': {
-                pros: "Evolucionan cada 3 turnos, volviéndose extremadamente poderosos.",
-                contras: "Inician muy débiles (movimiento de 1 casilla) y vulnerables.",
-                derrota: "Pierden si el Comandante muere."
-            },
-            'Coloso': {
-                pros: "Mucha movilidad, su torso no puede ser destruido y lanza piedras.",
-                contras: "Movimiento rígido, requiere que sus partes se mantengan juntas.",
-                derrota: "Pierde cuando eliminan todas sus extremidades."
-            }
+        let nivelActualJugador = 1;
+
+        const nombresEscenarios = {
+            1: "El Despertar en el Claro",
+            2: "Los Primeros Pasos del Aprendiz",
+            3: "El Cruce del Arroyo Manso",
+            4: "La Entrada al Bosque Susurrante",
+            5: "Sendero de las Hojas Ancestrales",
+            6: "El Refugio de los Sabios",
+            7: "La Encrucijada de Frontera",
+            8: "Camino a las Colinas Empedradas",
+            9: "Las Puertas del Arrabal",
+            10: "Plaza del Mercado: Voces de Alerta",
+            11: "El Asedio a la Guarnición",
+            12: "La Torre de los Ecos Ocultos",
+            13: "Cámaras de Cristal y Polvo Estelar",
+            14: "El Laboratorio del Hechicero Errante",
+            15: "Convergencia de Líneas Ley",
+            16: "La Caverna de las Sombras Vivas",
+            17: "Páramo de Cenizas Frías",
+            18: "El Abismo de los Susurros",
+            19: "Umbral del Trono Prohibido",
+            20: "El Núcleo del Cataclismo"
         };
 
-        let nivelActualJugador = 1;
+        const grid = document.getElementById('mapa-grid');
+        for(let i=0; i<81; i++) {
+            let celda = document.createElement('div');
+            celda.className = 'celda-debug';
+            grid.insertBefore(celda, grid.firstChild);
+        }
+
+        const mapaCoordenadas = {
+            1:  { r: 5, c: 5 }, 2:  { r: 3, c: 5 }, 3:  { r: 1, c: 5 }, 4:  { r: 1, c: 7 },
+            5:  { r: 1, c: 9 }, 6:  { r: 3, c: 9 }, 7:  { r: 5, c: 9 }, 8:  { r: 7, c: 9 },
+            9:  { r: 9, c: 9 }, 10: { r: 9, c: 7 }, 11: { r: 7, c: 7 }, 12: { r: 7, c: 4 },
+            13: { r: 9, c: 4 }, 14: { r: 9, c: 2 }, 15: { r: 6, c: 2 }, 16: { r: 4, c: 2 },
+            17: { r: 4, c: 3 }, 18: { r: 2, c: 3 }, 19: { r: 2, c: 1 }, 20: { r: 1, c: 1 }
+        };
 
         function corregirExtension(img) {
             if (!img.getAttribute('reintentado')) {
                 img.setAttribute('reintentado', '1');
-                if (img.src.endsWith('.PNG')) {
-                    img.src = img.src.replace('.PNG', '.png');
-                } else if (img.src.endsWith('.png')) {
-                    img.src = img.src.replace('.png', '.PNG');
-                } else if (img.src.endsWith('.JPG')) {
-                    img.src = img.src.replace('.JPG', '.jpg');
-                } else if (img.src.endsWith('.jpg')) {
-                    img.src = img.src.replace('.jpg', '.JPG');
-                }
+                if (img.src.endsWith('.PNG')) img.src = img.src.replace('.PNG', '.png');
+                else if (img.src.endsWith('.png')) img.src = img.src.replace('.png', '.PNG');
+                else if (img.src.endsWith('.JPG')) img.src = img.src.replace('.JPG', '.jpg');
+                else if (img.src.endsWith('.jpg')) img.src = img.src.replace('.jpg', '.JPG');
             } else if (img.getAttribute('reintentado') === '1') {
                 img.setAttribute('reintentado', '2');
                 let partes = img.src.split('/');
-                let archivo = partes.pop().toLowerCase();
-                img.src = partes.join('/') + '/' + archivo;
+                img.src = partes.join('/') + '/' + partes.pop().toLowerCase();
             }
+        }
+
+        function obtenerDatosHeroePorNivel(nivel) {
+            if (nivel >= 1 && nivel <= 5) return { imagen: "Mago - Fuego Frente.png" };
+            else if (nivel >= 6 && nivel <= 7) return { imagen: "Humano - Comandante Frente.png" };
+
+            else if (nivel >= 8 && nivel <= 9) return { imagen: "Coloso - Torso Frente.png" };
+            else if (nivel >= 10 && nivel <= 11) return { imagen: "Mago - Hielo Frente.png" };
+
+            else if (nivel >= 12 && nivel <= 14) return { imagen: "Elfo - Druida Frente.png" };
+            else if (nivel >= 15 && nivel <= 18) return { imagen: "Humano - Científico Frente.png" };
+
+            else return { imagen: "Mago - Hielo Frente.png" };
         }
 
         async function cargarDatosUsuario() {
             let perfil = null;
-
-            // 1. Cargar desde localStorage
             const localData = localStorage.getItem('legados_estado');
-            if (localData) {
-                try { perfil = JSON.parse(localData); } catch (e) {}
-            }
+            if (localData) { try { perfil = JSON.parse(localData); } catch (e) {} }
 
-            // 2. Cargar de Supabase si hay sesión activa
             if (window.clienteSupabase) {
                 try {
                     const { data: { session } } = await window.clienteSupabase.auth.getSession();
                     if (session) {
                         const { data: dbPerfil } = await window.clienteSupabase
-                            .from('perfiles')
-                            .select('*')
-                            .eq('id', session.user.id)
-                            .single();
+                            .from('perfiles').select('*').eq('id', session.user.id).single();
                         if (dbPerfil) perfil = dbPerfil;
                     }
-                } catch (e) {
-                    console.log("Modo offline o sin conexión a Supabase.");
-                }
+                } catch (e) {}
             }
 
-            // 3. Establecer nivel actual (entre 1 y 20)
-            if (perfil && perfil.nivel_historia) {
-                nivelActualJugador = Math.min(Math.max(parseInt(perfil.nivel_historia) || 1, 1), 20);
+if (perfil && perfil.nivel_historia) {
+                // Quitamos el Math.min(..., 20) para que permita leer el nivel 21
+                nivelActualJugador = Math.max(parseInt(perfil.nivel_historia) || 1, 1);
             }
+
+            // --- INICIO CÓDIGO NUEVO: DETECTAR FINAL DEL JUEGO ---
+            if (nivelActualJugador >= 21) {
+                const contenedor = document.querySelector('.contenedor');
+                contenedor.innerHTML = `
+                    <img src="Legado_logo.png" alt="Legado Asymmetric Chess" class="logo" onerror="corregirExtension(this)">
+                    
+                    <h1 style="color: #f1c40f; font-family: 'Cinzel', serif; text-shadow: 0 0 15px rgba(241, 196, 15, 0.4); margin-top: 10px;">
+                        ¡FELICITACIONES!
+                    </h1>
+                    
+                    <div class="banner-historia" style="text-align: center; padding: 25px;">
+                        <p style="font-size: 1.15rem; margin: 0 0 15px 0; line-height: 1.6; color: #e8e8e8;">
+                            Has alcanzado el final de la primera parte de Legados.
+                        </p>
+                        <p style="font-size: 1rem; margin: 0; line-height: 1.6; color: #d6b4fc;">
+                            Tus tropas pueden descansar por ahora... <br>
+                            ¡Más adelante habrá nuevos niveles y desafíos!
+                        </p>
+                    </div>
+                    
+                    <button class="btn-iniciar" onclick="window.location.href='index.html'" style="margin-top: 15px;">
+                        🌟 Regresar al Menú Principal
+                    </button>
+                `;
+                return; // Detiene la función aquí para que no intente cargar el mapa ni las piezas del nivel 21
+            }
+            // --- FIN CÓDIGO NUEVO ---
+
 
             document.getElementById('lbl-nivel').innerText = nivelActualJugador;
-            
-            // Actualizar porcentaje de la barra de progreso
-            const porcentaje = (nivelActualJugador / 20) * 100;
-            document.getElementById('barra-progreso').style.width = `${porcentaje}%`;
+            document.getElementById('lbl-nombre-escenario').innerText = nombresEscenarios[nivelActualJugador] || "Camino Desconocido";
+            document.getElementById('barra-progreso').style.width = `${(nivelActualJugador / 20) * 100}%`;
 
-            // 4. Cargar facciones desbloqueadas
-            cargarFaccionesDesbloqueadas(perfil);
-        }
+            const coordActual = mapaCoordenadas[nivelActualJugador] || mapaCoordenadas[1];
+            const contenedorPieza = document.getElementById('contenedor-pieza');
+            const imgEl = document.getElementById('img-heroe-pieza');
+            imgEl.removeAttribute('reintentado');
 
-        function cargarFaccionesDesbloqueadas(perfil) {
-            const selectJ1 = document.getElementById('fac-j1');
-            selectJ1.innerHTML = '';
+            // Siempre plantamos el div en la coordenada final
+            contenedorPieza.style.gridArea = `${coordActual.r} / ${coordActual.c} / ${coordActual.r + 1} / ${coordActual.c + 1}`;
 
-            let unlockedKeys = [];
+            if (nivelActualJugador > 1) {
+                const nivelAnterior = nivelActualJugador - 1;
+                const coordAnt = mapaCoordenadas[nivelAnterior];
+                const heroeAnt = obtenerDatosHeroePorNivel(nivelAnterior);
+                const heroeAct = obtenerDatosHeroePorNivel(nivelActualJugador);
 
-            if (perfil) {
-                unlockedKeys = (perfil.facciones_desbloqueadas || perfil.facciones_facciones_desbloqueadas || []).map(f => f.toLowerCase());
-            }
+                // Calcular la diferencia de posiciones relativas a la celda
+                const offsetX = (coordAnt.c - coordActual.c) * 100;
+                const offsetY = (coordAnt.r - coordActual.r) * 100;
 
-            if (unlockedKeys.length === 0) {
-                unlockedKeys = ['humano'];
-            }
+                // 1. Setear el estado inicial (oculto en la posición anterior)
+                contenedorPieza.style.transition = 'none';
+                contenedorPieza.style.transform = `translate(${offsetX}%, ${offsetY}%)`;
+                imgEl.src = heroeAnt.imagen;
+                imgEl.style.animation = 'none';
 
-            const mapaFacciones = [
-                { key: 'humano', label: 'Humanos', value: 'Humano' },
-                { key: 'humanos', label: 'Humanos', value: 'Humano' },
-                { key: 'mago', label: 'Magos', value: 'Mago' },
-                { key: 'magos', label: 'Magos', value: 'Mago' },
-                { key: 'elfo', label: 'Elfos', value: 'Elfo' },
-                { key: 'elfos', label: 'Elfos', value: 'Elfo' },
-                { key: 'coloso', label: 'Colosos', value: 'Coloso' },
-                { key: 'colosos', label: 'Colosos', value: 'Coloso' }
-            ];
+                // Forzar al navegador a registrar los cambios sin animarlos aún (Reflow)
+                void contenedorPieza.offsetWidth;
 
-            let agregados = new Set();
+                // 2. Iniciar el movimiento suave hacia la posición actual
+                contenedorPieza.style.transition = 'transform 1.2s ease-in-out';
+                contenedorPieza.style.transform = `translate(0%, 0%)`;
 
-            mapaFacciones.forEach(f => {
-                if (unlockedKeys.includes(f.key) && !agregados.has(f.value)) {
-                    const opt = document.createElement('option');
-                    opt.value = f.value;
-                    opt.textContent = f.label;
-                    selectJ1.appendChild(opt);
-                    agregados.add(f.value);
-                }
-            });
+                // 3. Evaluar qué pasa cuando llega a destino
+                setTimeout(() => {
+                    if (heroeAnt.imagen !== heroeAct.imagen) {
+                        // Animación de transformación si cambia el héroe
+                        imgEl.style.animation = 'desaparecerMagico 0.3s forwards';
+                        
+                        setTimeout(() => {
+                            imgEl.src = heroeAct.imagen;
+                            imgEl.style.animation = 'aparecerMagico 0.3s forwards';
+                            
+                            setTimeout(() => {
+                                imgEl.style.animation = 'flotarAnimacion 2.2s ease-in-out infinite';
+                            }, 300); // Luego de agrandarse, empieza a flotar
+                        }, 300); // Luego de achicarse, cambia la imagen
+                        
+                    } else {
+                        // Si es el mismo, simplemente arranca a flotar
+                        imgEl.style.animation = 'flotarAnimacion 2.2s ease-in-out infinite';
+                    }
+                }, 1200); // Tiempo que dura el viaje (1.2s)
 
-            if (selectJ1.options.length === 0) {
-                const opt = document.createElement('option');
-                opt.value = 'Humano';
-                opt.textContent = 'Humanos';
-                selectJ1.appendChild(opt);
-            }
-
-            actualizarImagen();
-        }
-
-        function actualizarImagen() {
-            const selector = document.getElementById('fac-j1');
-            const imagen = document.getElementById('img-j1');
-            const panelInfo = document.getElementById('info-j1');
-            const faccion = selector.value;
-            
-            imagen.removeAttribute('reintentado');
-            // Mantenemos el '1' al final de la imagen ya que es el Jugador 1
-            imagen.src = `Select${faccion}1.PNG`;
-
-            const info = datosFacciones[faccion];
-            if (info) {
-                panelInfo.innerHTML = `
-                    <div><strong>Pros:</strong> ${info.pros}</div>
-                    <div><strong>Contras:</strong> ${info.contras}</div>
-                    <div class="info-derrota">Derrota: ${info.derrota}</div>
-                `;
+            } else {
+                // Nivel 1: Cargado normal y directo a flotar
+                const heroeAct = obtenerDatosHeroePorNivel(nivelActualJugador);
+                imgEl.src = heroeAct.imagen;
+                contenedorPieza.style.transform = `translate(0%, 0%)`;
+                imgEl.style.animation = 'flotarAnimacion 2.2s ease-in-out infinite';
             }
         }
 
         function iniciarBatallaHistoria() {
-            const j1 = document.getElementById('fac-j1').value.toLowerCase() + 's';
-
-            const config = { 
-                jugador1: j1,
-                modoJuego: 'historia',
-                nivelHistoria: nivelActualJugador
-            };
-            
+            const config = { modoJuego: 'historia', nivelHistoria: nivelActualJugador };
             localStorage.setItem('configuracionPartida', JSON.stringify(config));
             localStorage.setItem('modoJuego', 'historia');
-            
-            // Redirige directamente al tablero exclusivo del modo historia
             window.location.href = 'tablero_historia.html';
         }
 
-        window.onload = async function() {
-            await cargarDatosUsuario();
-        };
+        window.onload = async function() { await cargarDatosUsuario(); };
     </script>
 </body>
 </html>
