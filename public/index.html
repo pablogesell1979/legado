@@ -188,6 +188,31 @@
     <script>
         window.estadoJugador = { id: null, nombre: 'Jugador', monedas: 0, elo: 1000, facciones_desbloqueadas: [], personajes_comprados: [] };
 
+// --- FUNCIÓN NUEVA PARA CONTAR CONECTADOS ---
+        function iniciarContadorOnline() {
+            const channel = window.clienteSupabase.channel('sala-global-online');
+
+            channel
+                .on('presence', { event: 'sync' }, () => {
+                    const state = channel.presenceState();
+                    const totalConectados = Object.keys(state).length;
+                    
+                    const contadorEl = document.getElementById('online-count');
+                    if (contadorEl) {
+                        contadorEl.innerText = `${totalConectados} Conectado${totalConectados === 1 ? '' : 's'}`;
+                    }
+                })
+                .subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        await channel.track({ 
+                            conectado_en: new Date().toISOString(),
+                            usuario: window.estadoJugador?.nombre || 'Anónimo'
+                        });
+                    }
+                });
+        }
+// ---------------------------------------------
+
         async function iniciarSesion() {
             const { data, error } = await window.clienteSupabase.auth.signInWithOAuth({
                 provider: 'google',
