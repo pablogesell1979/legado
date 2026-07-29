@@ -452,16 +452,44 @@
                     
                     let esValido = false; const diffF = Math.abs(f - fila); const diffC = Math.abs(c - col); const orientacion = pieza.orientacion; const piezaDestino = mapaPiezas[idDestino];
 
-                    if (pieza.faccion === 'coloso') {
-                        if (pieza.texto === 'TO') { if (diffF <= 1 && diffC <= 1) esValido = true; }
-                        else if (pieza.texto === 'BI' || pieza.texto === 'BD') { if (diffF === diffC && diffF <= 3) esValido = lineaDespejada(fila, col, f, c); }
-                        else if (pieza.texto === 'PI' || pieza.texto === 'PD') { if ((diffF === 0 || diffC === 0) && (diffF <= 2 && diffC <= 2)) esValido = lineaDespejada(fila, col, f, c); }
-                        else if (pieza.texto === 'RO') { if (tieneBrazoAdyacente(fila, col, pieza.jugador)) { if (diffF === diffC || diffF === 0 || diffC === 0) esValido = lineaDespejada(fila, col, f, c); } }
+if (pieza.faccion === 'coloso') {
+    // MOVIMIENTO DEL TORSO
+    if (pieza.texto === 'TO') { 
+        let dirAdelante = (pieza.orientacion === 'Atras') ? -1 : 1; 
+        let avance = (f - fila) * dirAdelante; 
 
-                        if (esValido && ['TO', 'BI', 'BD', 'PI', 'PD'].includes(pieza.texto)) {
-                            if (!esAnatomiaValidaColoso(`${fila}-${col}`, idDestino, pieza)) esValido = false; 
-                        }
-                    }
+        if (avance === 0) {
+            if (diffC <= 2) esValido = true; 
+        } else if (avance > 0) {
+            if (diffC === 0 && avance <= 3) esValido = true; 
+            else if (diffF === diffC && avance <= 2) esValido = true; 
+        } else if (avance < 0) {
+            if (avance === -1 && diffC <= 1) esValido = true; 
+        }
+    }
+    // MOVIMIENTO DE LOS BRAZOS
+    else if (pieza.texto === 'BI' || pieza.texto === 'BD') { 
+        if (diffF === diffC && diffF <= 3) esValido = lineaDespejada(fila, col, f, c); 
+    }
+    // MOVIMIENTO DE LAS PIERNAS (Torre 2 + Caballo)
+    else if (pieza.texto === 'PI' || pieza.texto === 'PD') { 
+        if ((diffF === 0 || diffC === 0) && (diffF <= 2 && diffC <= 2)) {
+            esValido = lineaDespejada(fila, col, f, c); 
+        } else if ((diffF === 2 && diffC === 1) || (diffF === 1 && diffC === 2)) {
+            esValido = true; 
+        }
+    }
+    // MOVIMIENTO DE LA ROCA
+    else if (pieza.texto === 'RO') { 
+        if (tieneBrazoAdyacente(fila, col, pieza.jugador)) { 
+            if (diffF === diffC || diffF === 0 || diffC === 0) esValido = lineaDespejada(fila, col, f, c); 
+        } 
+    }
+
+    if (esValido && ['TO', 'BI', 'BD', 'PI', 'PD'].includes(pieza.texto)) {
+        if (!esAnatomiaValidaColoso(`${fila}-${col}`, idDestino, pieza)) esValido = false; 
+    }
+}
                     else if (pieza.faccion === 'humanos') {
                         if (pieza.texto === 'MI') {
                             let dirAdelante = (orientacion === 'Atras') ? -1 : 1;
