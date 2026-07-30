@@ -858,7 +858,7 @@ if (pieza.faccion === 'coloso') {
         // --- INICIALIZACIÓN NUEVA MULTIJUGADOR ---
         function inicializarJuegoMulti() {
             const dataGuardada = localStorage.getItem('configuracionOnline');
-            let minutosSeleccionados = 6; 
+            let minutosSeleccionados = 2; 
 
             if (dataGuardada) {
                 const config = JSON.parse(dataGuardada);
@@ -866,7 +866,7 @@ if (pieza.faccion === 'coloso') {
                 esPartidaLocal = false;
                 salaActual = config.salaId;
                 miNumeroDeJugador = config.rol === 'crear' ? 1 : 2;
-                minutosSeleccionados = config.tiempoMinutos || 6;
+                minutosSeleccionados = config.tiempoMinutos || 2;
 
                 // Formateamos las facciones para no arrastrar las "s" o "os"
                 const formatear = (f) => f.replace(/s$/, '').replace(/o$/, 'o');
