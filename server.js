@@ -5,8 +5,8 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
-// Le dice a Express que sirva los HTML/CSS/JS de la carpeta "public"
-app.use(express.static('public'));
+// Le dice a Express que sirva los HTML/CSS/JS de la carpeta "public" permitiendo archivos y carpetas ocultas (necesario para .well-known)[cite: 1]
+app.use(express.static('public', { dotfiles: 'allow' }));
 
 // Configuramos CORS
 const io = new Server(server, {
