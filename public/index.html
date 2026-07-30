@@ -285,6 +285,16 @@ iniciarContadorOnline(); // <--- ¡Faltaba agregar esta línea aquí!
                 
             }, 3000);
         };
+
+// --- REGISTRO DEL SERVICE WORKER PARA LA APP ANDROID ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((reg) => { console.log('Service Worker registrado con éxito:', reg.scope); })
+                    .catch((err) => { console.log('Error al registrar el Service Worker:', err); });
+            });
+        }
+
     </script>
 </body>
 </html>
