@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LEGADO: Asymmetric Chess - Reglas Oficiales y Facciones</title>
+    <style>
+        :root {
+            --bg-dark: #0a0c10;
+            --bg-card: #141822;
+            --bg-card-hover: #1c2230;
+            --accent-gold: #f39c12;
+            --accent-gold-glow: rgba(243, 156, 18, 0.4);
+            --accent-cyan: #00d2ff;
+            --accent-red: #e74c3c;
+            --accent-green: #2ecc71;
+            --accent-purple: #9b59b6;
+            --text-main: #f1f2f6;
+            --text-muted: #a4b0be;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            line-height: 1.5;
+            padding-bottom: 80px; /* Space for bottom nav */
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        header {
+            background: linear-gradient(180deg, rgba(20,24,34,0.95) 0%, rgba(10,12,16,0.8) 100%);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 16px;
+            text-align: center;
+        }
+
+        .brand-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 50%, #e67e22 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* Mobile Tab View Controller */
+        .tab-contents {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Navigation Bar (Bottom Mobile Bar) */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(18, 22, 32, 0.96);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 4px;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+
+        .nav-item .icon {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        .nav-item.active {
+            color: var(--accent-gold);
+            background: rgba(243, 156, 18, 0.1);
+        }
+
+        /* Section Cards & Layout */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 8px;
+        }
+
+        .card-header .badge-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(243, 156, 18, 0.15);
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .card-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        p {
+            font-size: 0.9rem;
+            color: #dcdde1;
+            margin-bottom: 10px;
+        }
+
+        /* Highlight Boxes */
+        .highlight-box {
+            background: rgba(0, 210, 255, 0.08);
+            border-left: 3px solid var(--accent-cyan);
+            padding: 10px 12px;
+            border-radius: 0 8px 8px 0;
+            margin: 10px 0;
+            font-size: 0.85rem;
+        }
+
+        .highlight-box.gold {
+            background: rgba(243, 156, 18, 0.08);
+            border-left-color: var(--accent-gold);
+        }
+
+        .highlight-box.red {
+            background: rgba(231, 76, 60, 0.08);
+            border-left-color: var(--accent-red);
+        }
+
+        /* Grid stats / key-values */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Faction Selector Horizontal Scroll / Pills */
+        .faction-pills {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+            scrollbar-width: none;
+        }
+
+        .faction-pills::-webkit-scrollbar {
+            display: none;
+        }
+
+        .pill-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pill-btn.active {
+            background: var(--accent-gold);
+            color: #000;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px var(--accent-gold-glow);
+        }
+
+        /* Faction Specific Theme Details */
+        .faction-card {
+            display: none;
+        }
+
+        .faction-card.active {
+            display: block;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .piece-list {
+            list-style: none;
+            margin-top: 8px;
+        }
+
+        .piece-item {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .piece-name {
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .badge-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .tag-red { background: rgba(231, 76, 60, 0.2); color: #ff6b6b; border: 1px solid rgba(231, 76, 60, 0.4); }
+        .tag-green { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); }
+        .tag-gold { background: rgba(243, 156, 18, 0.2); color: #f39c12; border: 1px solid rgba(243, 156, 18, 0.4); }
+        .tag-purple { background: rgba(155, 89, 182, 0.2); color: #be2ed6; border: 1px solid rgba(155, 89, 182, 0.4); }
+
+        /* Feature List */
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 0.88rem;
+        }
+
+        .feature-icon {
+            color: var(--accent-gold);
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        /* Banner Box */
+        .hero-box {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.15) 0%, rgba(0, 210, 255, 0.1) 100%);
+            border: 1px solid rgba(243, 156, 18, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .hero-box h2 {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .hero-box p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-title">LEGADO</div>
+        <div class="brand-subtitle">Asymmetric Chess • Manual de Reglas</div>
+    </header>
+
+    <div class="tab-contents">
+
+        <!-- ==================== TAB 1: REGLAS BÁSICAS ==================== -->
+        <div id="tab-reglas" class="tab-pane active">
+            
+            <div class="hero-box">
+                <h2>Ajedrez Táctico y Asimétrico</h2>
+                <p>Una reinvención del ajedrez clásico por turnos donde cada facción juega con sus propias reglas, piezas y condiciones de victoria.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="badge-icon">🎯</div>
+                    <div>
+                        <div class="card-title">Objetivo del Juego</div>
+                        <div class="card-subtitle">Condición de Victoria / Defección</div>
+                    </div>
+                </div>
+                <p>El objetivo principal es <strong>eliminar las piezas clave del oponente</strong> o forzar su condición de derrota única.</p>
+                
+                <div class="highlight-box red">
+                    <strong>¡Atención!</strong> No hay "Jaque Mate" universal. Cada facción pierde de forma totalmente distinta:
+                    <ul style="margin-left: 18px; margin-top: 6px; font-size: 0.82rem; color: #f5cd79;">
+                        <li><strong>Coloso:</strong> Pierde si eliminan sus 4 extremidades.</li>
+                        <li><strong>Elfos:</strong> Pierden si destruyen su <em>Árbol Sagrado</em>.</li>
+                        <li><strong>Humanos:</strong> Pierden si eliminan a su <em>Comandante</em>.</li>
+                        <li><strong>Magos:</strong> Pierden al caer sus Grandes Magos.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="badge-icon">♟️</div>
+                    <div>
+                        <div class="card-title">Dinámica de Juego</div>
+                        <div class="card-subtitle">Reglas Turno a Turno</div>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <span class="feature-icon">⚡</span>
+                    <div>
+                        <strong>1 Acción por Turno:</strong> En tu turno podés mover una pieza, activar una habilidad especial o ejecutar un conjuro único.
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">🛡️</span>
+                    <div>
+                        <strong>Captura Tradicional:</strong> Al igual que en el ajedrez clásico, cualquier pieza (por más débil que sea) puede capturar a otra pisando su casilla.
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">🤖</span>
+                    <div>
+                        <strong>Motor de Validación:</strong> El juego valida automáticamente los movimientos legales para que te concentres 100% en la estrategia pura.
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">⏱️</span>
+                    <div>
+                        <strong>Reloj de Partida:</strong> Manejo de tiempo optimizado para partidas ágiles, dinámicas y tensas desde el celular.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="badge-icon">🗺️</div>
+                    <div>
+                        <div class="card-title">El Tablero (9x9 + Terreno)</div>
+                        <div class="card-subtitle">Casillas de Agua y Obstáculos</div>
+                    </div>
+                </div>
+                <p>Un campo de batalla expandido de <strong>9x9 casillas</strong> con elementos de terreno interactivos:</p>
+                
+                <div class="grid-2">
+                    <div class="stat-card">
+                        <div class="stat-value">9x9</div>
+                        <div class="stat-label">Casillas Totales</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Casillas de Agua</div>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    💧 <strong>Efecto del Agua:</strong> Las 5 casillas de agua alteran la movilidad de las piezas y bloquean trayectorias terrestres.
+                </div>
+                <div class="highlight-box gold">
+                    🌲 <strong>Terreno Dinámico:</strong> Facciones como los Elfos o Magos pueden modificar el mapa invocando muros de hielo, fuego o árboles sagrados.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== TAB 2: FACCIONES ==================== -->
+        <div id="tab-facciones" class="tab-pane">
+
+            <div class="faction-pills">
+                <button class="pill-btn active" onclick="switchFaction('coloso', this)">🪨 Coloso</button>
+                <button class="pill-btn" onclick="switchFaction('elfos', this)">🧝 Elfos</button>
+                <button class="pill-btn" onclick="switchFaction('humanos', this)">🛡️ Humanos</button>
+                <button class="pill-btn" onclick="switchFaction('magos', this)">🔮 Magos</button>
+                <button class="pill-btn" onclick="switchFaction('proximas', this)">✨ Futuras</button>
+            </div>
+
+            <!-- FACCION: COLOSO -->
+            <div id="fac-coloso" class="faction-card active">
+                <div class="card">
+                    <span class="badge-tag tag-gold">Mecánica de Cohesión</span>
+                    <h3 style="color:#fff; font-size:1.2rem; margin-bottom:6px;">El Coloso</h3>
+                    <p>Una entidad titánica dividida en <strong>5 piezas interconectadas</strong> que deben actuar en perfecta coordinación sobre el tablero.</p>
+                    
+                    <div class="highlight-box red">
+                        ⚠️ <strong>Condición de Derrota:</strong> Perder sus 4 extremidades. Al quedar desarmado, su Torso permanece vulnerable.
+                    </div>
+
+                    <div class="highlight-box gold">
+                        ⛓️ <strong>Restricción de Distancia (4 Casillas):</strong> Ninguna extremidad puede alejarse a más de 4 casillas del Torso. Si excede el rango, queda inmovilizada.
+                    </div>
+
+                    <h4 style="color:var(--accent-cyan); margin: 12px 0 6px 0; font-size:0.9rem;">Piezas del Coloso:</h4>
+                    <ul class="piece-list">
+                        <li class="piece-item">
+                            <span class="piece-name">Torso Central</span>
+                            Pieza núcleo que define el rango de control de la entidad.
+                        </li>
+                        <li class="piece-item">
+                            <span class="piece-name">Brazo Izquierdo y Brazo Derecho</span>
+                            Extremidades ofensivas con patrones propios de ataque.
+                        </li>
+                        <li class="piece-item">
+                            <span class="piece-name">Pierna Izquierda y Pierna Derecha</span>
+                            Encargadas del desplazamiento estratégico y control del espacio.
+                        </li>
+                        <li class="piece-item">
+                            <span class="piece-name">4 Rocas Arrojadizas</span>
+                            Ataque a distancia con alcance de 3 casillas en cualquier dirección.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- FACCION: ELFOS -->
+            <div id="fac-elfos" class="faction-card">
+                <div class="card">
+                    <span class="badge-tag tag-green">Guerrilla y Terreno</span>
+                    <h3 style="color:#fff; font-size:1.2rem; margin-bottom:6px;">Los Elfos</h3>
+                    <p>Especialistas en control territorial, emboscadas a distancia y protección del bosque ancestral.</p>
+                    
+                    <div class="highlight-box red">
+                        🛡️ <strong>¿Qué Protegen?</strong> El <strong>Árbol Sagrado</strong>. Es su pieza central; si es destruido, los Elfos pierden la partida inmediatamente.
+                    </div>
+
+                    <h4 style="color:var(--accent-cyan); margin: 12px 0 6px 0; font-size:0.9rem;">Ejército Élfico:</h4>
+                    <ul class="piece-list">
+                        <li class="piece-item">
+                            <span class="piece-name">2 Druidas</span>
+                            Pueden teletransportar el Árbol Sagrado y tienen la capacidad de revivir hasta 3 veces.
+                        </li>
+                        <li class="piece-item">
+                            <span class="piece-name">2 Arqueros</span>
+                            Disparan proyectiles certeros en línea recta a larga distancia.
+                        </li>
+                        <li class="piece-item">
+                            <span class="piece-name">2 Exploradores</span>
+                            Movimiento ágil basado en el salto del Caballo de ajedrez.
+                        </li>
+                        <li class="piece-item">
+                            <span class="piece-name">3 Guerreros</span>
+                            Plantan hasta 6 árboles en el tablero para bloquear el paso y dominar casillas.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- FACCION: HUMANOS -->
+            <div id="fac-humanos" class="faction-card">
+                <div class="card">
+                    <span class="badge-tag tag-purple">Evolución Tecnológica</span>
+                    <h3 style="color:#fff; font-size:1.2rem; margin-bottom:6px;">Los Humanos</h3>
+                    <p>Una facción basada en la disciplina militar y el avance científico en tiempo de batalla.</p>
+                    
+                    <div class="highlight-box gold">
+                        ⚙️ <strong>Evolución Tecnológica:</strong> Avanza 1 Nivel de tecnología cada 3 turnos (hasta Nivel 4), mejorando las capacidades y alcance de todo el ejército.
+                    </div>
+
+                    <div class="highlight-box red">
+                        👑 <strong>Puntos Críticos:</strong>
+                        <ul style="margin-left: 16px; margin-top: 4px;">
+                            <li><strong>Comandante:</strong> Pieza clave. Si muere, los Humanos Pierden.</li>
+                            <li><strong>Científico:</strong> Mantiene la evolución. Si muere, la evolución se detiene.</li>
+                        </ul>
+                    </div>
+
+                    <h4 style="color:var(--accent-cyan); margin: 12px 0 6px 0; font-size:0.9rem;">Composición del Ejército:</h4>
+                    <ul class="piece-list">
+                        <li class="piece-item"><span class="piece-name">1 Comandante</span> Liderazgo y condición de supervivencia.</li>
+                        <li class="piece-item"><span class="piece-name">1 Científico</span> Motor del desarrollo tecnológico.</li>
+                        <li class="piece-item"><span class="piece-name">4 Centinelas</span> Unidades tácticas defensivas mejorables.</li>
+                        <li class="piece-item"><span class="piece-name">2 Guerreros y 5 Milicianos</span> Infantería versátil de choque.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- FACCION: MAGOS -->
+            <div id="fac-magos" class="faction-card">
+                <div class="card">
+                    <span class="badge-tag tag-red">Conjuros de Un Solo Uso</span>
+                    <h3 style="color:#fff; font-size:1.2rem; margin-bottom:6px;">Los Magos</h3>
+                    <p>Dominio del fuego, hielo y la alteración mística. Cada conjuro es único, devastador e irrepetible.</p>
+
+                    <div class="highlight-box gold">
+                        ✨ <strong>Estrategia de Conjuros:</strong> La clave está en la precisión. Utilizar los hechizos en el momento exacto para desarticular la estrategia rival.
+                    </div>
+
+                    <h4 style="color:var(--accent-cyan); margin: 12px 0 6px 0; font-size:0.9rem;">Poderes Mágicos:</h4>
+                    <ul class="piece-list">
+                        <li class="piece-item">
+                            <span class="piece-name">Gran Mago Rojo</span>
+                            Hechizos de destrucción: <em>Bola de Fuego, Teletransporte, Muro de Fuego, Rayo</em>.
+                        </li>
+                        <li class="piece-item">
+                            <span class="piece-name">Gran Mago Azul</span>
+                            Hechizos de control: <em>Muro de Hielo, Zona Prohibida, Elemental de Agua, Movimiento Veloz</em>.
+                        </li>
+                        <li class="piece-item">
+                            <span class="piece-name">Mago Aprendiz (Soporte)</span>
+                            Magia táctica: <em>Telequinesis, Piel de Piedra, Inmovilizar</em>.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- FACCION: PROXIMAS -->
+            <div id="fac-proximas" class="faction-card">
+                <div class="card" style="text-align: center;">
+                    <span class="badge-tag tag-gold">Universo en Expansión</span>
+                    <h3 style="color:#fff; font-size:1.2rem; margin-bottom:10px;">Próximas Facciones</h3>
+                    <p>LEGADO está diseñado como un universo en constante evolución. Muy pronto se sumarán nuevas facciones con mecánicas inéditas:</p>
+                    
+                    <div class="grid-2" style="margin-top: 14px;">
+                        <div class="stat-card">
+                            <div style="font-size:1.5rem;">🏹</div>
+                            <div class="stat-value" style="font-size:0.9rem; color:#fff;">AMAZONA</div>
+                        </div>
+                        <div class="stat-card">
+                            <div style="font-size:1.5rem;">🥷</div>
+                            <div class="stat-value" style="font-size:0.9rem; color:#fff;">NINJA</div>
+                        </div>
+                        <div class="stat-card">
+                            <div style="font-size:1.5rem;">🦎</div>
+                            <div class="stat-value" style="font-size:0.9rem; color:#fff;">CRIATURA</div>
+                        </div>
+                        <div class="stat-card">
+                            <div style="font-size:1.5rem;">🤖</div>
+                            <div class="stat-value" style="font-size:0.9rem; color:#fff;">CIBORG</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== TAB 3: ELO Y ORO ==================== -->
+        <div id="tab-elo" class="tab-pane">
+            <div class="card">
+                <div class="card-header">
+                    <div class="badge-icon">🏆</div>
+                    <div>
+                        <div class="card-title">Sistema Competitivo ELO</div>
+                        <div class="card-subtitle">Clasificación de Jugadores</div>
+                    </div>
+                </div>
+                <p>Al igual que en el ajedrez internacional, LEGADO cuenta con un sistema de puntuación <strong>ELO</strong> que mide con precisión tu nivel táctico.</p>
+                
+                <div class="highlight-box">
+                    ⚖️ <strong>Emparejamiento Justo:</strong> El matchmaking automático te enfrenta contra rivales con un puntaje ELO similar para garantizar partidas reñidas.
+                </div>
+
+                <div class="highlight-box gold">
+                    🌐 <strong>Clasificación Global:</strong> Escala posiciones en las ligas competitivas y demostrá quién es el verdadero maestro de la asimetría.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="badge-icon">🪙</div>
+                    <div>
+                        <div class="card-title">Sistema de Oro y Recompensas</div>
+                        <div class="card-subtitle">Desbloqueos y Personalización</div>
+                    </div>
+                </div>
+                <p>El <strong>Oro</strong> es la moneda del juego que obtenés al jugar y superar desafíos.</p>
+
+                <div class="feature-item">
+                    <span class="feature-icon">🔓</span>
+                    <div><strong>Desbloquear Facciones:</strong> Utilizá tu Oro para adquirir nuevas facciones y estilos de juego.</div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">🧩</span>
+                    <div><strong>Nuevas Piezas y Skins:</strong> Personaliza tu Galería con aspectos cosméticos y variantes.</div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">📜</span>
+                    <div><strong>Logros del Modo Historia:</strong> Completa los 20 niveles tácticos para acumular recompensas exclusivas.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="badge-icon">⚖️</div>
+                    <div>
+                        <div class="card-title">Equilibrio Asimétrico</div>
+                        <div class="card-subtitle">Variedad e Igualdad de Oportunidades</div>
+                    </div>
+                </div>
+                <p>Aunque cada facción juega con reglas radicalmente distintas, el juego está minuciosamente balanceado para que cada partida sea equilibrada, única e inolvidable.</p>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 4: MODOS DE JUEGO ==================== -->
+        <div id="tab-modos" class="tab-pane">
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="badge-icon">📜</div>
+                    <div>
+                        <div class="card-title">Modo Historia</div>
+                        <div class="card-subtitle">20 Niveles de Puzzles Tácticos</div>
+                    </div>
+                </div>
+                <p>Supera desafíos tácticos prediseñados de dificultad creciente ("Los Primeros Pasos del Aprendiz") para dominar las mecánicas secretas de cada facción y ganar Oro.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="badge-icon">⚔️</div>
+                    <div>
+                        <div class="card-title">Modo Multijugador Online</div>
+                        <div class="card-subtitle">Encuentros en Tiempo Real</div>
+                    </div>
+                </div>
+                <p>Búsqueda rápida de partida sin complicaciones. Entra directo a la cola de batalla y compite por puntos ELO.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="badge-icon">🤖</div>
+                    <div>
+                        <div class="card-title">Modo Entrenamiento</div>
+                        <div class="card-subtitle">Práctica Local y vs CPU</div>
+                    </div>
+                </div>
+                <p>Practica tus aperturas y combos 1 vs 1 local en el mismo dispositivo o prueba estrategias contra la IA.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="badge-icon">🏛️</div>
+                    <div>
+                        <div class="card-title">Galería de Piezas</div>
+                        <div class="card-subtitle">Compendio Interactivo</div>
+                    </div>
+                </div>
+                <p>Consulta en detalle los atributos, trayectorias de movimiento y habilidades especiales de cada pieza y facción.</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Bottom Mobile Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('tab-reglas', this)">
+            <span class="icon">📜</span>
+            <span>Reglas</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-facciones', this)">
+            <span class="icon">🛡️</span>
+            <span>Facciones</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-elo', this)">
+            <span class="icon">🏆</span>
+            <span>Elo & Oro</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-modos', this)">
+            <span class="icon">🎮</span>
+            <span>Modos</span>
+        </button>
+    </nav>
+
+    <script>
+        function switchTab(tabId, btn) {
+            const panes = document.querySelectorAll('.tab-pane');
+            panes.forEach(pane => pane.classList.remove('active'));
+
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchFaction(factionId, btn) {
+            const fCards = document.querySelectorAll('.faction-card');
+            fCards.forEach(card => card.classList.remove('active'));
+
+            const pills = document.querySelectorAll('.pill-btn');
+            pills.forEach(pill => pill.classList.remove('active'));
+
+            document.getElementById('fac-' + factionId).classList.add('active');
+            btn.classList.add('active');
+        }
+    </script>
+</body>
+</html>
