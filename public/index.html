@@ -5,7 +5,7 @@
 <link rel="manifest" href="/manifest.json">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LEGADOS - Menú Principal</title>
     
     <!-- Librería de Supabase -->
@@ -22,7 +22,7 @@
         /* --- ESTILO DEL FONDO GLOBAL --- */
         body { 
             background-color: var(--bg);
-            background-image: url('fondoindex.jpg'); /* Nuevo fondo de baldosas */
+            background-image: url('fondoindex.jpg'); 
             background-size: cover;
             background-position: center top;
             background-attachment: fixed;
@@ -33,11 +33,12 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            min-height: 100vh; 
-            position: relative; 
+            height: 100vh; /* Fijo para evitar scroll global */
+            padding: 5px 10px; /* Reducido para ganar espacio vertical */
+            box-sizing: border-box;
+            overflow: hidden; 
         }
 
-        /* Ajuste para PC para que el fondo no se estire deformado */
         @media (min-width: 768px) {
             body { background-size: auto 100%; }
         }
@@ -62,33 +63,35 @@
         .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #bdc3c7; display: flex; align-items: center; gap: 5px; text-shadow: 1px 1px 2px #000; }
         .dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
 
-        .logo-img { width: 90%; max-width: 350px; margin: 40px 0 20px 0; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+        /* Ajustes de tamaño en el logo para evitar scroll */
+        .logo-img { width: 80%; max-width: 250px; margin: 15px 0 10px 0; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
 
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; }
         .btn-google { background: #ea4335; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); transition: 0.2s; }
         .btn-google:hover { background: #c0392b; transform: scale(1.05); }
 
-        #main-screen { display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
+        #main-screen { display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; padding: 5px; box-sizing: border-box; }
 
-        .player-status { background: var(--panel); width: 100%; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
-        .player-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: #fff; text-shadow: 1px 1px 3px #000; }
+        .player-status { background: var(--panel); width: 100%; padding: 10px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
+        .player-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; color: #fff; text-shadow: 1px 1px 3px #000; }
         .stats-row { display: flex; gap: 20px; }
-        .stat-badge { display: flex; align-items: center; gap: 5px; font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px; border: 1px solid #444; }
+        .stat-badge { display: flex; align-items: center; gap: 5px; font-size: 1.1rem; font-weight: bold; background: rgba(0,0,0,0.6); padding: 4px 15px; border-radius: 20px; border: 1px solid #444; }
         .stat-elo { color: var(--elo); }
         .stat-gold { color: var(--gold); }
 
-        .facciones-container { display: flex; gap: 15px; margin-bottom: 25px; }
-        .circulo-faccion { width: 55px; height: 55px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8); transition: 0.3s; background-size: cover; background-position: center; border: 3px solid; }
+        /* Facciones compactadas */
+        .facciones-container { display: flex; gap: 12px; margin-bottom: 12px; }
+        .circulo-faccion { width: 45px; height: 45px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8); transition: 0.3s; background-size: cover; background-position: center; border: 3px solid; }
         .faccion-humanos { background-image: url('caphumano.jpg'); border-color: var(--humanos); }
         .faccion-magos { background-image: url('capmago.jpg'); border-color: var(--magos); }
         .faccion-elfos { background-image: url('capelfo.jpg'); border-color: var(--elfos); }
         .faccion-coloso { background-image: url('capcoloso.jpg'); border-color: var(--coloso); }
         .bloqueada { filter: grayscale(100%) opacity(0.4); border: 2px dashed #666; box-shadow: none; }
 
-        /* --- NUEVOS ESTILOS PARA LOS BOTONES CON IMÁGENES --- */
+        /* --- BOTONES COMPACTADOS PARA ENTRAR EN UNA SOLA PANTALLA --- */
         .menu-btn-img {
             width: 100%;
-            margin: 8px 0;
+            margin: 5px 0;
             border: none;
             background-color: transparent;
             background-size: 100% 100%;
@@ -99,7 +102,7 @@
             justify-content: center;
             align-items: center;
             color: white;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.8);
             transition: transform 0.2s, filter 0.2s;
@@ -109,17 +112,17 @@
             filter: brightness(1.1);
         }
 
-        /* Alturas específicas según la proporción del diseño */
-        .btn-tienda { background-image: url('btn-facciones.png'); height: 70px; }
-        .btn-historia { background-image: url('btn-historia.png'); height: 95px; font-size: 1.3rem; }
-        .btn-online { background-image: url('btn-online.png'); height: 95px; font-size: 1.4rem; }
-        .btn-comojugar { background-image: url('btn-comojugar.png'); height: 70px; margin-top: 15px; }
+        /* Alturas ajustadas para evitar scroll */
+        .btn-tienda { background-image: url('btn-facciones.png'); height: 55px; }
+        .btn-historia { background-image: url('btn-historia.png'); height: 70px; font-size: 1.2rem; }
+        .btn-online { background-image: url('btn-online.png'); height: 70px; font-size: 1.3rem; }
+        .btn-comojugar { background-image: url('btn-comojugar.png'); height: 55px; margin-top: 5px; }
 
         .btn-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 80%; /* Margen interno para que el texto no toque los bordes del gráfico */
+            width: 80%; 
         }
         
         .btn-content.center {
@@ -127,24 +130,44 @@
             gap: 15px;
         }
 
-        /* Contenedor para los botones dobles (1vs1 y CPU) */
-        .split-buttons-container {
-            display: flex;
-            justify-content: space-between;
+        /* --- NUEVO CONTENEDOR UNIFICADO PARA 1VS1 Y ENTRENAMIENTO --- */
+        .btn-entrenamiento-doble {
+            background-image: url('btn-entrena.png');
             width: 100%;
-            gap: 10px;
-            margin: 8px 0;
+            height: 60px;
+            margin: 5px 0;
+            display: flex;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: none;
+            background-color: transparent;
+            transition: transform 0.2s, filter 0.2s;
         }
-        .btn-half {
-            flex: 1;
-            height: 70px;
-            font-size: 1rem;
+        /* La imagen de fondo se amplía entera al hacer hover en el contenedor */
+        .btn-entrenamiento-doble:hover {
+            transform: scale(1.03);
+            filter: brightness(1.1);
         }
-        .btn-local { background-image: url('btn-local.png'); }
-        .btn-cpu { background-image: url('btn-cpu.png'); }
 
-        .reward { font-size: 1rem; color: var(--gold); background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 4px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
-        .btn-logout { margin-top: 30px; background: rgba(0,0,0,0.5); border: 1px solid #c0392b; color: #ff7675; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-zona-click {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.8);
+            transition: transform 0.2s;
+        }
+        /* La letra se anima sutilmente al tocar cada mitad */
+        .btn-zona-click:hover {
+            transform: scale(1.05); 
+        }
+
+        .reward { font-size: 0.9rem; color: var(--gold); background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 4px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+        .btn-logout { margin-top: 15px; background: rgba(0,0,0,0.5); border: 1px solid #c0392b; color: #ff7675; padding: 6px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-logout:hover { background: #c0392b; color: white; }
     </style>
 </head>
@@ -208,18 +231,22 @@
             </div>
         </button>
 
-        <!-- Contenedor dividido para 1vs1 y CPU -->
-        <div class="split-buttons-container">
-            <button class="menu-btn-img btn-half btn-local" onclick="irA('seleccion_1vs1.html', '1vs1')">
-                <span>1vs1 Local</span>
-            </button>
-
-            <button class="menu-btn-img btn-half btn-cpu" onclick="irA('seleccion_cpu.html', 'cpu')">
-                <div class="btn-content center" style="flex-direction: column; gap: 5px;">
-                    <span style="font-size: 0.9rem;">Entrenamiento</span>
-                    <div class="reward" style="font-size: 0.8rem; padding: 2px 6px;">🪙 +5</div>
+        <!-- CONTENEDOR UNIFICADO: Imagen compartida, textos y clics independientes -->
+        <div class="btn-entrenamiento-doble">
+            
+            <!-- Mitad Izquierda (1vs1) -->
+            <div class="btn-zona-click" onclick="irA('seleccion_1vs1.html', '1vs1')">
+                <span style="font-size: 0.95rem; margin-left: 25px;">1vs1 Local</span>
+            </div>
+            
+            <!-- Mitad Derecha (CPU) -->
+            <div class="btn-zona-click" onclick="irA('seleccion_cpu.html', 'cpu')">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; margin-left: 30px;">
+                    <span style="font-size: 0.85rem;">Entrenamiento</span>
+                    <div class="reward" style="font-size: 0.7rem; padding: 2px 6px;">🪙 +5</div>
                 </div>
-            </button>
+            </div>
+            
         </div>
 
         <button class="menu-btn-img btn-comojugar" onclick="irA('reglas.html')">
