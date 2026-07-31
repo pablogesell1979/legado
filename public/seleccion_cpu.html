@@ -109,6 +109,15 @@
         }
         .btn-iniciar:hover, .btn-iniciar:active { background-color: #27ae60; }
 
+        .btn-volver {
+            width: 100%; padding: 16px; font-size: 1.2rem; margin-top: 10px;
+            background-color: #2c3e50; color: white; border: none; border-radius: 8px;
+            cursor: pointer; font-weight: bold; transition: background 0.2s;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+        .btn-volver:hover, .btn-iniciar:active { background-color: #000000; }
+
+
         /* --- ADAPTACIÓN RESPONSIVA PARA CELULARES --- */
         @media (max-width: 768px) {
             body { padding: 10px; justify-content: flex-start; }
@@ -179,6 +188,8 @@
         </div>
 
         <button class="btn-iniciar" onclick="iniciarPartida()">Iniciar Entrenamiento</button>
+        <button class="btn-volver" onclick="window.location.href='index.html'">← Volver al Menú</button>
+
     </div>
 
     <script>

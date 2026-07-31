@@ -14,112 +14,138 @@
 
     <style>
         :root { 
-            --bg: #0b0c10; --panel: #1a1d24; --text: #c5c6c7; 
+            --bg: #050608; --panel: rgba(26, 29, 36, 0.85); --text: #ecf0f1; 
             --gold: #f1c40f; --elo: #3498db; --humanos: #2980b9; 
             --magos: #8e44ad; --elfos: #27ae60; --coloso: #c0392b;
         }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; position: relative; }
+        
+        /* --- ESTILO DEL FONDO GLOBAL --- */
+        body { 
+            background-color: var(--bg);
+            background-image: url('fondoindex.jpg'); /* Nuevo fondo de baldosas */
+            background-size: cover;
+            background-position: center top;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: var(--text); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            position: relative; 
+        }
+
+        /* Ajuste para PC para que el fondo no se estire deformado */
+        @media (min-width: 768px) {
+            body { background-size: auto 100%; }
+        }
         
         /* --- ESTILOS DE LA PANTALLA DE CARGA --- */
         #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-image: url('portada1.jpg');
-            background-size: cover; /* Por defecto en celus llena la pantalla */
-            background-position: center;
-            background-repeat: no-repeat; /* Evita que la imagen se duplique en PC */
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            padding-bottom: 60px;
-            transition: opacity 0.5s ease;
-            background-color: var(--bg); /* Color de fondo a los costados en PC */
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: url('portada1.jpg'); background-size: cover; 
+            background-position: center; background-repeat: no-repeat; 
+            z-index: 9999; display: flex; flex-direction: column;
+            justify-content: flex-end; align-items: center;
+            padding-bottom: 60px; transition: opacity 0.5s ease;
+            background-color: var(--bg);
         }
-
-        /* Detecta si es una pantalla de PC o Tablet horizontal y ajusta a lo alto */
-        @media (min-width: 768px) {
-            #loading-screen {
-                background-size: contain; 
-            }
-        }
+        @media (min-width: 768px) { #loading-screen { background-size: contain; } }
         
-        .loader-spinner {
-            width: 45px;
-            height: 45px;
-            border: 5px solid rgba(255, 255, 255, 0.3);
-            border-top: 5px solid var(--gold);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        .loader-text {
-            margin-top: 15px;
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-            text-shadow: 0px 2px 5px rgba(0,0,0,0.8);
-            animation: pulse 1.5s infinite;
-        }
-
+        .loader-spinner { width: 45px; height: 45px; border: 5px solid rgba(255, 255, 255, 0.3); border-top: 5px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        .loader-text { margin-top: 15px; color: white; font-size: 1.2rem; font-weight: bold; text-shadow: 0px 2px 5px rgba(0,0,0,0.8); animation: pulse 1.5s infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        /* --------------------------------------- */
 
-        .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #7f8c8d; display: flex; align-items: center; gap: 5px; }
+        .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #bdc3c7; display: flex; align-items: center; gap: 5px; text-shadow: 1px 1px 2px #000; }
         .dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
 
-        .logo-img { width: 90%; max-width: 350px; margin: 40px 0 20px 0; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .logo-img { width: 90%; max-width: 350px; margin: 40px 0 20px 0; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
 
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; }
-        .btn-google { background: #ea4335; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s; }
-        .btn-google:hover { background: #c0392b; }
+        .btn-google { background: #ea4335; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); transition: 0.2s; }
+        .btn-google:hover { background: #c0392b; transform: scale(1.05); }
 
-        #main-screen { display: none; width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
+        #main-screen { display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
 
-        .player-status { background: var(--panel); width: 100%; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; }
-        .player-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: #fff; }
+        .player-status { background: var(--panel); width: 100%; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
+        .player-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: #fff; text-shadow: 1px 1px 3px #000; }
         .stats-row { display: flex; gap: 20px; }
-        .stat-badge { display: flex; align-items: center; gap: 5px; font-size: 1.2rem; font-weight: bold; background: #000; padding: 5px 15px; border-radius: 20px; border: 1px solid #333; }
+        .stat-badge { display: flex; align-items: center; gap: 5px; font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px; border: 1px solid #444; }
         .stat-elo { color: var(--elo); }
         .stat-gold { color: var(--gold); }
 
         .facciones-container { display: flex; gap: 15px; margin-bottom: 25px; }
-        .circulo-faccion { 
-            width: 55px; 
-            height: 55px; 
-            border-radius: 50%; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4); 
-            transition: 0.3s; 
-            background-size: cover; 
-            background-position: center;
-            border: 3px solid; 
-        }
-        
+        .circulo-faccion { width: 55px; height: 55px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8); transition: 0.3s; background-size: cover; background-position: center; border: 3px solid; }
         .faccion-humanos { background-image: url('caphumano.jpg'); border-color: var(--humanos); }
         .faccion-magos { background-image: url('capmago.jpg'); border-color: var(--magos); }
         .faccion-elfos { background-image: url('capelfo.jpg'); border-color: var(--elfos); }
         .faccion-coloso { background-image: url('capcoloso.jpg'); border-color: var(--coloso); }
-        
         .bloqueada { filter: grayscale(100%) opacity(0.4); border: 2px dashed #666; box-shadow: none; }
 
-        .menu-btn { width: 100%; padding: 14px; margin: 6px 0; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; background: #2c3e50; color: white; }
-        .menu-btn:hover { background: #34495e; }
-        
-        .btn-destacado { transform: scale(1.02); margin: 10px 0; border: 2px solid; }
-        .btn-historia { background: #8e44ad; border-color: #9b59b6; }
-        .btn-historia:hover { background: #9b59b6; }
-        .btn-online { background: #d35400; border-color: #e67e22; }
-        .btn-online:hover { background: #e67e22; }
-        .btn-tienda { background: #27ae60; }
-        .btn-tienda:hover { background: #2ecc71; }
+        /* --- NUEVOS ESTILOS PARA LOS BOTONES CON IMÁGENES --- */
+        .menu-btn-img {
+            width: 100%;
+            margin: 8px 0;
+            border: none;
+            background-color: transparent;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.8);
+            transition: transform 0.2s, filter 0.2s;
+        }
+        .menu-btn-img:hover {
+            transform: scale(1.03);
+            filter: brightness(1.1);
+        }
 
-        .reward { font-size: 0.9rem; color: var(--gold); background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 10px; display: flex; align-items: center; gap: 4px; }
-        .btn-logout { margin-top: 20px; background: transparent; border: 1px solid #c0392b; color: #c0392b; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
+        /* Alturas específicas según la proporción del diseño */
+        .btn-tienda { background-image: url('btn-facciones.png'); height: 70px; }
+        .btn-historia { background-image: url('btn-historia.png'); height: 95px; font-size: 1.3rem; }
+        .btn-online { background-image: url('btn-online.png'); height: 95px; font-size: 1.4rem; }
+        .btn-comojugar { background-image: url('btn-comojugar.png'); height: 70px; margin-top: 15px; }
+
+        .btn-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 80%; /* Margen interno para que el texto no toque los bordes del gráfico */
+        }
+        
+        .btn-content.center {
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Contenedor para los botones dobles (1vs1 y CPU) */
+        .split-buttons-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 10px;
+            margin: 8px 0;
+        }
+        .btn-half {
+            flex: 1;
+            height: 70px;
+            font-size: 1rem;
+        }
+        .btn-local { background-image: url('btn-local.png'); }
+        .btn-cpu { background-image: url('btn-cpu.png'); }
+
+        .reward { font-size: 1rem; color: var(--gold); background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 4px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+        .btn-logout { margin-top: 30px; background: rgba(0,0,0,0.5); border: 1px solid #c0392b; color: #ff7675; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-logout:hover { background: #c0392b; color: white; }
     </style>
 </head>
 <body>
@@ -131,14 +157,14 @@
     </div>
 
     <div class="online-indicator">
-        <div class="dot"></div> <span id="online-count">12 Conectados</span>
+        <div class="dot"></div> <span id="online-count">Cargando...</span>
     </div>
 
     <img src="LogoSolo.png" alt="Logo Legados" class="logo-img">
 
     <!-- PANTALLA DE LOGIN -->
     <div id="login-screen">
-        <p style="text-align: center; max-width: 300px; margin-bottom: 20px; color: #888;">Debes iniciar sesión para guardar tu progreso, ELO y Monedas.</p>
+        <p style="text-align: center; max-width: 300px; margin-bottom: 20px; color: #aaa;">Debes iniciar sesión para guardar tu progreso, ELO y Monedas.</p>
         <button class="btn-google" onclick="iniciarSesion()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
             Entrar con Google
@@ -162,27 +188,44 @@
             <div id="fac-coloso" class="circulo-faccion faccion-coloso bloqueada" title="Coloso"></div>
         </div>
 
-        <button class="menu-btn btn-tienda" onclick="irA('galeria.html')">
-            <span>🛒 Conseguir Facciones</span>
+        <button class="menu-btn-img btn-tienda" onclick="irA('galeria.html')">
+            <div class="btn-content center">
+                <span>Conseguir Facciones</span>
+            </div>
         </button>
 
-        <button class="menu-btn btn-destacado btn-historia" onclick="irA('seleccion_historia.html', 'historia')">
-            <span>📖 Modo Historia</span>
-            <div class="reward">🪙 +10</div>
+        <button class="menu-btn-img btn-historia" onclick="irA('seleccion_historia.html', 'historia')">
+            <div class="btn-content">
+                <span>Modo Historia</span>
+                <div class="reward">🪙 +10</div>
+            </div>
         </button>
 
-        <button class="menu-btn btn-destacado btn-online" onclick="irA('seleccion_multi.html', 'online')">
-            <span>🌐 Jugar Online</span>
-            <div class="reward">🪙 +25</div>
+        <button class="menu-btn-img btn-online" onclick="irA('seleccion_multi.html', 'online')">
+            <div class="btn-content center">
+                <span>Jugar Online</span>
+                <div class="reward">🪙 +25</div>
+            </div>
         </button>
 
-        <button class="menu-btn" onclick="irA('seleccion_1vs1.html', '1vs1')">
-            <span>⚔️ 1vs1 Local</span>
-        </button>
+        <!-- Contenedor dividido para 1vs1 y CPU -->
+        <div class="split-buttons-container">
+            <button class="menu-btn-img btn-half btn-local" onclick="irA('seleccion_1vs1.html', '1vs1')">
+                <span>1vs1 Local</span>
+            </button>
 
-        <button class="menu-btn" onclick="irA('seleccion_cpu.html', 'cpu')">
-            <span>🤖 Entrenamiento Vs CPU</span>
-            <div class="reward">🪙 +5</div>
+            <button class="menu-btn-img btn-half btn-cpu" onclick="irA('seleccion_cpu.html', 'cpu')">
+                <div class="btn-content center" style="flex-direction: column; gap: 5px;">
+                    <span style="font-size: 0.9rem;">Entrenamiento</span>
+                    <div class="reward" style="font-size: 0.8rem; padding: 2px 6px;">🪙 +5</div>
+                </div>
+            </button>
+        </div>
+
+        <button class="menu-btn-img btn-comojugar" onclick="irA('reglas.html')">
+            <div class="btn-content center">
+                <span>Cómo Jugar</span>
+            </div>
         </button>
 
         <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
@@ -191,7 +234,6 @@
     <script>
         window.estadoJugador = { id: null, nombre: 'Jugador', monedas: 0, elo: 1000, facciones_desbloqueadas: [], personajes_comprados: [] };
 
-// --- FUNCIÓN NUEVA PARA CONTAR CONECTADOS ---
         function iniciarContadorOnline() {
             const channel = window.clienteSupabase.channel('sala-global-online');
 
@@ -214,7 +256,6 @@
                     }
                 });
         }
-// ---------------------------------------------
 
         async function iniciarSesion() {
             const { data, error } = await window.clienteSupabase.auth.signInWithOAuth({
@@ -283,13 +324,12 @@
                 setTimeout(() => {
                     loader.style.display = 'none';
                     verificarSesion();
-iniciarContadorOnline(); // <--- ¡Faltaba agregar esta línea aquí!
+                    iniciarContadorOnline();
                 }, 500); 
                 
             }, 3000);
         };
 
-// --- REGISTRO DEL SERVICE WORKER PARA LA APP ANDROID ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
