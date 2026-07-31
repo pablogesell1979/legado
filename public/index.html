@@ -33,10 +33,11 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            height: 100vh; /* Fijo para evitar scroll global */
-            padding: 5px 10px; /* Reducido para ganar espacio vertical */
+            justify-content: center; /* Centra todo verticalmente si sobra espacio */
+            min-height: 100vh; /* Permite scroll solo si la pantalla es muy diminuta */
+            padding: 20px 10px; 
             box-sizing: border-box;
-            overflow: hidden; 
+            overflow-x: hidden; 
         }
 
         @media (min-width: 768px) {
@@ -63,8 +64,7 @@
         .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #bdc3c7; display: flex; align-items: center; gap: 5px; text-shadow: 1px 1px 2px #000; }
         .dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
 
-        /* Ajustes de tamaño en el logo para evitar scroll */
-        .logo-img { width: 80%; max-width: 250px; margin: 15px 0 10px 0; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+        .logo-img { width: 80%; max-width: 280px; margin: 0 0 15px 0; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
 
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; }
         .btn-google { background: #ea4335; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); transition: 0.2s; }
@@ -72,35 +72,31 @@
 
         #main-screen { display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; padding: 5px; box-sizing: border-box; }
 
-        .player-status { background: var(--panel); width: 100%; padding: 10px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
-        .player-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; color: #fff; text-shadow: 1px 1px 3px #000; }
+        .player-status { background: var(--panel); width: 94%; padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; }
+        .player-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; color: #fff; text-shadow: 1px 1px 3px #000; }
         .stats-row { display: flex; gap: 20px; }
-        .stat-badge { display: flex; align-items: center; gap: 5px; font-size: 1.1rem; font-weight: bold; background: rgba(0,0,0,0.6); padding: 4px 15px; border-radius: 20px; border: 1px solid #444; }
+        .stat-badge { display: flex; align-items: center; gap: 5px; font-size: 1.1rem; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px; border: 1px solid #444; }
         .stat-elo { color: var(--elo); }
         .stat-gold { color: var(--gold); }
 
-        /* Facciones compactadas */
-        .facciones-container { display: flex; gap: 12px; margin-bottom: 12px; }
-        .circulo-faccion { width: 45px; height: 45px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8); transition: 0.3s; background-size: cover; background-position: center; border: 3px solid; }
+        .facciones-container { display: flex; gap: 15px; margin-bottom: 15px; }
+        .circulo-faccion { width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8); transition: 0.3s; background-size: cover; background-position: center; border: 3px solid; }
         .faccion-humanos { background-image: url('caphumano.jpg'); border-color: var(--humanos); }
         .faccion-magos { background-image: url('capmago.jpg'); border-color: var(--magos); }
         .faccion-elfos { background-image: url('capelfo.jpg'); border-color: var(--elfos); }
         .faccion-coloso { background-image: url('capcoloso.jpg'); border-color: var(--coloso); }
         .bloqueada { filter: grayscale(100%) opacity(0.4); border: 2px dashed #666; box-shadow: none; }
 
-        /* --- BOTONES COMPACTADOS PARA ENTRAR EN UNA SOLA PANTALLA --- */
+        /* --- BOTONES CORREGIDOS --- */
         .menu-btn-img {
-            width: 100%;
-            margin: 5px 0;
+            width: 94%; /* Reducido levemente para que no queden tan anchos/achatados */
+            margin: 6px auto;
             border: none;
             background-color: transparent;
             background-size: 100% 100%;
             background-repeat: no-repeat;
             background-position: center;
             cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             color: white;
             font-size: 1.1rem;
             font-weight: bold;
@@ -112,17 +108,20 @@
             filter: brightness(1.1);
         }
 
-        /* Alturas ajustadas para evitar scroll */
-        .btn-tienda { background-image: url('btn-facciones.png'); height: 55px; }
-        .btn-historia { background-image: url('btn-historia.png'); height: 70px; font-size: 1.2rem; }
-        .btn-online { background-image: url('btn-online.png'); height: 70px; font-size: 1.3rem; }
-        .btn-comojugar { background-image: url('btn-comojugar.png'); height: 55px; margin-top: 5px; }
+        /* Alturas recalibradas para mantener la proporción sin achatarlos */
+        .btn-tienda { background-image: url('btn-facciones.png'); height: 75px; }
+        .btn-historia { background-image: url('btn-historia.png'); height: 90px; font-size: 1.25rem; }
+        .btn-online { background-image: url('btn-online.png'); height: 90px; font-size: 1.35rem; }
+        .btn-comojugar { background-image: url('btn-comojugar.png'); height: 75px; margin-top: 5px; }
 
+        /* Contenedor interno para centrado absoluto */
         .btn-content {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            width: 80%; 
+            width: 100%;
+            height: 100%; /* Forzar uso de todo el alto del botón */
+            padding: 0 10%;
+            box-sizing: border-box;
         }
         
         .btn-content.center {
@@ -130,12 +129,16 @@
             gap: 15px;
         }
 
-        /* --- NUEVO CONTENEDOR UNIFICADO PARA 1VS1 Y ENTRENAMIENTO --- */
+        .btn-content.space-between {
+            justify-content: space-between;
+        }
+
+        /* --- CONTENEDOR 1VS1 Y ENTRENAMIENTO --- */
         .btn-entrenamiento-doble {
             background-image: url('btn-entrena.png');
-            width: 100%;
-            height: 60px;
-            margin: 5px 0;
+            width: 94%; /* Mismo ancho que los demás */
+            height: 75px; /* Proporción correcta */
+            margin: 6px auto;
             display: flex;
             background-size: 100% 100%;
             background-repeat: no-repeat;
@@ -144,7 +147,6 @@
             background-color: transparent;
             transition: transform 0.2s, filter 0.2s;
         }
-        /* La imagen de fondo se amplía entera al hacer hover en el contenedor */
         .btn-entrenamiento-doble:hover {
             transform: scale(1.03);
             filter: brightness(1.1);
@@ -152,22 +154,30 @@
 
         .btn-zona-click {
             flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             cursor: pointer;
             color: white;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.8);
             transition: transform 0.2s;
         }
-        /* La letra se anima sutilmente al tocar cada mitad */
         .btn-zona-click:hover {
             transform: scale(1.05); 
         }
 
+        /* Contenedores flexibles internos para evadir el ícono y centrar el texto */
+        .zona-texto-doble {
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 100%; 
+            height: 100%; 
+            padding-left: 35px; /* Empuja el texto hacia la derecha esquivando la espada/robot */
+            box-sizing: border-box;
+        }
+
         .reward { font-size: 0.9rem; color: var(--gold); background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 4px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
-        .btn-logout { margin-top: 15px; background: rgba(0,0,0,0.5); border: 1px solid #c0392b; color: #ff7675; padding: 6px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        
+        .btn-logout { margin-top: 20px; background: rgba(0,0,0,0.5); border: 1px solid #c0392b; color: #ff7675; padding: 8px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-logout:hover { background: #c0392b; color: white; }
     </style>
 </head>
@@ -218,7 +228,7 @@
         </button>
 
         <button class="menu-btn-img btn-historia" onclick="irA('seleccion_historia.html', 'historia')">
-            <div class="btn-content">
+            <div class="btn-content space-between">
                 <span>Modo Historia</span>
                 <div class="reward">🪙 +10</div>
             </div>
@@ -231,19 +241,21 @@
             </div>
         </button>
 
-        <!-- CONTENEDOR UNIFICADO: Imagen compartida, textos y clics independientes -->
+        <!-- CONTENEDOR UNIFICADO Y CENTRADO -->
         <div class="btn-entrenamiento-doble">
             
             <!-- Mitad Izquierda (1vs1) -->
             <div class="btn-zona-click" onclick="irA('seleccion_1vs1.html', '1vs1')">
-                <span style="font-size: 0.95rem; margin-left: 25px;">1vs1 Local</span>
+                <div class="zona-texto-doble">
+                    <span style="font-size: 1.05rem;">1vs1 Local</span>
+                </div>
             </div>
             
             <!-- Mitad Derecha (CPU) -->
             <div class="btn-zona-click" onclick="irA('seleccion_cpu.html', 'cpu')">
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; margin-left: 30px;">
-                    <span style="font-size: 0.85rem;">Entrenamiento</span>
-                    <div class="reward" style="font-size: 0.7rem; padding: 2px 6px;">🪙 +5</div>
+                <div class="zona-texto-doble" style="flex-direction: column; gap: 4px;">
+                    <span style="font-size: 0.9rem;">Entrenamiento</span>
+                    <div class="reward" style="font-size: 0.75rem; padding: 2px 6px;">🪙 +5</div>
                 </div>
             </div>
             
