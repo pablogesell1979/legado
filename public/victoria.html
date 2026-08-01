@@ -127,78 +127,103 @@
                 document.getElementById('img-ganador').src = rutaCorregida;
             }
 
-            // 4. PROCESO DE BASE DE DATOS Y RECOMPENSAS
-            try {
-                if (window.clienteSupabase) {
-                    const { data: { session } } = await window.clienteSupabase.auth.getSession();
-                    
-                    if (session) {
-                        const { data: perfil } = await window.clienteSupabase
-                            .from('perfiles')
-                            .select('*')
-                            .eq('id', session.user.id)
-                            .single();
+// 4. PROCESO DE BASE DE DATOS Y RECOMPENSAS
+try {
+    if (window.clienteSupabase) {
+        const { data: { session } } = await window.clienteSupabase.auth.getSession();
+        
+        if (session) {
+            const { data: perfil } = await window.clienteSupabase
+                .from('perfiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
 
-                        if (perfil) {
-                            let monedasActuales = perfil.monedas || 0;
-                            let eloActual = perfil.elo || 1000;
-                            let mensajeRecompensa = "";
-                            let datosUpdate = { monedas: monedasActuales };
+            if (perfil) {
+                let monedasActuales = perfil.monedas || 0;
+                let eloActual = perfil.elo || 1000;
+                let mensajeRecompensa = "";
+                let datosUpdate = { monedas: monedasActuales };
 
-                            if (modoJuego === 'online') {
-                                if (soyElGanador) {
-                                    monedasActuales += 25;
-                                    eloActual += 20;
-                                    mensajeRecompensa = "🌐 ¡Victoria Online! +25 🪙 y +20 🏆 ELO";
-                                } else {
-                                    monedasActuales += 5;
-                                    eloActual = Math.max(0, eloActual - 20);
-                                    mensajeRecompensa = "🌐 Derrota Online. +5 🪙 de consolación y -20 🏆 ELO";
-                                }
-                                datosUpdate.elo = eloActual;
-                            } 
-                            else if (modoJuego === 'cpu') {
-                                if (ganadorPartida === 1) {
-                                    monedasActuales += 5;
-                                    mensajeRecompensa = "🪙 ¡Victoria en Entrenamiento! Has ganado +5 monedas.";
-                                } else {
-                                    mensajeRecompensa = "🤖 Derrota ante la CPU. ¡A seguir practicando!";
-                                }
-                            } 
-                            else if (modoJuego === 'historia') {
-                                monedasActuales += 10;
-                                mensajeRecompensa = "📖 ¡Nivel del Modo Historia superado! +10 🪙";
-                            } 
-                            else {
-                                mensajeRecompensa = "⚔️ Partida Local 1vs1 finalizada.";
-                            }
-
-                            datosUpdate.monedas = monedasActuales;
-
-                            await window.clienteSupabase
-                                .from('perfiles')
-                                .update(datosUpdate)
-                                .eq('id', session.user.id);
-
-                            document.getElementById('texto-recompensa').innerText = mensajeRecompensa;
-                        }
+                if (modoJuego === 'online') {
+                    if (soyElGanador) {
+                        monedasActuales += 25;
+                        eloActual += 20;
+                        mensajeRecompensa = "🌐 ¡Victoria Online! +25 🪙 y +20 🏆 ELO";
                     } else {
-                        document.getElementById('texto-recompensa').innerText = "Inicia sesión en el menú para registrar recompensas y ELO.";
+                        monedasActuales += 5;
+                        eloActual = Math.max(0, eloActual - 20);
+                        mensajeRecompensa = "🌐 Derrota Online. +5 🪙 de consolación y -20 🏆 ELO";
                     }
-                } else {
-                    document.getElementById('texto-recompensa').innerText = "Modo sin conexión detectado.";
+                    datosUpdate.elo = eloActual;
+                } 
+                else if (modoJuego === 'cpu') {
+                    if (ganadorPartida === 1) {
+                        monedasActuales += 5;
+                        mensajeRecompensa = "🪙 ¡Victoria en Entrenamiento! Has ganado +5 monedas.";
+                    } else {
+                        mensajeRecompensa = "🤖 Derrota ante la CPU. ¡A seguir practicando!";
+                    }
+                } 
+                else if (modoJuego === 'historia') {
+                    monedasActuales += 10;
+                    mensajeRecompensa = "📖 ¡Nivel del Modo Historia superado! +10 🪙";
+                } 
+                else {
+                    mensajeRecompensa = "⚔️ Partida Local 1vs1 finalizada.";
                 }
-            } catch (err) {
-                console.error("Error al actualizar recompensas:", err);
-                document.getElementById('texto-recompensa').innerText = "Partida finalizada. Recompensas locales.";
-            } finally {
-                // 5. LIMPIEZA FINAL (Seguro, porque todas las variables ya viven en la RAM)
-                localStorage.removeItem('resultadoPartida');
-                localStorage.removeItem('modoJuego');
-                localStorage.removeItem('configuracionOnline');
-                localStorage.removeItem('legado_rol_navegador');
+
+                datosUpdate.monedas = monedasActuales;
+
+                // 4.1 Actualizamos Perfil (Monedas y ELO)
+                await window.clienteSupabase
+                    .from('perfiles')
+                    .update(datosUpdate)
+                    .eq('id', session.user.id);
+                
+                // 4.2 ¡NUEVO! Guardamos el registro en historial_partidas
+                // Aseguramos que tenemos los datos de la partida parseados
+                let faccion1 = 'Desconocida';
+                let faccion2 = 'Desconocida';
+                if (datosGuardados) {
+                    const datos = JSON.parse(datosGuardados);
+                    faccion1 = datos.j1 || 'Desconocida';
+                    faccion2 = datos.j2 || 'Desconocida';
+                }
+
+                // Determinamos el nombre del rival según el modo
+                let nombreRival = modoJuego === 'cpu' ? 'CPU' : 'Rival / Invitado';
+
+                await window.clienteSupabase
+                    .from('historial_partidas')
+                    .insert([{
+                        // id y fecha no se mandan porque Supabase los genera automáticamente (uuid y timestamptz)
+                        jugador1_nombre: perfil.nombre || session.user.email, // Usa el nombre del perfil o el email
+                        faccion_j1: faccion1,
+                        jugador2_nombre: nombreRival, 
+                        faccion_j2: faccion2,
+                        ganador: ganadorPartida, // Mandamos el int4 (1 o 2)
+                        modo_juego: modoJuego
+                    }]);
+
+                document.getElementById('texto-recompensa').innerText = mensajeRecompensa;
             }
+        } else {
+            document.getElementById('texto-recompensa').innerText = "Inicia sesión en el menú para registrar recompensas y estadísticas.";
         }
+    } else {
+        document.getElementById('texto-recompensa').innerText = "Modo sin conexión detectado.";
+    }
+} catch (err) {
+    console.error("Error al actualizar recompensas o historial:", err);
+    document.getElementById('texto-recompensa').innerText = "Partida finalizada. Recompensas locales.";
+} finally {
+    // 5. LIMPIEZA FINAL 
+    localStorage.removeItem('resultadoPartida');
+    localStorage.removeItem('modoJuego');
+    localStorage.removeItem('configuracionOnline');
+    localStorage.removeItem('legado_rol_navegador');
+}
     </script>
 </body>
 </html>
