@@ -84,110 +84,119 @@
 
     <script>
         window.onload = async function() {
+            // 1. CAPTURA INMEDIATA (Antes de cualquier proceso asíncrono o borrado)
             const datosGuardados = localStorage.getItem('resultadoPartida');
             const modoJuego = localStorage.getItem('modoJuego') || '1vs1';
-            
-            // Leemos el rol que guardamos en la pantalla de selección (1 o 2)
             const miRolLocal = parseInt(localStorage.getItem('legado_rol_navegador') || '1');
 
             let ganadorPartida = 1; 
             let soyElGanador = false;
+            let imgGanador = '';
 
+            // 2. PARSEO SEGURO DE DATOS
             if (datosGuardados) {
-                const datosPartida = JSON.parse(datosGuardados);
-                ganadorPartida = datosPartida.ganador || 1;
-                
-                if (modoJuego === 'online') {
-                    // Magia aquí: Comparamos el ganador del tablero con nuestro rol
-                    soyElGanador = (ganadorPartida === miRolLocal);
+                try {
+                    const datosPartida = JSON.parse(datosGuardados);
+                    ganadorPartida = datosPartida.ganador || 1;
+                    imgGanador = datosPartida.imgGanador || '';
+                } catch (e) {
+                    console.error("Error parseando el resultado de la partida:", e);
+                }
+            }
 
-                    if (soyElGanador) {
-                        document.getElementById('texto-ganador').innerText = "¡VICTORIA! HAS DOMINADO EL CAMPO DE BATALLA";
-                        document.getElementById('texto-ganador').style.color = "#2ecc71"; // Verde
-                    } else {
-                        document.getElementById('texto-ganador').innerText = "DERROTA. TUS TROPAS HAN CAÍDO";
-                        document.getElementById('texto-ganador').style.color = "#e74c3c"; // Rojo
-                    }
+            // 3. ACTUALIZACIÓN VISUAL (Síncrona y rápida usando los datos ya capturados)
+            if (modoJuego === 'online') {
+                soyElGanador = (ganadorPartida === miRolLocal);
+
+                if (soyElGanador) {
+                    document.getElementById('texto-ganador').innerText = "¡VICTORIA! HAS DOMINADO EL CAMPO DE BATALLA";
+                    document.getElementById('texto-ganador').style.color = "#2ecc71"; // Verde
                 } else {
-                    soyElGanador = (ganadorPartida === 1);
-                    document.getElementById('texto-ganador').innerText = `¡EL JUGADOR ${ganadorPartida} HA DOMINADO EL CAMPO DE BATALLA!`;
-                    document.getElementById('texto-ganador').style.color = "#f39c12"; // Naranja default
+                    document.getElementById('texto-ganador').innerText = "DERROTA. TUS TROPAS HAN CAÍDO";
+                    document.getElementById('texto-ganador').style.color = "#e74c3c"; // Rojo
                 }
-                
-                if (datosPartida.imgGanador) {
-                    let rutaCorregida = datosPartida.imgGanador.replace('.PNG', '.png');
-                    document.getElementById('img-ganador').src = rutaCorregida;
-                }
+            } else if (modoJuego === 'cpu' || modoJuego === '1vs1' || modoJuego === 'historia') {
+                document.getElementById('texto-ganador').innerText = `¡EL JUGADOR ${ganadorPartida} HA DOMINADO EL CAMPO DE BATALLA!`;
+                document.getElementById('texto-ganador').style.color = "#f39c12"; // Naranja default
             } else {
                 document.getElementById('texto-ganador').innerText = "Partida finalizada.";
             }
+            
+            if (imgGanador) {
+                let rutaCorregida = imgGanador.replace('.PNG', '.png');
+                document.getElementById('img-ganador').src = rutaCorregida;
+            }
 
-            // Procesar recompensas y ELO en Supabase
+            // 4. PROCESO DE BASE DE DATOS Y RECOMPENSAS
             try {
-                const { data: { session } } = await window.clienteSupabase.auth.getSession();
-                
-                if (session) {
-                    const { data: perfil } = await window.clienteSupabase
-                        .from('perfiles')
-                        .select('*')
-                        .eq('id', session.user.id)
-                        .single();
-
-                    if (perfil) {
-                        let monedasActuales = perfil.monedas || 0;
-                        let eloActual = perfil.elo || 1000;
-                        let mensajeRecompensa = "";
-                        let datosUpdate = { monedas: monedasActuales };
-
-                        if (modoJuego === 'online') {
-                            if (soyElGanador) {
-                                monedasActuales += 25;
-                                eloActual += 20;
-                                mensajeRecompensa = "🌐 ¡Victoria Online! +25 🪙 y +20 🏆 ELO";
-                            } else {
-                                monedasActuales += 5;
-                                eloActual = Math.max(0, eloActual - 20);
-                                mensajeRecompensa = "🌐 Derrota Online. +5 🪙 de consolación y -20 🏆 ELO";
-                            }
-                            datosUpdate.elo = eloActual;
-                        } 
-                        else if (modoJuego === 'cpu') {
-                            if (ganadorPartida == 1) {
-                                monedasActuales += 5;
-                                mensajeRecompensa = "🪙 ¡Victoria en Entrenamiento! Has ganado +5 monedas.";
-                            } else {
-                                mensajeRecompensa = "🤖 Derrota ante la CPU. ¡A seguir practicando!";
-                            }
-                        } 
-                        else if (modoJuego === 'historia') {
-                            monedasActuales += 10;
-                            mensajeRecompensa = "📖 ¡Nivel del Modo Historia superado! +10 🪙";
-                        } 
-                        else {
-                            mensajeRecompensa = "⚔️ Partida Local 1vs1 finalizada.";
-                        }
-
-                        datosUpdate.monedas = monedasActuales;
-
-                        await window.clienteSupabase
+                if (window.clienteSupabase) {
+                    const { data: { session } } = await window.clienteSupabase.auth.getSession();
+                    
+                    if (session) {
+                        const { data: perfil } = await window.clienteSupabase
                             .from('perfiles')
-                            .update(datosUpdate)
-                            .eq('id', session.user.id);
+                            .select('*')
+                            .eq('id', session.user.id)
+                            .single();
 
-                        document.getElementById('texto-recompensa').innerText = mensajeRecompensa;
+                        if (perfil) {
+                            let monedasActuales = perfil.monedas || 0;
+                            let eloActual = perfil.elo || 1000;
+                            let mensajeRecompensa = "";
+                            let datosUpdate = { monedas: monedasActuales };
+
+                            if (modoJuego === 'online') {
+                                if (soyElGanador) {
+                                    monedasActuales += 25;
+                                    eloActual += 20;
+                                    mensajeRecompensa = "🌐 ¡Victoria Online! +25 🪙 y +20 🏆 ELO";
+                                } else {
+                                    monedasActuales += 5;
+                                    eloActual = Math.max(0, eloActual - 20);
+                                    mensajeRecompensa = "🌐 Derrota Online. +5 🪙 de consolación y -20 🏆 ELO";
+                                }
+                                datosUpdate.elo = eloActual;
+                            } 
+                            else if (modoJuego === 'cpu') {
+                                if (ganadorPartida === 1) {
+                                    monedasActuales += 5;
+                                    mensajeRecompensa = "🪙 ¡Victoria en Entrenamiento! Has ganado +5 monedas.";
+                                } else {
+                                    mensajeRecompensa = "🤖 Derrota ante la CPU. ¡A seguir practicando!";
+                                }
+                            } 
+                            else if (modoJuego === 'historia') {
+                                monedasActuales += 10;
+                                mensajeRecompensa = "📖 ¡Nivel del Modo Historia superado! +10 🪙";
+                            } 
+                            else {
+                                mensajeRecompensa = "⚔️ Partida Local 1vs1 finalizada.";
+                            }
+
+                            datosUpdate.monedas = monedasActuales;
+
+                            await window.clienteSupabase
+                                .from('perfiles')
+                                .update(datosUpdate)
+                                .eq('id', session.user.id);
+
+                            document.getElementById('texto-recompensa').innerText = mensajeRecompensa;
+                        }
+                    } else {
+                        document.getElementById('texto-recompensa').innerText = "Inicia sesión en el menú para registrar recompensas y ELO.";
                     }
                 } else {
-                    document.getElementById('texto-recompensa').innerText = "Inicia sesión en el menú para registrar recompensas y ELO.";
+                    document.getElementById('texto-recompensa').innerText = "Modo sin conexión detectado.";
                 }
             } catch (err) {
                 console.error("Error al actualizar recompensas:", err);
-                document.getElementById('texto-recompensa').innerText = "Partida finalizada con éxito.";
+                document.getElementById('texto-recompensa').innerText = "Partida finalizada. Recompensas locales.";
             } finally {
-                // Limpieza final de variables para que no queden basuras en la próxima partida
+                // 5. LIMPIEZA FINAL (Seguro, porque todas las variables ya viven en la RAM)
+                localStorage.removeItem('resultadoPartida');
                 localStorage.removeItem('modoJuego');
                 localStorage.removeItem('configuracionOnline');
                 localStorage.removeItem('legado_rol_navegador');
-                localStorage.removeItem('resultadoPartida');
             }
         }
     </script>
