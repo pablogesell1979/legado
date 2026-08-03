@@ -602,10 +602,10 @@ function animarRayo(fO, cO, dirF, dirC) {
             const piezaEnCelda = mapaPiezas[idClickeado];
 
             if (piezaEnCelda && piezaEnCelda.jugador === turnoActual) {
-                if (piezaEnCelda.inmovilizado > 0) { alert("Esta pieza está inmovilizada y no puede actuar."); return; }
-                if (piezaEnCelda.texto === 'CI' && piezaEnCelda.faccion === 'humanos') { alert("El Científico está concentrado y no puede moverse."); return; }
+                if (piezaEnCelda.inmovilizado > 0) { mostrarAlertaEstetica("Esta pieza está inmovilizada y no puede actuar."); return; }
+                if (piezaEnCelda.texto === 'CI' && piezaEnCelda.faccion === 'humanos') { mostrarAlertaEstetica("El Científico está concentrado y no puede moverse."); return; }
                 if (piezaEnCelda.texto === 'RO' && piezaEnCelda.faccion === 'coloso') {
-                    if (!tieneBrazoAdyacente(f, c, piezaEnCelda.jugador)) { alert("La roca necesita un Brazo adyacente."); return; }
+                    if (!tieneBrazoAdyacente(f, c, piezaEnCelda.jugador)) { mostrarAlertaEstetica("La roca necesita un Brazo adyacente."); return; }
                 }
 
                 limpiarDestacados();
@@ -798,6 +798,67 @@ function animarRayo(fO, cO, dirF, dirC) {
             }
             return blancos;
         }
+
+
+
+function mostrarAlertaEstetica(mensaje) {
+    // Crear el contenedor principal del modal
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '10000';
+    overlay.style.animation = 'fadeIn 0.2s ease-out';
+
+    // Crear la caja de contenido (estética y centrada)
+    const modal = document.createElement('div');
+    modal.style.backgroundColor = '#1a1d24';
+    modal.style.color = '#c5c6c7';
+    modal.style.padding = '20px 30px';
+    modal.style.borderRadius = '8px';
+    modal.style.border = '2px solid #c5a059';
+    modal.style.boxShadow = '0 10px 25px rgba(0,0,0,0.6)';
+    modal.style.textAlign = 'center';
+    modal.style.maxWidth = '400px';
+    modal.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+
+    // Texto del mensaje (reemplazando saltos de línea si los hay)
+    const texto = document.createElement('p');
+    texto.style.margin = '0 0 20px 0';
+    texto.style.fontSize = '1.05rem';
+    texto.style.lineHeight = '1.4';
+    texto.innerText = mensaje;
+
+    // Botón de aceptación estético
+    const boton = document.createElement('button');
+    boton.innerText = 'Aceptar';
+    boton.style.backgroundColor = '#2980b9';
+    boton.style.color = 'white';
+    boton.style.border = 'none';
+    boton.style.padding = '10px 20px';
+    boton.style.borderRadius = '6px';
+    boton.style.fontWeight = 'bold';
+    boton.style.cursor = 'pointer';
+    
+    boton.onmouseover = () => boton.style.backgroundColor = '#3498db';
+    boton.onmouseout = () => boton.style.backgroundColor = '#2980b9';
+    
+    boton.onclick = () => {
+        overlay.remove();
+    };
+
+    // Ensamblar y mostrar
+    modal.appendChild(texto);
+    modal.appendChild(boton);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+}
 
         function actualizarPanelAcciones(seleccion) {
             const contenedor = document.getElementById('conjuros-dinamicos');
@@ -1205,7 +1266,7 @@ function animarRayo(fO, cO, dirF, dirC) {
                 let faccionSaliente = (turnoActual === 1) ? jugador1Faccion : jugador2Faccion;
                 if (faccionSaliente === 'humanos' && !evolucionTerminada && nivelHumano < 4) {
                     turnoGlobalHumano++;
-                    if (turnoGlobalHumano % 3 === 0) { nivelHumano++; alert(`¡EVOLUCIÓN HUMANA! Los humanos alcanzan el NIVEL ${nivelHumano}:\n${descripcionesNivelHumano[nivelHumano]}`); }
+                    if (turnoGlobalHumano % 3 === 0) { nivelHumano++; mostrarAlertaEstetica(`¡EVOLUCIÓN HUMANA! Los humanos alcanzan el NIVEL ${nivelHumano}:\n${descripcionesNivelHumano[nivelHumano]}`); }
                 }
                 turnoActual = (turnoActual === 1) ? 2 : 1;
                 turnoExtraActivo[turnoActual] = turnoExtraProgramado[turnoActual]; turnoExtraProgramado[turnoActual] = 0;
@@ -1218,14 +1279,14 @@ function animarRayo(fO, cO, dirF, dirC) {
                         actualizarIndicadorTurno(false);
                         return; 
                     } else {
-                        alert(`¡Te has quedado sin movimientos ni hechizos disponibles y pierdes la partida!`);
+                        mostrarAlertaEstetica(`¡Te has quedado sin movimientos ni hechizos disponibles y pierdes la partida!`);
                         declararVictoria(2);
                         return;
                     }
                 }
                 
                 let ganador = (turnoActual === 1) ? 2 : 1;
-                alert(`¡El Jugador ${turnoActual} no tiene movimientos ni hechizos disponibles y pierde la partida!`);
+                mostrarAlertaEstetica(`¡El Jugador ${turnoActual} no tiene movimientos ni hechizos disponibles y pierde la partida!`);
                 declararVictoria(ganador);
                 return;
             }
@@ -1531,7 +1592,7 @@ function animarRayo(fO, cO, dirF, dirC) {
                     jugador1Faccion = 'magos'; jugador2Faccion = 'elemental';
                     colocarPiezaBase(7, 4, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
                     colocarPiezaBase(1, 4, 'elemental', 'EL', 'Mago - Elemental', 'Frente', 2);
-                    alert("¡Vamos a probar algunos hechizos!");
+                    mostrarAlertaEstetica("¡Vamos a probar algunos hechizos!");
                     break;
                 case 2:
                     jugador1Faccion = 'magos'; jugador2Faccion = 'humanos';
@@ -1555,7 +1616,7 @@ function animarRayo(fO, cO, dirF, dirC) {
                     colocarPiezaBase(0, 1, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
                     colocarPiezaBase(0, 3, 'elfos', 'AR', 'Elfo - Arquero', 'Frente', 2);
                     colocarPiezaBase(0, 6, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
-                    alert("¡Cuidado con las flechas!");
+                    mostrarAlertaEstetica("¡Cuidado con las flechas!");
                     break;
                 case 5:
                     jugador1Faccion = 'magos'; jugador2Faccion = 'elfos';
@@ -1574,7 +1635,7 @@ function animarRayo(fO, cO, dirF, dirC) {
                     colocarPiezaBase(7, 4, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(0, 0, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
                     colocarPiezaBase(0, 8, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
-                    alert("¡Los humanos evolucionan con el tiempo!");
+                    mostrarAlertaEstetica("¡Los humanos evolucionan con el tiempo!");
                     break;
                 case 7:
                     jugador1Faccion = 'humanos'; jugador2Faccion = 'elfos';
@@ -1615,7 +1676,7 @@ function animarRayo(fO, cO, dirF, dirC) {
                     colocarPiezaBase(0, 2, 'humanos', 'GU', 'Humano - Guardián', 'Frente', 2);
                     colocarPiezaBase(0, 3, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2);
                     colocarPiezaBase(0, 7, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2);
-                    alert("¡Las rocas pueden arrojarse acercando las manos!");
+                    mostrarAlertaEstetica("¡Las rocas pueden arrojarse acercando las manos!");
                     break;
                 case 9:
                     jugador1Faccion = 'coloso'; jugador2Faccion = 'humanos';
@@ -1654,7 +1715,7 @@ function animarRayo(fO, cO, dirF, dirC) {
                     colocarPiezaBase(4, 2, 'humanos', 'GU', 'Humano - Guardián', 'Frente', 2);
                     colocarPiezaBase(4, 6, 'humanos', 'CI', 'Humano - Científico', 'Frente', 2);
 
-alert("¡Usa tus hechizos con inteligencia, si muere el científico se detiene la evolución!");
+mostrarAlertaEstetica("¡Usa tus hechizos con inteligencia, si muere el científico se detiene la evolución!");
 
     break;
 
@@ -1669,7 +1730,7 @@ case 12:
     colocarPiezaBase(0, 2, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
     colocarPiezaBase(0, 6, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
 
-alert("¡Trata de atacar a distancia!");
+mostrarAlertaEstetica("¡Trata de atacar a distancia!");
 
     break;
 
@@ -1752,7 +1813,7 @@ case 16:
                     colocarPiezaBase(0, 3, 'coloso', 'PI', 'Coloso - PieIzquierdo', 'Frente', 2);
                     colocarPiezaBase(0, 5, 'coloso', 'PD', 'Coloso - PieDerecho', 'Frente', 2);
 
-alert("¡Ataca la CABEZA solo al final!");
+mostrarAlertaEstetica("¡Ataca la CABEZA solo al final!");
     break;
 
 case 17:
@@ -1781,7 +1842,7 @@ case 17:
                     colocarPiezaBase(0, 3, 'coloso', 'PI', 'Coloso - PieIzquierdo', 'Frente', 2);
                     colocarPiezaBase(0, 5, 'coloso', 'PD', 'Coloso - PieDerecho', 'Frente', 2);
 
-alert("¡Cuidado con las ROCAS!");
+mostrarAlertaEstetica("¡Cuidado con las ROCAS!");
 
     break;
 
