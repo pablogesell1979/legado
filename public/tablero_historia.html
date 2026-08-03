@@ -67,6 +67,7 @@
         .muro-arbol::before { content: '🌲'; position: absolute; font-size: 1.4rem; z-index: 5; opacity: 0.9; pointer-events: none; }
 
         .pieza-contenedor { width: 90%; height: 90%; display: flex; align-items: center; justify-content: center; position: relative; pointer-events: none; }
+        
         .pieza-contenedor img { width: 100%; height: 100%; object-fit: contain; display: none; z-index: 10; transform: scale(1.35); transform-origin: bottom center; }
         
         .ficha-texto { width: 75%; height: 75%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: #ffffff; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); box-shadow: 0 4px 8px rgba(0,0,0,0.6); border: 2px solid #ffffff; z-index: 5; position: absolute; text-align: center;}
@@ -113,11 +114,9 @@
         .reloj-activo { border-color: var(--accent-gold); color: var(--accent-gold); box-shadow: 0 0 15px rgba(197, 160, 89, 0.4); }
         .reloj-inactivo { border-color: #2a2d32; color: #555; opacity: 0.7; }
         .reloj-peligro { color: #e74c3c !important; animation: latido 1s infinite; border-color: #e74c3c; box-shadow: 0 0 15px rgba(231, 76, 60, 0.5); }
-        
         @keyframes latido { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
         .tiempo-display { font-family: monospace; font-size: 1.4rem; letter-spacing: 1px; }
 
-        /* ================= ANIMACIONES ================= */
         @keyframes muerteEfecto {
             0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 5px #e74c3c); }
             50% { transform: scale(1.5) translateY(-10px); opacity: 0.8; filter: drop-shadow(0 0 20px #e74c3c) brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(5); }
@@ -125,44 +124,14 @@
         }
         .animacion-muerte {
             animation: muerteEfecto 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
-            pointer-events: none; z-index: 100 !important;
+            pointer-events: none;
+            z-index: 100 !important;
         }
         @keyframes flashSangre {
             0% { background-color: rgba(231, 76, 60, 0.8) !important; box-shadow: inset 0 0 20px #c0392b !important; }
             100% { background-color: transparent; box-shadow: none; }
         }
         .flash-sangre { animation: flashSangre 0.5s ease-out forwards; }
-
-        /* Bola de Fuego (Rotación y Opacidad) */
-        @keyframes bolaFuegoAnim {
-            0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.8); opacity: 1;}
-            100% { transform: translate(-50%, -50%) rotate(720deg) scale(1.5); opacity: 0.9;}
-        }
-        .anim-fuego {
-            position: absolute; z-index: 500; width: 45px; height: 45px;
-            background-image: url('fuego.png'); background-size: contain; background-repeat: no-repeat; background-position: center;
-            transition: top 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: bolaFuegoAnim 0.25s linear; pointer-events: none; transform-origin: center center;
-        }
-
-        /* Rayo Arcano (Parpadeo) */
-        @keyframes parpadeoRayo {
-            0%, 100% { opacity: 0.9; filter: brightness(1.5) drop-shadow(0 0 10px #3498db); }
-            50% { opacity: 0.3; filter: brightness(1) drop-shadow(0 0 5px #2980b9); }
-        }
-        .anim-rayo {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 150;
-            background-image: url('rayo.png'); background-size: contain; background-position: center; background-repeat: no-repeat;
-            animation: parpadeoRayo 0.1s infinite; pointer-events: none; transform: scale(1.2);
-        }
-        .anim-rayo.horizontal { transform: rotate(90deg) scale(1.2); } 
-
-        /* Spawn Efecto (Elemental / Revivir) */
-        @keyframes spawnAnim {
-            0% { transform: scale(3.5) translateY(-20px); opacity: 0; filter: drop-shadow(0 0 20px white) brightness(2); }
-            100% { transform: scale(1.35) translateY(0); opacity: 1; filter: drop-shadow(0 0 0 transparent) brightness(1); }
-        }
-        .spawn-efecto img { animation: spawnAnim 0.4s ease-out forwards; }
 
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -239,7 +208,7 @@
         let jugador2Faccion = 'elemental'; 
         let turnoActual = 1; 
 
-        let nivelActual = 1; 
+        let nivelActual = 1; // <--- AGREGA ESTA LÍNEA AQUÍ
         
         let celdaSeleccionada = null;
         let modoTargetConjuro = null; 
@@ -247,9 +216,6 @@
         
         let mapaPiezas = {}; 
         let celdasBloqueadas = {};
-        
-        // Bloqueo global de interacción durante animaciones
-        let animando = false;
         
         let cementerioElfos = { 1: [], 2: [] }; 
         let conjurosUsados = {
@@ -323,18 +289,23 @@
         }
 
         function tickReloj() {
-            if (animando) return; // Pausa el reloj mientras hay animaciones
             if (turnoActual === 1) {
                 tiempoJ1--;
                 if (tiempoJ1 <= 0) {
-                    tiempoJ1 = 0; clearInterval(intervaloReloj); actualizarVistaReloj();
-                    declararVictoria(2); return;
+                    tiempoJ1 = 0;
+                    clearInterval(intervaloReloj);
+                    actualizarVistaReloj();
+                    declararVictoria(2); 
+                    return;
                 }
             } else {
                 tiempoJ2--;
                 if (tiempoJ2 <= 0) {
-                    tiempoJ2 = 0; clearInterval(intervaloReloj); actualizarVistaReloj();
-                    declararVictoria(1); return;
+                    tiempoJ2 = 0;
+                    clearInterval(intervaloReloj);
+                    actualizarVistaReloj();
+                    declararVictoria(1); 
+                    return;
                 }
             }
             actualizarVistaReloj();
@@ -378,8 +349,7 @@
             }
         }
 
-        // Se agregó esSpawn para manejar el agrandamiento en animaciones
-        function colocarPiezaBase(fila, col, faccion, texto, prefijoImagen, orientacion, jugador, inmune = 0, inmovilizado = 0, esSpawn = false) {
+        function colocarPiezaBase(fila, col, faccion, texto, prefijoImagen, orientacion, jugador, inmune = 0, inmovilizado = 0) {
             const id = `${fila}-${col}`;
             const celda = document.getElementById(`c-${id}`);
             if (!celda) return;
@@ -388,7 +358,6 @@
             celda.innerHTML = '';
             const contenedor = document.createElement('div');
             contenedor.className = `pieza-contenedor ${faccion} j${jugador}`;
-            if (esSpawn) contenedor.classList.add('spawn-efecto');
             contenedor.id = `pieza-${id}`;
 
             const span = document.createElement('span');
@@ -424,12 +393,16 @@
             
             if (!esVulnerable(p)) return; 
            
-            if (nivelActual === 19 || nivelActual === 20) {
-                if (p.jugador === 1) { 
-                    declararVictoria(2); 
-                    return;
-                }
-            }
+
+// --- NUEVA LÓGICA NIVELES 19 Y 20: DERROTA INSTANTÁNEA ---
+    if (nivelActual === 19 || nivelActual === 20) {
+        if (p.jugador === 1) { // Si muere cualquier pieza tuya (Jugador 1)
+            declararVictoria(2); // Gana el enemigo inmediatamente
+            return;
+        }
+    }
+// ---------------------------------------------------------
+
 
             if (p.faccion === 'elfos' && !p.texto.startsWith('Árbol') && p.texto !== 'AS') {
                 cementerioElfos[p.jugador].push(p.texto); 
@@ -459,52 +432,7 @@
             }
         }
 
-        // Función auxiliar para animar desplazamientos en línea recta
-        function moverPiezaAnimada(origenF, origenC, destF, destC, callback) {
-            const idOrigen = `${origenF}-${origenC}`;
-            const celdaOrigen = document.getElementById(`c-${idOrigen}`);
-            const piezaDOM = celdaOrigen.querySelector('.pieza-contenedor');
-            
-            if (!piezaDOM) { callback(); return; }
-
-            const celdaDestino = document.getElementById(`c-${destF}-${destC}`);
-            
-            const deltaX = celdaDestino.offsetLeft - celdaOrigen.offsetLeft;
-            const deltaY = celdaDestino.offsetTop - celdaOrigen.offsetTop;
-            
-            piezaDOM.style.transition = 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)';
-            piezaDOM.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-            piezaDOM.style.zIndex = '1000';
-            
-            setTimeout(() => { callback(); }, 200);
-        }
-
-        // Función auxiliar para animar bola de fuego
-        function animarBolaDeFuego(origF, origC, destF, destC, callback) {
-            const tablero = document.getElementById('tablero');
-            const bola = document.createElement('div');
-            bola.className = 'anim-fuego';
-            
-            const celdaO = document.getElementById(`c-${origF}-${origC}`);
-            const celdaD = document.getElementById(`c-${destF}-${destC}`);
-            
-            bola.style.left = (celdaO.offsetLeft + celdaO.offsetWidth / 2) + 'px';
-            bola.style.top = (celdaO.offsetTop + celdaO.offsetHeight / 2) + 'px';
-            
-            tablero.appendChild(bola);
-            
-            // Forzar reflow para que la transición funcione
-            bola.getBoundingClientRect();
-            
-            bola.style.left = (celdaD.offsetLeft + celdaD.offsetWidth / 2) + 'px';
-            bola.style.top = (celdaD.offsetTop + celdaD.offsetHeight / 2) + 'px';
-            
-            setTimeout(() => { bola.remove(); callback(); }, 250);
-        }
-
         function manejarClickCelda(f, c) {
-            if (animando) return; // Bloquear clicks si está animando
-            
             const esTurnoCPU = (turnoActual === 1 && j1EsCPU) || (turnoActual === 2 && j2EsCPU);
             if (esTurnoCPU) return; 
 
@@ -566,15 +494,11 @@
                 if (objetivo.classList.contains('destino-valido') || objetivo.classList.contains('captura-valida')) {
                     const idOrigen = `${celdaSeleccionada.fila}-${celdaSeleccionada.col}`;
                     const p = celdaSeleccionada.pieza;
-                    
-                    animando = true;
-                    moverPiezaAnimada(celdaSeleccionada.fila, celdaSeleccionada.col, f, c, () => {
-                        if (mapaPiezas[idClickeado]) matarPieza(idClickeado); 
-                        document.getElementById(`c-${idOrigen}`).innerHTML = ''; delete mapaPiezas[idOrigen];
-                        colocarPiezaBase(f, c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
-                        animando = false;
-                        finalizarTurno();
-                    });
+                    if (mapaPiezas[idClickeado]) matarPieza(idClickeado); 
+
+                    document.getElementById(`c-${idOrigen}`).innerHTML = ''; delete mapaPiezas[idOrigen];
+                    colocarPiezaBase(f, c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
+                    finalizarTurno();
                 } else { cancelarModoTarget(); }
             }
         }
@@ -884,52 +808,25 @@
             } 
             else if (modoTargetConjuro === 'DR_revivir') {
                 let tipoRevivir = 'GU'; if (cementerioElfos[p.jugador].length > 0) tipoRevivir = cementerioElfos[p.jugador].pop();
-                colocarPiezaBase(tf, tc, 'elfos', tipoRevivir, `Elfo - ${nombresPiezas[tipoRevivir]}`, p.orientacion, p.jugador, 0, 0, true);
+                colocarPiezaBase(tf, tc, 'elfos', tipoRevivir, `Elfo - ${nombresPiezas[tipoRevivir]}`, p.orientacion, p.jugador);
                 conj['DR_usos_revivir']++;
             } 
             else if (modoTargetConjuro === 'MA_elemental') {
-                colocarPiezaBase(tf, tc, 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador, 0, 0, true); conj['MA_elemental'] = true;
+                colocarPiezaBase(tf, tc, 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador); conj['MA_elemental'] = true;
             } 
             else if (modoTargetConjuro === 'MR_bola_fuego') {
-                animando = true;
-                animarBolaDeFuego(celdaSeleccionada.fila, celdaSeleccionada.col, tf, tc, () => {
-                    matarPieza(idTarget); conj['MR_bola_fuego'] = true;
-                    animando = false; finalizarTurno();
-                });
-                return; 
+                matarPieza(idTarget); conj['MR_bola_fuego'] = true;
             } 
             else if (modoTargetConjuro === 'MR_rayo') {
-                animando = true;
                 let dirF = tf - celdaSeleccionada.fila; let dirC = tc - celdaSeleccionada.col;
                 let curF = celdaSeleccionada.fila + dirF; let curC = celdaSeleccionada.col + dirC;
-                let celdasAfectadas = [];
-                
                 while(curF >= 0 && curF <= 8 && curC >= 0 && curC <= 8) {
                     let idRay = `${curF}-${curC}`;
                     if (casillasAgua.includes(idRay) || (celdasBloqueadas[idRay] && celdasBloqueadas[idRay].tipo === 'muro-arbol')) break;
-                    celdasAfectadas.push(idRay);
+                    if (mapaPiezas[idRay]) { let pr = mapaPiezas[idRay]; if (!(pr.jugador === p.jugador && pr.faccion === 'magos')) matarPieza(idRay); }
                     curF += dirF; curC += dirC;
                 }
-
-                let esVertical = (dirC === 0);
-                celdasAfectadas.forEach(idRay => {
-                    let rayoDiv = document.createElement('div');
-                    rayoDiv.className = `anim-rayo ${esVertical ? 'vertical' : 'horizontal'}`;
-                    document.getElementById(`c-${idRay}`).appendChild(rayoDiv);
-                });
-
-                setTimeout(() => {
-                    celdasAfectadas.forEach(idRay => {
-                        let celdaDOM = document.getElementById(`c-${idRay}`);
-                        let rayo = celdaDOM.querySelector('.anim-rayo'); if(rayo) rayo.remove();
-                        if (mapaPiezas[idRay]) { 
-                            let pr = mapaPiezas[idRay]; 
-                            if (!(pr.jugador === p.jugador && pr.faccion === 'magos')) matarPieza(idRay); 
-                        }
-                    });
-                    conj['MR_rayo'] = true; animando = false; finalizarTurno();
-                }, 400);
-                return;
+                conj['MR_rayo'] = true;
             }
             else if (modoTargetConjuro === 'MR_teletransporte_paso2') {
                 const idOrig = memoriaConjuro.origen; const pMago = memoriaConjuro.pieza;
@@ -959,20 +856,12 @@
             }
             else if (modoTargetConjuro === 'AP_telequinesis_paso2') {
                 let idOrig = memoriaConjuro.origen;
-                if (memoriaConjuro.esArbol) { 
-                    celdasBloqueadas[idTarget] = celdasBloqueadas[idOrig]; delete celdasBloqueadas[idOrig]; 
-                    conj['AP_telequinesis'] = true; finalizarTurno();
-                } 
+                if (memoriaConjuro.esArbol) { celdasBloqueadas[idTarget] = celdasBloqueadas[idOrig]; delete celdasBloqueadas[idOrig]; } 
                 else {
-                    animando = true;
-                    let origArr = idOrig.split('-');
-                    moverPiezaAnimada(origArr[0], origArr[1], tf, tc, () => {
-                        let pObj = mapaPiezas[idOrig]; document.getElementById(`c-${idOrig}`).innerHTML = ''; delete mapaPiezas[idOrig];
-                        colocarPiezaBase(tf, tc, pObj.faccion, pObj.texto, pObj.prefijoImagen, pObj.orientacion, pObj.jugador, pObj.inmune, pObj.inmovilizado);
-                        conj['AP_telequinesis'] = true; animando = false; finalizarTurno();
-                    });
-                    return;
+                    let pObj = mapaPiezas[idOrig]; document.getElementById(`c-${idOrig}`).innerHTML = ''; delete mapaPiezas[idOrig];
+                    colocarPiezaBase(tf, tc, pObj.faccion, pObj.texto, pObj.prefijoImagen, pObj.orientacion, pObj.jugador, pObj.inmune, pObj.inmovilizado);
                 }
+                conj['AP_telequinesis'] = true;
             }
 
             finalizarTurno();
@@ -1027,56 +916,64 @@
             window.location.href = 'victoria_historia.html'; 
         }
 
-        function verificarVictoria() {
-            let j1Vivo = false; 
-            let j2Vivo = false;
-            let colosoJ1 = false, torsoJ1Vivo = false;
-            let colosoJ2 = false, torsoJ2Vivo = false;
+function verificarVictoria() {
+    let j1Vivo = false; 
+    let j2Vivo = false;
+    let colosoJ1 = false, torsoJ1Vivo = false;
+    let colosoJ2 = false, torsoJ2Vivo = false;
 
-            for (const key in mapaPiezas) {
-                const p = mapaPiezas[key];
-                if (p.jugador === 1) {
-                    j1Vivo = true;
-                    if (p.faccion === 'coloso') colosoJ1 = true;
-                    if (p.texto === 'TO') torsoJ1Vivo = true;
-                }
-                if (p.jugador === 2) {
-                    j2Vivo = true;
-                    if (p.faccion === 'coloso') colosoJ2 = true;
-                    if (p.texto === 'TO') torsoJ2Vivo = true;
-                }
-            }
-
-            if (nivelActual === 19 || nivelActual === 20) {
-                let casillasObjetivo = ['2-2', '2-6', '6-2', '6-6']; 
-                
-                if (nivelActual === 20) {
-                    casillasObjetivo.push('2-4', '6-4'); 
-                }
-                
-                let todasEnPosicion = true;
-                for (let id of casillasObjetivo) {
-                    let p = mapaPiezas[id];
-                    if (!p || p.jugador !== 1) { 
-                        todasEnPosicion = false;
-                        break;
-                    }
-                }
-                
-                if (todasEnPosicion) {
-                    declararVictoria(1); 
-                    return true;
-                }
-                return false; 
-            }
-
-            if (colosoJ1 && !torsoJ1Vivo) j1Vivo = false;
-            if (colosoJ2 && !torsoJ2Vivo) j2Vivo = false;
-
-            if (!j1Vivo) { declararVictoria(2); return true; }
-            if (!j2Vivo) { declararVictoria(1); return true; }
-            return false;
+    for (const key in mapaPiezas) {
+        const p = mapaPiezas[key];
+        if (p.jugador === 1) {
+            j1Vivo = true;
+            if (p.faccion === 'coloso') colosoJ1 = true;
+            if (p.texto === 'TO') torsoJ1Vivo = true;
         }
+        if (p.jugador === 2) {
+            j2Vivo = true;
+            if (p.faccion === 'coloso') colosoJ2 = true;
+            if (p.texto === 'TO') torsoJ2Vivo = true;
+        }
+    }
+
+    // --- LÓGICA EXCLUSIVA NIVELES 19 Y 20 ---
+    if (nivelActual === 19 || nivelActual === 20) {
+        let casillasObjetivo = ['2-2', '2-6', '6-2', '6-6']; 
+        
+        if (nivelActual === 20) {
+            casillasObjetivo.push('2-4', '6-4'); 
+        }
+        
+        let todasEnPosicion = true;
+        for (let id of casillasObjetivo) {
+            let p = mapaPiezas[id];
+            // Si falta una pieza tuya en las casillas, aún no ganaste
+            if (!p || p.jugador !== 1) { 
+                todasEnPosicion = false;
+                break;
+            }
+        }
+        
+        if (todasEnPosicion) {
+            declararVictoria(1); // Ganas tú por posición
+            return true;
+        }
+        
+        // AQUÍ ESTÁ EL TRUCO: 
+        // Si no están en las casillas, la función corta acá. 
+        // No importa si el Jugador 2 murió o no tiene movimientos, el juego sigue.
+        return false; 
+    }
+    // ---------------------------------------------------------
+
+    // --- RESTO DEL CÓDIGO ORIGINAL (Para niveles 1 al 18) ---
+    if (colosoJ1 && !torsoJ1Vivo) j1Vivo = false;
+    if (colosoJ2 && !torsoJ2Vivo) j2Vivo = false;
+
+    if (!j1Vivo) { declararVictoria(2); return true; }
+    if (!j2Vivo) { declararVictoria(1); return true; }
+    return false;
+}
 
         function actualizarPanelHumanos() {
             const panel = document.getElementById('panel-humanos');
@@ -1190,19 +1087,23 @@
                 turnoExtraActivo[turnoActual] = turnoExtraProgramado[turnoActual]; turnoExtraProgramado[turnoActual] = 0;
             }
 
-            if (!tieneMovimientosDisponibles(turnoActual)) {
+if (!tieneMovimientosDisponibles(turnoActual)) {
+                // --- NUEVA LÓGICA PARA NIVELES 19 Y 20 ---
                 if (nivelActual === 19 || nivelActual === 20) {
                     if (turnoActual === 2) {
+                        // Si el enemigo se queda sin piezas/movimientos, simplemente saltamos su turno
                         turnoActual = 1;
                         actualizarIndicadorTurno(false);
-                        return; 
+                        return; // Salimos para que te vuelva a tocar a ti
                     } else {
+                        // Si TÚ te quedas sin movimientos, sí pierdes
                         alert(`¡Te has quedado sin movimientos ni hechizos disponibles y pierdes la partida!`);
                         declararVictoria(2);
                         return;
                     }
                 }
                 
+                // --- LÓGICA ORIGINAL PARA NIVELES 1 al 18 ---
                 let ganador = (turnoActual === 1) ? 2 : 1;
                 alert(`¡El Jugador ${turnoActual} no tiene movimientos ni hechizos disponibles y pierde la partida!`);
                 declararVictoria(ganador);
@@ -1292,8 +1193,8 @@
             if (esTurnoCPU && !procesandoCPU) { procesandoCPU = true; setTimeout(ejecutarJugadaCPU, 600); }
         }
 
+        // --- SISTEMA CEREBRAL DE LA CPU ACTUALIZADO Y MEJORADO ---
         function ejecutarJugadaCPU() {
-            if (animando) return;
             let mejoresAcciones = []; let mejorPuntuacion = -9999; const conj = conjurosUsados[turnoActual];
             let misPiezas = [];
             for (let id in mapaPiezas) {
@@ -1306,8 +1207,9 @@
                 const enPeligro = celdaBajoAmenazaMejorada(item.f, item.c, turnoActual); 
                 const p = item.pieza; 
 
-                // 1. LÓGICA DE CONJUROS
+                // 1. LÓGICA DE CONJUROS (Ahora evalúa todos los poderes de Magos)
                 if (p.faccion === 'magos') {
+                    // MR - Bola de Fuego
                     if (p.texto === 'MR' && !conj['MR_bola_fuego']) {
                         let targets = obtenerEnemigosEnRango(item.f, item.c, 3, turnoActual);
                         if (targets.length > 0) {
@@ -1316,17 +1218,12 @@
                             if (['CO', 'AS', 'TO'].includes(target.pieza.texto)) ptos += 500; 
                             if (ptos > mejorPuntuacion) {
                                 mejorPuntuacion = ptos;
-                                mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { 
-                                    animando = true;
-                                    animarBolaDeFuego(item.f, item.c, target.f, target.c, () => {
-                                        matarPieza(target.id); conj['MR_bola_fuego'] = true; 
-                                        animando = false; procesandoCPU = false; finalizarTurno();
-                                    });
-                                }}];
+                                mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { matarPieza(target.id); conj['MR_bola_fuego'] = true; }}];
                             }
                         }
                     }
                     
+                    // MR - Rayo Arcano (Evalúa el mejor rayo sin dañar aliados)
                     if (p.texto === 'MR' && !conj['MR_rayo']) {
                         const dir = (p.jugador === 1) ? -1 : 1; 
                         const opcionesRayo = [ [item.f + dir, item.c], [item.f, item.c - 1], [item.f, item.c + 1] ];
@@ -1344,7 +1241,7 @@
                                         victimasRayo++; valorVictimas += (valorTactico[pr.texto] || 20);
                                         if (['CO', 'AS', 'TO'].includes(pr.texto)) valorVictimas += 500;
                                     } else if (pr.jugador === p.jugador) {
-                                        valorVictimas -= 1000; 
+                                        valorVictimas -= 1000; // Si hay un aliado no tira el rayo
                                     }
                                 }
                                 curF += dirF; curC += dirC;
@@ -1355,60 +1252,54 @@
                                 if (ptos > mejorPuntuacion) {
                                     mejorPuntuacion = ptos;
                                     mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { 
-                                        animando = true;
                                         let cF = item.f + dirF; let cC = item.c + dirC;
-                                        let celdasAfectadas = [];
                                         while(cF >= 0 && cF <= 8 && cC >= 0 && cC <= 8) {
                                             let idRy = `${cF}-${cC}`;
                                             if (casillasAgua.includes(idRy) || (celdasBloqueadas[idRy] && celdasBloqueadas[idRy].tipo === 'muro-arbol')) break;
-                                            celdasAfectadas.push(idRy);
+                                            if (mapaPiezas[idRy] && mapaPiezas[idRy].jugador !== p.jugador) matarPieza(idRy);
                                             cF += dirF; cC += dirC;
                                         }
-                                        let esVertical = (dirC === 0);
-                                        celdasAfectadas.forEach(idRy => {
-                                            let rayoDiv = document.createElement('div');
-                                            rayoDiv.className = `anim-rayo ${esVertical ? 'vertical' : 'horizontal'}`;
-                                            document.getElementById(`c-${idRy}`).appendChild(rayoDiv);
-                                        });
-
-                                        setTimeout(() => {
-                                            celdasAfectadas.forEach(idRy => {
-                                                let celdaDOM = document.getElementById(`c-${idRy}`);
-                                                let rayo = celdaDOM.querySelector('.anim-rayo'); if(rayo) rayo.remove();
-                                                if (mapaPiezas[idRy] && mapaPiezas[idRy].jugador !== p.jugador) matarPieza(idRy);
-                                            });
-                                            conj['MR_rayo'] = true; 
-                                            animando = false; procesandoCPU = false; finalizarTurno();
-                                        }, 400);
+                                        conj['MR_rayo'] = true; 
                                     }}];
                                 }
                             }
                         });
                     }
 
+                    // MA - Mago de Hielo (Doble Velocidad, prioridad alta si está disponible)
                     if (p.texto === 'MA' && !conj['MA_mov_veloz']) {
                         let ptos = 250; 
                         if (ptos > mejorPuntuacion) {
                             mejorPuntuacion = ptos;
-                            mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { conj['MA_mov_veloz'] = true; turnoExtraProgramado[turnoActual] = 1; procesandoCPU = false; finalizarTurno(); }}];
+                            mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { conj['MA_mov_veloz'] = true; turnoExtraProgramado[turnoActual] = 1; }}];
                         }
                     }
 
+// MA - Invocar Elemental
                     if (p.texto === 'MA' && !conj['MA_elemental']) {
+                        // 1. Verificar si el Mago está adyacente a una casilla de agua
                         let estaCercaDeAgua = false;
                         for(let af = Math.max(0, item.f - 1); af <= Math.min(8, item.f + 1); af++) {
                             for(let ac = Math.max(0, item.c - 1); ac <= Math.min(8, item.c + 1); ac++) { 
-                                if(casillasAgua.includes(`${af}-${ac}`)) { estaCercaDeAgua = true; break; }
+                                if(casillasAgua.includes(`${af}-${ac}`)) {
+                                    estaCercaDeAgua = true;
+                                    break;
+                                }
                             }
                             if(estaCercaDeAgua) break;
                         }
 
+                        // 2. Si está en la orilla, buscar una casilla vacía adyacente al mago (que NO sea agua)
                         if (estaCercaDeAgua) {
                             let casillasValidas = [];
                             for(let vf = Math.max(0, item.f - 1); vf <= Math.min(8, item.f + 1); vf++) {
                                 for(let vc = Math.max(0, item.c - 1); vc <= Math.min(8, item.c + 1); vc++) {
                                     let idDestino = `${vf}-${vc}`;
-                                    if ((vf !== item.f || vc !== item.c) && !casillasAgua.includes(idDestino) && !mapaPiezas[idDestino] && !celdasBloqueadas[idDestino]) {
+                                    // Evitar la casilla del mago, casillas de agua, piezas existentes o muros
+                                    if ((vf !== item.f || vc !== item.c) && 
+                                        !casillasAgua.includes(idDestino) && 
+                                        !mapaPiezas[idDestino] && 
+                                        !celdasBloqueadas[idDestino]) {
                                         casillasValidas.push(idDestino);
                                     }
                                 }
@@ -1418,12 +1309,13 @@
                                 let ptos = 150;
                                 if (ptos > mejorPuntuacion) {
                                     mejorPuntuacion = ptos;
+                                    // Toma la primera casilla válida encontrada
                                     let objDestino = casillasValidas[0].split('-');
                                     mejoresAcciones = [{ 
                                         tipo: 'conjuro_auto', 
                                         accion: () => { 
-                                            colocarPiezaBase(parseInt(objDestino[0]), parseInt(objDestino[1]), 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador, 0, 0, true); 
-                                            conj['MA_elemental'] = true; procesandoCPU = false; finalizarTurno();
+                                            colocarPiezaBase(parseInt(objDestino[0]), parseInt(objDestino[1]), 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador); 
+                                            conj['MA_elemental'] = true; 
                                         }
                                     }];
                                 }
@@ -1431,6 +1323,7 @@
                         }
                     }
 
+                    // AP - Aprendiz Inmovilizar a un enemigo pesado
                     if (p.texto === 'AP' && !conj['AP_inmovilizar']) {
                         let targets = obtenerEnemigosEnRango(item.f, item.c, 3, turnoActual); 
                         targets = targets.filter(t => t.pieza.inmovilizado <= 0);
@@ -1439,11 +1332,12 @@
                             let target = targets[0]; let ptos = 90 + (valorTactico[target.pieza.texto] || 0) * 1.5;
                             if (ptos > mejorPuntuacion) {
                                 mejorPuntuacion = ptos;
-                                mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { mapaPiezas[target.id].inmovilizado = 4; actualizarClasesEstado(target.id); conj['AP_inmovilizar'] = true; procesandoCPU = false; finalizarTurno(); }}];
+                                mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { mapaPiezas[target.id].inmovilizado = 4; actualizarClasesEstado(target.id); conj['AP_inmovilizar'] = true; }}];
                             }
                         }
                     }
                     
+                    // AP - Aprendiz Escudar aliado en peligro (Piel de Piedra)
                     if (p.texto === 'AP' && !conj['AP_piel_piedra']) {
                         let aliadoEnPeligro = null;
                         for (let idAliado in mapaPiezas) {
@@ -1460,7 +1354,7 @@
                             let ptos = 140;
                             if (ptos > mejorPuntuacion) {
                                 mejorPuntuacion = ptos;
-                                mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { mapaPiezas[aliadoEnPeligro].inmune = 4; actualizarClasesEstado(aliadoEnPeligro); conj['AP_piel_piedra'] = true; procesandoCPU = false; finalizarTurno(); }}];
+                                mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { mapaPiezas[aliadoEnPeligro].inmune = 4; actualizarClasesEstado(aliadoEnPeligro); conj['AP_piel_piedra'] = true; }}];
                             }
                         }
                     }
@@ -1474,6 +1368,7 @@
                     let puntuacion = Math.random() * 5; 
                     
                     if (piezaDest && piezaDest.jugador !== turnoActual) {
+                        // AQUÍ ESTABA LA FALLA PRINCIPAL: El multiplicador era bajo comparado con huir. ¡Ahora es letal!
                         puntuacion += (valorTactico[piezaDest.texto] || 20) * 5; 
                         if (['CO', 'AS', 'TO'].includes(piezaDest.texto)) { puntuacion += 2000; } 
                     }
@@ -1500,35 +1395,33 @@
                 if (accionElegida.tipo === 'movimiento') {
                     const orig = accionElegida.origen; const dest = accionElegida.destino; const p = orig.pieza;
                     const idDestino = `${dest.f}-${dest.c}`;
-                    
-                    animando = true;
-                    moverPiezaAnimada(orig.f, orig.c, dest.f, dest.c, () => {
-                        if (mapaPiezas[idDestino]) matarPieza(idDestino);
-                        document.getElementById(`c-${orig.id}`).innerHTML = ''; delete mapaPiezas[orig.id];
-                        colocarPiezaBase(dest.f, dest.c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
-                        animando = false; procesandoCPU = false; finalizarTurno();
-                    });
+                    if (mapaPiezas[idDestino]) matarPieza(idDestino);
+                    document.getElementById(`c-${orig.id}`).innerHTML = ''; delete mapaPiezas[orig.id];
+                    colocarPiezaBase(dest.f, dest.c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
                 } else if (accionElegida.tipo === 'conjuro_auto') { 
                     accionElegida.accion(); 
                 }
-            } else {
-                procesandoCPU = false; finalizarTurno();
             }
+
+            procesandoCPU = false; finalizarTurno();
         }
 
         function inicializarNivelHistoria(nivel) {
             nivel = parseInt(nivel) || 1;
-            nivelActual = nivel; 
+            nivelActual = nivel; // <--- AGREGA ESTA LÍNEA AQUÍ
             document.getElementById('indicador-sub').innerText = `Modo Historia - Nivel ${nivel}`;
 
+
+// --- INICIO CÓDIGO NUEVO: CAMBIAR TABLERO SEGÚN NIVEL ---
             const tableroFondo = document.querySelector('.tablero-contenedor');
             if (nivelActual === 19) {
                 tableroFondo.style.backgroundImage = "url('TABLERO 9x9_3.jpg')";
             } else if (nivelActual === 20) {
                 tableroFondo.style.backgroundImage = "url('TABLERO 9x9_4.jpg')";
             } else {
-                tableroFondo.style.backgroundImage = "url('TABLERO 9x9_2.jpg')"; 
+                tableroFondo.style.backgroundImage = "url('TABLERO 9x9_2.jpg')"; // Tablero por defecto
             }
+            // --- FIN CÓDIGO NUEVO ---
 
             jugador1Faccion = 'magos'; 
             jugador2Faccion = 'elemental';
@@ -1538,12 +1431,15 @@
                     jugador1Faccion = 'magos'; jugador2Faccion = 'elemental';
                     colocarPiezaBase(7, 4, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
                     colocarPiezaBase(1, 4, 'elemental', 'EL', 'Mago - Elemental', 'Frente', 2);
-                    alert("¡Vamos a probar algunos hechizos!");
+
+alert("¡Vamos a probar algunos hechizos!");
+
                     break;
                 case 2:
                     jugador1Faccion = 'magos'; jugador2Faccion = 'humanos';
                     colocarPiezaBase(7, 4, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
                     for (let c = 0; c < 9; c++) { colocarPiezaBase(1, c, 'humanos', 'MI', 'Humano - Miliciano', 'Frente', 2); }
+
                     break;
                 case 3:
                     jugador1Faccion = 'magos'; jugador2Faccion = 'humanos'; 
@@ -1552,6 +1448,7 @@
                     colocarPiezaBase(2, 3, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2);
                     colocarPiezaBase(7, 3, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
                     colocarPiezaBase(7, 5, 'magos', 'MA', 'Mago - Hielo', 'Atras', 1);
+
                     break;
                 case 4:
                     jugador1Faccion = 'magos'; jugador2Faccion = 'elfos';
@@ -1562,7 +1459,9 @@
                     colocarPiezaBase(0, 1, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
                     colocarPiezaBase(0, 3, 'elfos', 'AR', 'Elfo - Arquero', 'Frente', 2);
                     colocarPiezaBase(0, 6, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
-                    alert("¡Cuidado con las flechas!");
+
+alert("¡Cuidado con las flechas!");
+
                     break;
                 case 5:
                     jugador1Faccion = 'magos'; jugador2Faccion = 'elfos';
@@ -1581,7 +1480,9 @@
                     colocarPiezaBase(7, 4, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(0, 0, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
                     colocarPiezaBase(0, 8, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
-                    alert("¡Los humanos evolucionan con el tiempo!");
+
+alert("¡Los humanos evolucionan con el tiempo!");
+
                     break;
                 case 7:
                     jugador1Faccion = 'humanos'; jugador2Faccion = 'elfos';
@@ -1606,10 +1507,14 @@
                     colocarPiezaBase(7, 5, 'coloso', 'BD', 'Coloso - ManoDerecha', 'Atras', 1);
                     colocarPiezaBase(8, 3, 'coloso', 'PI', 'Coloso - PieIzquierdo', 'Atras', 1);
                     colocarPiezaBase(8, 5, 'coloso', 'PD', 'Coloso - PieDerecho', 'Atras', 1);
+
+
                     colocarPiezaBase(5, 0, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(5, 1, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(5, 6, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(5, 7, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
+
+
                     colocarPiezaBase(6, 3, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(6, 5, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(7, 2, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
@@ -1620,14 +1525,19 @@
                     colocarPiezaBase(0, 2, 'humanos', 'GU', 'Humano - Guardián', 'Frente', 2);
                     colocarPiezaBase(0, 3, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2);
                     colocarPiezaBase(0, 7, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2);
-                    alert("¡Las rocas pueden arrojarse acercando las manos!");
+
+alert("¡Las rocas pueden arrojarse acercando las manos!");
+
                     break;
                 case 9:
                     jugador1Faccion = 'coloso'; jugador2Faccion = 'humanos';
+
                     colocarPiezaBase(6, 1, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(6, 7, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(7, 1, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(7, 7, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
+
+
                     colocarPiezaBase(7, 4, 'coloso', 'TO', 'Coloso - Torso', 'Atras', 1);
                     colocarPiezaBase(7, 3, 'coloso', 'BI', 'Coloso - ManoIzquierda', 'Atras', 1);
                     colocarPiezaBase(7, 5, 'coloso', 'BD', 'Coloso - ManoDerecha', 'Atras', 1);
@@ -1649,56 +1559,92 @@
                     colocarPiezaBase(7, 3, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
                     colocarPiezaBase(7, 5, 'magos', 'MA', 'Mago - Hielo', 'Atras', 1);
                     break;
-                case 11:
-                    jugador1Faccion = 'magos'; jugador2Faccion = 'humanos';
-                    colocarPiezaBase(8, 1, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
-                    for (let f = 0; f <= 4; f++) { colocarPiezaBase(f, 1, 'humanos', 'CO', 'Humano - Comandante', 'Frente', 2); }
-                    colocarPiezaBase(8, 6, 'magos', 'MA', 'Mago - Hielo', 'Atras', 1);
-                    for (let f = 0; f <= 3; f++) { colocarPiezaBase(f, 6, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2); }
-                    colocarPiezaBase(4, 2, 'humanos', 'GU', 'Humano - Guardián', 'Frente', 2);
-                    colocarPiezaBase(4, 6, 'humanos', 'CI', 'Humano - Científico', 'Frente', 2);
-                    alert("¡Usa tus hechizos con inteligencia, si muere el científico se detiene la evolución!");
+                default:
+                    colocarPiezaBase(7, 4, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
+                    colocarPiezaBase(1, 4, 'elemental', 'EL', 'Mago - Elemental', 'Frente', 2);
                     break;
-                case 12:
-                    jugador1Faccion = 'elfos'; jugador2Faccion = 'magos';
-                    colocarPiezaBase(8, 2, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
-                    colocarPiezaBase(7, 4, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
-                    colocarPiezaBase(6, 6, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
-                    colocarPiezaBase(0, 2, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
-                    colocarPiezaBase(0, 6, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
-                    alert("¡Trata de atacar a distancia!");
-                    break;
-                case 13:
-                    jugador1Faccion = 'elfos'; jugador2Faccion = 'magos';
-                    colocarPiezaBase(8, 2, 'elfos', 'EX', 'Elfo - Explorador', 'Atras', 1);
-                    colocarPiezaBase(7, 4, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
-                    colocarPiezaBase(8, 6, 'elfos', 'EX', 'Elfo - Explorador', 'Atras', 1);
-                    colocarPiezaBase(6, 4, 'elfos', 'DR', 'Elfo - Druida', 'Atras', 1);
-                    colocarPiezaBase(0, 2, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
-                    colocarPiezaBase(0, 3, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
-                    colocarPiezaBase(0, 5, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
-                    colocarPiezaBase(0, 6, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
-                    break;
-                case 14:
-                    jugador1Faccion = 'elfos'; jugador2Faccion = 'magos';
-                    colocarPiezaBase(7, 2, 'elfos', 'EX', 'Elfo - Explorador', 'Atras', 1);
-                    colocarPiezaBase(6, 4, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
-                    colocarPiezaBase(7, 6, 'elfos', 'EX', 'Elfo - Explorador', 'Atras', 1);
-                    colocarPiezaBase(8, 1, 'elfos', 'GU', 'Elfo - Guerrero', 'Atras', 1);
-                    colocarPiezaBase(7, 4, 'elfos', 'DR', 'Elfo - Druida', 'Atras', 1);
-                    colocarPiezaBase(8, 7, 'elfos', 'GU', 'Elfo - Guerrero', 'Atras', 1);
-                    colocarPiezaBase(8, 0, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
-                    colocarPiezaBase(8, 8, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
-                    colocarPiezaBase(2, 2, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
-                    colocarPiezaBase(2, 3, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
-                    colocarPiezaBase(2, 5, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
-                    colocarPiezaBase(2, 6, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
-                    colocarPiezaBase(0, 3, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
-                    colocarPiezaBase(0, 5, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
-                    colocarPiezaBase(1, 4, 'magos', 'AP', 'Mago - Aprendiza', 'Frente', 2);
-                    break;
-                case 15:
-                    jugador1Faccion = 'humanos'; jugador2Faccion = 'magos';
+
+case 11:
+    jugador1Faccion = 'magos';
+    jugador2Faccion = 'humanos';
+
+    colocarPiezaBase(8, 1, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
+
+    for (let f = 0; f <= 4; f++) {
+        colocarPiezaBase(f, 1, 'humanos', 'CO', 'Humano - Comandante', 'Frente', 2);
+    }
+
+    colocarPiezaBase(8, 6, 'magos', 'MA', 'Mago - Hielo', 'Atras', 1);
+
+    for (let f = 0; f <= 3; f++) {
+        colocarPiezaBase(f, 6, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2);
+    }
+
+    colocarPiezaBase(4, 2, 'humanos', 'GU', 'Humano - Guardián', 'Frente', 2);
+    colocarPiezaBase(4, 6, 'humanos', 'CI', 'Humano - Científico', 'Frente', 2);
+
+alert("¡Usa tus hechizos con inteligencia, si muere el científico se detiene la evolución!");
+
+    break;
+
+case 12:
+    jugador1Faccion = 'elfos';
+    jugador2Faccion = 'magos';
+
+    colocarPiezaBase(8, 2, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
+    colocarPiezaBase(7, 4, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
+    colocarPiezaBase(6, 6, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
+
+    colocarPiezaBase(0, 2, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
+    colocarPiezaBase(0, 6, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
+
+alert("¡Trata de atacar a distancia!");
+
+    break;
+
+case 13:
+    jugador1Faccion = 'elfos';
+    jugador2Faccion = 'magos';
+
+    colocarPiezaBase(8, 2, 'elfos', 'EX', 'Elfo - Explorador', 'Atras', 1);
+    colocarPiezaBase(7, 4, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
+    colocarPiezaBase(8, 6, 'elfos', 'EX', 'Elfo - Explorador', 'Atras', 1);
+    colocarPiezaBase(6, 4, 'elfos', 'DR', 'Elfo - Druida', 'Atras', 1);
+
+    colocarPiezaBase(0, 2, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
+    colocarPiezaBase(0, 3, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
+    colocarPiezaBase(0, 5, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
+    colocarPiezaBase(0, 6, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
+
+    break;
+
+case 14:
+    jugador1Faccion = 'elfos';
+    jugador2Faccion = 'magos';
+
+    colocarPiezaBase(7, 2, 'elfos', 'EX', 'Elfo - Explorador', 'Atras', 1);
+    colocarPiezaBase(6, 4, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
+    colocarPiezaBase(7, 6, 'elfos', 'EX', 'Elfo - Explorador', 'Atras', 1);
+    colocarPiezaBase(8, 1, 'elfos', 'GU', 'Elfo - Guerrero', 'Atras', 1);
+    colocarPiezaBase(7, 4, 'elfos', 'DR', 'Elfo - Druida', 'Atras', 1);
+    colocarPiezaBase(8, 7, 'elfos', 'GU', 'Elfo - Guerrero', 'Atras', 1);
+    colocarPiezaBase(8, 0, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
+    colocarPiezaBase(8, 8, 'elfos', 'AR', 'Elfo - Arquero', 'Atras', 1);
+
+    colocarPiezaBase(2, 2, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
+    colocarPiezaBase(2, 3, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
+    colocarPiezaBase(2, 5, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
+    colocarPiezaBase(2, 6, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
+    colocarPiezaBase(0, 3, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
+    colocarPiezaBase(0, 5, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
+    colocarPiezaBase(1, 4, 'magos', 'AP', 'Mago - Aprendiza', 'Frente', 2);
+
+    break;
+
+case 15:
+    jugador1Faccion = 'humanos';
+    jugador2Faccion = 'magos';
+
                     colocarPiezaBase(8, 1, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(8, 7, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(7, 4, 'humanos', 'CI', 'Humano - Científico', 'Atras', 1);
@@ -1708,12 +1654,17 @@
                     colocarPiezaBase(7, 3, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
                     colocarPiezaBase(7, 5, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
                     colocarPiezaBase(7, 7, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
-                    colocarPiezaBase(0, 3, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
-                    colocarPiezaBase(0, 5, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
-                    colocarPiezaBase(1, 4, 'magos', 'AP', 'Mago - Aprendiza', 'Frente', 2);
-                    break;
-                case 16:
-                    jugador1Faccion = 'humanos'; jugador2Faccion = 'coloso';
+
+    colocarPiezaBase(0, 3, 'magos', 'MR', 'Mago - Fuego', 'Frente', 2);
+    colocarPiezaBase(0, 5, 'magos', 'MA', 'Mago - Hielo', 'Frente', 2);
+    colocarPiezaBase(1, 4, 'magos', 'AP', 'Mago - Aprendiza', 'Frente', 2);
+
+    break;
+
+case 16:
+    jugador1Faccion = 'humanos';
+    jugador2Faccion = 'coloso';
+
                     colocarPiezaBase(8, 1, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(8, 7, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(7, 4, 'humanos', 'CI', 'Humano - Científico', 'Atras', 1);
@@ -1723,15 +1674,20 @@
                     colocarPiezaBase(7, 3, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
                     colocarPiezaBase(7, 5, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
                     colocarPiezaBase(7, 7, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
+
                     colocarPiezaBase(1, 4, 'coloso', 'TO', 'Coloso - Torso', 'Frente', 2);
                     colocarPiezaBase(1, 3, 'coloso', 'BI', 'Coloso - ManoIzquierda', 'Frente', 2);
                     colocarPiezaBase(1, 5, 'coloso', 'BD', 'Coloso - ManoDerecha', 'Frente', 2);
                     colocarPiezaBase(0, 3, 'coloso', 'PI', 'Coloso - PieIzquierdo', 'Frente', 2);
                     colocarPiezaBase(0, 5, 'coloso', 'PD', 'Coloso - PieDerecho', 'Frente', 2);
-                    alert("¡Ataca la CABEZA solo al final!");
-                    break;
-                case 17:
-                    jugador1Faccion = 'humanos'; jugador2Faccion = 'coloso';
+
+alert("¡Ataca la CABEZA solo al final!");
+    break;
+
+case 17:
+    jugador1Faccion = 'humanos';
+    jugador2Faccion = 'coloso';
+
                     colocarPiezaBase(8, 1, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(8, 7, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(7, 4, 'humanos', 'CI', 'Humano - Científico', 'Atras', 1);
@@ -1743,6 +1699,7 @@
                     colocarPiezaBase(7, 3, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
                     colocarPiezaBase(7, 5, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
                     colocarPiezaBase(7, 7, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
+
                     colocarPiezaBase(2, 1, 'coloso', 'RO', 'Coloso - Piedra', 'Frente', 2);
                     colocarPiezaBase(2, 7, 'coloso', 'RO', 'Coloso - Piedra', 'Frente', 2);
                     colocarPiezaBase(1, 1, 'coloso', 'RO', 'Coloso - Piedra', 'Frente', 2);
@@ -1752,10 +1709,16 @@
                     colocarPiezaBase(1, 5, 'coloso', 'BD', 'Coloso - ManoDerecha', 'Frente', 2);
                     colocarPiezaBase(0, 3, 'coloso', 'PI', 'Coloso - PieIzquierdo', 'Frente', 2);
                     colocarPiezaBase(0, 5, 'coloso', 'PD', 'Coloso - PieDerecho', 'Frente', 2);
-                    alert("¡Cuidado con las ROCAS!");
-                    break;
-                case 18:
-                    jugador1Faccion = 'humanos'; jugador2Faccion = 'coloso';
+
+alert("¡Cuidado con las ROCAS!");
+
+    break;
+
+
+case 18:
+    jugador1Faccion = 'humanos';
+    jugador2Faccion = 'coloso';
+
                     colocarPiezaBase(8, 1, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(8, 7, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(7, 4, 'humanos', 'CI', 'Humano - Científico', 'Atras', 1);
@@ -1771,6 +1734,7 @@
                     colocarPiezaBase(7, 6, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
                     colocarPiezaBase(7, 7, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
                     colocarPiezaBase(7, 8, 'humanos', 'MI', 'Humano - Miliciano', 'Atras', 1);
+
                     colocarPiezaBase(4, 2, 'coloso', 'RO', 'Coloso - Piedra', 'Frente', 2);
                     colocarPiezaBase(4, 6, 'coloso', 'RO', 'Coloso - Piedra', 'Frente', 2);
                     colocarPiezaBase(2, 1, 'coloso', 'RO', 'Coloso - Piedra', 'Frente', 2);
@@ -1782,32 +1746,51 @@
                     colocarPiezaBase(1, 5, 'coloso', 'BD', 'Coloso - ManoDerecha', 'Frente', 2);
                     colocarPiezaBase(0, 3, 'coloso', 'PI', 'Coloso - PieIzquierdo', 'Frente', 2);
                     colocarPiezaBase(0, 5, 'coloso', 'PD', 'Coloso - PieDerecho', 'Frente', 2);
-                    break;
+
+    break;
+
                 case 19:
-                    jugador1Faccion = 'magos'; jugador2Faccion = 'coloso';
-                    colocarPiezaBase(8, 4, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
-                    colocarPiezaBase(1, 4, 'coloso', 'TO', 'Coloso - Torso', 'Frente', 2);
+                    jugador1Faccion = 'magos'; jugador2Faccion = 'humanos';
+                    colocarPiezaBase(8, 2, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
+                    colocarPiezaBase(7, 4, 'magos', 'AP', 'Mago - Aprendiza', 'Atras', 1);
+                    colocarPiezaBase(8, 6, 'magos', 'MA', 'Mago - Hielo', 'Atras', 1);
+                    colocarPiezaBase(1, 4, 'humanos', 'GU', 'Humano - Guardián', 'Frente', 2);
                     break;
                 case 20:
-                    jugador1Faccion = 'magos'; jugador2Faccion = 'coloso';
-                    colocarPiezaBase(8, 4, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
-                    colocarPiezaBase(1, 4, 'coloso', 'TO', 'Coloso - Torso', 'Frente', 2);
+                    colocarPiezaBase(8, 2, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
+                    colocarPiezaBase(8, 0, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
+                    colocarPiezaBase(8, 8, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
+                    jugador1Faccion = 'elfos'; jugador2Faccion = 'humanos';
+                    colocarPiezaBase(8, 6, 'elfos', 'DR', 'Elfo - Druida', 'Atras', 1);
+                    colocarPiezaBase(1, 4, 'humanos', 'GU', 'Humano - Guardián', 'Frente', 2);
                     break;
-                default:
-                    colocarPiezaBase(7, 4, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
-                    colocarPiezaBase(1, 4, 'elemental', 'EL', 'Mago - Elemental', 'Frente', 2);
-                    break;
-            }
 
-            inicializarRelojes(15);
-            actualizarPanelHumanos(); actualizarPanelColoso(); actualizarIndicadorTurno(); actualizarUITurnoTiempo();
+    break;
+
+            }
         }
 
-        window.onload = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const lvl = urlParams.get('nivel') || 1;
-            inicializarNivelHistoria(lvl);
-        };
+        function inicializarJuego() {
+            let datosLegados = JSON.parse(localStorage.getItem('legados_estado')) || {};
+            let nivel = datosLegados.nivel_historia || 1;
+            
+            j1EsCPU = false;
+            j2EsCPU = true; 
+            
+            inicializarNivelHistoria(nivel);
+            turnoActual = 1; 
+            
+            inicializarRelojes(10); 
+            actualizarUITurnoTiempo();
+
+            actualizarIndicadorTurno();
+            actualizarPanelHumanos();
+            actualizarPanelColoso();
+
+            setTimeout(verificarTurnoCPU, 800);
+        }
+
+        inicializarJuego();
     </script>
 </body>
 </html>
