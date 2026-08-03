@@ -123,6 +123,9 @@
         @keyframes latido { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
         .tiempo-display { font-family: monospace; font-size: 1.4rem; letter-spacing: 1px; }
 
+        /* ========================================================
+           NUEVAS ANIMACIONES: DAÑO, SPAWN, PROYECTILES Y DESPLAZAR
+           ======================================================== */
         @keyframes muerteEfecto {
             0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 5px #e74c3c); }
             50% { transform: scale(1.5) translateY(-10px); opacity: 0.8; filter: drop-shadow(0 0 20px #e74c3c) brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(5); }
@@ -130,14 +133,57 @@
         }
         .animacion-muerte {
             animation: muerteEfecto 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
-            pointer-events: none;
-            z-index: 100 !important;
+            pointer-events: none; z-index: 100 !important;
         }
+
         @keyframes flashSangre {
             0% { background-color: rgba(231, 76, 60, 0.8) !important; box-shadow: inset 0 0 20px #c0392b !important; }
             100% { background-color: transparent; box-shadow: none; }
         }
         .flash-sangre { animation: flashSangre 0.5s ease-out forwards; }
+
+        /* SPAWN (Elemental / Revivir) */
+        @keyframes spawnEfecto {
+            0% { transform: scale(2.5); opacity: 0; filter: drop-shadow(0 0 20px #3498db) brightness(2); }
+            100% { transform: scale(1.35); opacity: 1; filter: drop-shadow(0 0 0 transparent) brightness(1); }
+        }
+        @keyframes spawnEfectoTexto {
+            0% { transform: scale(2.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animacion-spawn img { animation: spawnEfecto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
+        .animacion-spawn .ficha-texto { animation: spawnEfectoTexto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
+
+        /* BOLA DE FUEGO */
+        @keyframes fireballGiro { 
+            0% { transform: rotate(0deg) scale(1); filter: brightness(1); } 
+            50% { transform: rotate(180deg) scale(1.3); filter: brightness(1.5); }
+            100% { transform: rotate(360deg) scale(1); filter: brightness(1); } 
+        }
+        .efecto-bola-fuego {
+            position: absolute; z-index: 200; pointer-events: none;
+            background-image: url('fuego.png'); background-size: contain; background-repeat: no-repeat; background-position: center;
+            animation: fireballGiro 0.3s linear infinite; transition: all 0.3s ease-in;
+        }
+
+        /* RAYO ARCANO */
+        @keyframes rayoParpadeo { 
+            0% { opacity: 0.8; filter: brightness(1.8) drop-shadow(0 0 10px #3498db); } 
+            50% { opacity: 0.4; filter: brightness(1); } 
+            100% { opacity: 0.8; filter: brightness(1.8) drop-shadow(0 0 10px #3498db); } 
+        }
+        .efecto-rayo {
+            position: absolute; z-index: 150; pointer-events: none;
+            background-image: url('rayo.png'); background-size: cover; background-repeat: no-repeat; background-position: center;
+            animation: rayoParpadeo 0.1s infinite;
+        }
+
+        /* PIEZA DESLIZANDO */
+        .pieza-deslizando {
+            position: absolute !important; z-index: 250 !important; transition: all 0.25s ease-out !important;
+            pointer-events: none;
+        }
+        /* ======================================================== */
 
         #overlay-espera {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -251,6 +297,102 @@
         let esPartidaLocal = true;
         let socket;
 
+        // --- FUNCIONES DE ANIMACIONES (NUEVO) ---
+        function animarDesplazamiento(idOrigen, idDestino, callback) {
+            const tablero = document.getElementById('tablero');
+            const origenCelda = document.getElementById(`c-${idOrigen}`);
+            const destCelda = document.getElementById(`c-${idDestino}`);
+            const piezaVisual = origenCelda.querySelector('.pieza-contenedor');
+
+            if (!piezaVisual) { callback(); return; }
+
+            const oRect = origenCelda.getBoundingClientRect();
+            const dRect = destCelda.getBoundingClientRect();
+            const tRect = tablero.getBoundingClientRect();
+
+            const startX = oRect.left - tRect.left;
+            const startY = oRect.top - tRect.top;
+            const endX = dRect.left - tRect.left;
+            const endY = dRect.top - tRect.top;
+
+            const clone = piezaVisual.cloneNode(true);
+            clone.classList.add('pieza-deslizando');
+            clone.style.left = `${startX}px`;
+            clone.style.top = `${startY}px`;
+            clone.style.width = `${oRect.width}px`;
+            clone.style.height = `${oRect.height}px`;
+
+            tablero.appendChild(clone);
+            piezaVisual.style.opacity = '0'; // Ocultamos la original
+
+            void clone.offsetWidth; // Reflow forzar transicion
+
+            clone.style.left = `${endX}px`;
+            clone.style.top = `${endY}px`;
+
+            setTimeout(() => {
+                clone.remove();
+                callback();
+            }, 250); // Tiempo de la animación de movimiento
+        }
+
+        function animarBolaFuego(idOrigen, idDestino, callback) {
+            const tablero = document.getElementById('tablero');
+            const origenCelda = document.getElementById(`c-${idOrigen}`);
+            const destCelda = document.getElementById(`c-${idDestino}`);
+
+            const oRect = origenCelda.getBoundingClientRect();
+            const dRect = destCelda.getBoundingClientRect();
+            const tRect = tablero.getBoundingClientRect();
+
+            const fuego = document.createElement('div');
+            fuego.className = 'efecto-bola-fuego';
+            fuego.style.left = `${oRect.left - tRect.left}px`;
+            fuego.style.top = `${oRect.top - tRect.top}px`;
+            fuego.style.width = `${oRect.width}px`;
+            fuego.style.height = `${oRect.height}px`;
+
+            tablero.appendChild(fuego);
+            void fuego.offsetWidth; // Reflow
+
+            fuego.style.left = `${dRect.left - tRect.left}px`;
+            fuego.style.top = `${dRect.top - tRect.top}px`;
+
+            setTimeout(() => {
+                fuego.remove();
+                callback();
+            }, 300); // 300ms de vuelo
+        }
+
+        function animarRayo(idsCamino, orientacion, callback) {
+            const tablero = document.getElementById('tablero');
+            const divsRayo = [];
+
+            idsCamino.forEach(id => {
+                const celda = document.getElementById(`c-${id}`);
+                const cRect = celda.getBoundingClientRect();
+                const tRect = tablero.getBoundingClientRect();
+                
+                const div = document.createElement('div');
+                div.className = 'efecto-rayo';
+                if (orientacion === 'horizontal') div.style.transform = 'rotate(90deg)';
+                
+                div.style.left = `${cRect.left - tRect.left}px`;
+                div.style.top = `${cRect.top - tRect.top}px`;
+                div.style.width = `${cRect.width}px`;
+                div.style.height = `${cRect.height}px`;
+                
+                tablero.appendChild(div);
+                divsRayo.push(div);
+            });
+
+            setTimeout(() => {
+                divsRayo.forEach(d => d.remove());
+                callback();
+            }, 400); // El rayo queda instanciado 400ms
+        }
+        // ----------------------------------------
+
         function formatearTiempo(segundos) {
             let m = Math.floor(segundos / 60); let s = segundos % 60;
             return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
@@ -296,12 +438,15 @@
             }
         }
 
-        function colocarPiezaBase(fila, col, faccion, texto, prefijoImagen, orientacion, jugador, inmune = 0, inmovilizado = 0) {
+        function colocarPiezaBase(fila, col, faccion, texto, prefijoImagen, orientacion, jugador, inmune = 0, inmovilizado = 0, esSpawn = false) {
             const id = `${fila}-${col}`; const celda = document.getElementById(`c-${id}`);
             if (!celda) return;
             const archivoImg = `${prefijoImagen} ${orientacion}.png`;
             celda.innerHTML = '';
             const contenedor = document.createElement('div'); contenedor.className = `pieza-contenedor ${faccion} j${jugador}`; contenedor.id = `pieza-${id}`;
+            
+            if (esSpawn) contenedor.classList.add('animacion-spawn'); // <-- APLICAR ANIMACION DE SPAWN
+
             const span = document.createElement('span'); span.className = 'ficha-texto'; span.innerText = texto; contenedor.appendChild(span);
 
             if (archivoImg) {
@@ -336,7 +481,7 @@
         }
 
         function manejarClickCelda(f, c) {
-            if (!esPartidaLocal && turnoActual !== miNumeroDeJugador) { return; } // Bloqueo de turno enemigo
+            if (!esPartidaLocal && turnoActual !== miNumeroDeJugador) { return; }
 
             const idClickeado = `${f}-${c}`;
 
@@ -363,7 +508,7 @@
                     if (modoTargetConjuro === 'AP_piel_piedra_paso1') {
                         memoriaConjuro = { origen: idClickeado }; modoTargetConjuro = 'AP_piel_piedra_ejecutar';
                     }
-                    ejecutarEfectoConjuro(f, c);
+                    ejecutarEfectoConjuroWrapper(f, c);
                 }
                 return;
             }
@@ -391,22 +536,24 @@
                     const idOrigen = `${celdaSeleccionada.fila}-${celdaSeleccionada.col}`;
                     const p = celdaSeleccionada.pieza;
                     
-                    if (mapaPiezas[idClickeado]) matarPieza(idClickeado); 
+                    // REEMPLAZAMOS EL MOVIMIENTO DIRECTO POR LA ANIMACIÓN
+                    animarDesplazamiento(idOrigen, idClickeado, () => {
+                        if (mapaPiezas[idClickeado]) matarPieza(idClickeado); 
 
-                    document.getElementById(`c-${idOrigen}`).innerHTML = ''; delete mapaPiezas[idOrigen];
-                    colocarPiezaBase(f, c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
-                    
-                    if (!esPartidaLocal && socket) {
-                        socket.emit("jugada", { sala: salaActual, tipo: 'movimiento', origen: idOrigen, destino: idClickeado });
-                    }
-                    finalizarTurno();
+                        document.getElementById(`c-${idOrigen}`).innerHTML = ''; delete mapaPiezas[idOrigen];
+                        colocarPiezaBase(f, c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
+                        
+                        if (!esPartidaLocal && socket) {
+                            socket.emit("jugada", { sala: salaActual, tipo: 'movimiento', origen: idOrigen, destino: idClickeado });
+                        }
+                        finalizarTurno();
+                    });
                 } else {
                     cancelarModoTarget();
                 }
             }
         }
 
-        // ---- LÓGICA INTERNA DE TABLERO MANTENIDA IGUAL ----
         function tieneBrazoAdyacente(fila, col, jugador) {
             for (let df = -1; df <= 1; df++) {
                 for (let dc = -1; dc <= 1; dc++) {
@@ -452,56 +599,24 @@
                     
                     let esValido = false; const diffF = Math.abs(f - fila); const diffC = Math.abs(c - col); const orientacion = pieza.orientacion; const piezaDestino = mapaPiezas[idDestino];
 
-if (pieza.faccion === 'coloso') {
-    // MOVIMIENTO DEL TORSO
-    if (pieza.texto === 'TO') { 
-        let dirAdelante = (pieza.orientacion === 'Atras') ? -1 : 1; 
-        let avance = (f - fila) * dirAdelante; 
-
-        if (avance === 0) {
-            if (diffC <= 2) esValido = true; 
-        } else if (avance > 0) {
-            if (diffC === 0 && avance <= 3) esValido = true; 
-            else if (diffF === diffC && avance <= 2) esValido = true; 
-        } else if (avance < 0) {
-            if (avance === -1 && diffC <= 1) esValido = true; 
-        }
-    }
-    // MOVIMIENTO DE LOS BRAZOS
-    else if (pieza.texto === 'BI' || pieza.texto === 'BD') { 
-        if (diffF === diffC && diffF <= 3) esValido = lineaDespejada(fila, col, f, c); 
-    }
-    // MOVIMIENTO DE LAS PIERNAS (Torre 2 + Caballo)
-    else if (pieza.texto === 'PI' || pieza.texto === 'PD') { 
-        if ((diffF === 0 || diffC === 0) && (diffF <= 2 && diffC <= 2)) {
-            esValido = lineaDespejada(fila, col, f, c); 
-        } else if ((diffF === 2 && diffC === 1) || (diffF === 1 && diffC === 2)) {
-            esValido = true; 
-        }
-    }
-    // MOVIMIENTO DE LA ROCA
-    else if (pieza.texto === 'RO') { 
-        if (tieneBrazoAdyacente(fila, col, pieza.jugador)) { 
-            if (diffF === diffC || diffF === 0 || diffC === 0) esValido = lineaDespejada(fila, col, f, c); 
-        } 
-    }
-
-    if (esValido && ['TO', 'BI', 'BD', 'PI', 'PD'].includes(pieza.texto)) {
-        if (!esAnatomiaValidaColoso(`${fila}-${col}`, idDestino, pieza)) esValido = false; 
-    }
-}
-                    else if (pieza.faccion === 'humanos') {
-                        if (pieza.texto === 'MI') {
-                            let dirAdelante = (orientacion === 'Atras') ? -1 : 1;
-                            if (!piezaDestino && c === col && f === fila + dirAdelante) esValido = true;
-                            if (piezaDestino && piezaDestino.jugador !== pieza.jugador && piezaDestino.inmune <= 0 && diffC === 1 && f === fila + dirAdelante) esValido = true;
+                    if (pieza.faccion === 'coloso') {
+                        if (pieza.texto === 'TO') { 
+                            let dirAdelante = (pieza.orientacion === 'Atras') ? -1 : 1; 
+                            let avance = (f - fila) * dirAdelante; 
+                            if (avance === 0) { if (diffC <= 2) esValido = true; } 
+                            else if (avance > 0) { if (diffC === 0 && avance <= 3) esValido = true; else if (diffF === diffC && avance <= 2) esValido = true; } 
+                            else if (avance < 0) { if (avance === -1 && diffC <= 1) esValido = true; }
                         }
+                        else if (pieza.texto === 'BI' || pieza.texto === 'BD') { if (diffF === diffC && diffF <= 3) esValido = lineaDespejada(fila, col, f, c); }
+                        else if (pieza.texto === 'PI' || pieza.texto === 'PD') { if ((diffF === 0 || diffC === 0) && (diffF <= 2 && diffC <= 2)) { esValido = lineaDespejada(fila, col, f, c); } else if ((diffF === 2 && diffC === 1) || (diffF === 1 && diffC === 2)) { esValido = true; } }
+                        else if (pieza.texto === 'RO') { if (tieneBrazoAdyacente(fila, col, pieza.jugador)) { if (diffF === diffC || diffF === 0 || diffC === 0) esValido = lineaDespejada(fila, col, f, c); } }
+                        if (esValido && ['TO', 'BI', 'BD', 'PI', 'PD'].includes(pieza.texto)) { if (!esAnatomiaValidaColoso(`${fila}-${col}`, idDestino, pieza)) esValido = false; }
+                    }
+                    else if (pieza.faccion === 'humanos') {
+                        if (pieza.texto === 'MI') { let dirAdelante = (orientacion === 'Atras') ? -1 : 1; if (!piezaDestino && c === col && f === fila + dirAdelante) esValido = true; if (piezaDestino && piezaDestino.jugador !== pieza.jugador && piezaDestino.inmune <= 0 && diffC === 1 && f === fila + dirAdelante) esValido = true; }
                         else if (pieza.texto === 'CE') { if (diffF === diffC) { if (nivelHumano === 1) { if (diffF === 1) esValido = true; } else { esValido = lineaDespejada(fila, col, f, c); } } }
                         else if (pieza.texto === 'GU') { if (diffF === 0 || diffC === 0) { if (nivelHumano <= 2) { if (diffF <= 1 && diffC <= 1) esValido = true; } else { esValido = lineaDespejada(fila, col, f, c); } } }
-                        else if (pieza.texto === 'CO') {
-                            if (nivelHumano <= 3) { if (diffF <= 1 && diffC <= 1) esValido = true; }
-                            else { if (diffF === diffC || diffF === 0 || diffC === 0) { esValido = lineaDespejada(fila, col, f, c); } }
-                        }
+                        else if (pieza.texto === 'CO') { if (nivelHumano <= 3) { if (diffF <= 1 && diffC <= 1) esValido = true; } else { if (diffF === diffC || diffF === 0 || diffC === 0) { esValido = lineaDespejada(fila, col, f, c); } } }
                     } 
                     else {
                         if (pieza.texto === 'GU' || pieza.texto === 'AP') { if (diffF <= 1 && diffC <= 1) esValido = true; } 
@@ -515,11 +630,7 @@ if (pieza.faccion === 'coloso') {
                     if (esValido) {
                         if (!piezaDestino) { document.getElementById(`c-${idDestino}`).classList.add('destino-valido'); } 
                         else if (piezaDestino.jugador !== pieza.jugador && piezaDestino.inmune <= 0) { 
-                            if (piezaDestino.texto !== 'TO') {
-                                if (pieza.faccion !== 'humanos' || pieza.texto !== 'MI' || diffC === 1) {
-                                    document.getElementById(`c-${idDestino}`).classList.add('captura-valida'); 
-                                }
-                            }
+                            if (piezaDestino.texto !== 'TO') { if (pieza.faccion !== 'humanos' || pieza.texto !== 'MI' || diffC === 1) { document.getElementById(`c-${idDestino}`).classList.add('captura-valida'); } }
                         }
                     }
                 }
@@ -559,7 +670,7 @@ if (pieza.faccion === 'coloso') {
                 contenedor.appendChild(crearBotonConjuro("Rayo Arcano", "Rayo fulminante recto", conj['MR_rayo'], () => entrarModoTarget('MR_rayo')));
             } 
             else if (tipo === 'MA') {
-                contenedor.appendChild(crearBotonConjuro("Velocidad", "Doble acción en tu próximo turno", conj['MA_mov_veloz'], () => { conj['MA_mov_veloz'] = true; turnoExtraProgramado[turnoActual] = 1; ejecutarEfectoConjuro(-1, -1); }));
+                contenedor.appendChild(crearBotonConjuro("Velocidad", "Doble acción en tu próximo turno", conj['MA_mov_veloz'], () => { conj['MA_mov_veloz'] = true; turnoExtraProgramado[turnoActual] = 1; ejecutarEfectoConjuroWrapper(-1, -1); }));
                 contenedor.appendChild(crearBotonConjuro("Muro de Hielo", "Bloquea 2 casillas (4 turnos)", conj['MA_muro_hielo'], () => entrarModoTarget('MA_muro_hielo')));
                 contenedor.appendChild(crearBotonConjuro("Zona Prohibida", "Área letal 2x2 (2 turnos)", conj['MA_zona_prohibida'], () => entrarModoTarget('MA_zona_prohibida')));
                 let adyacentes = []; for(let af = Math.max(0,f-1); af<=Math.min(8,f+1); af++) { for(let ac=Math.max(0,c-1); ac<=Math.min(8,c+1); ac++) { if(casillasAgua.includes(`${af}-${ac}`)) adyacentes.push(`${af}-${ac}`); } }
@@ -639,7 +750,42 @@ if (pieza.faccion === 'coloso') {
             }
         }
 
-        function ejecutarEfectoConjuro(tf, tc, vieneDeRed = false) {
+        // WRAPPER ASINCRONO PARA ESPERAR ANIMACIONES ANTES DE APLICAR ESTADO
+        function ejecutarEfectoConjuroWrapper(tf, tc, vieneDeRed = false) {
+            const idTarget = `${tf}-${tc}`;
+            const idOrigen = celdaSeleccionada ? `${celdaSeleccionada.fila}-${celdaSeleccionada.col}` : null;
+
+            if (modoTargetConjuro === 'MR_bola_fuego') {
+                animarBolaFuego(idOrigen, idTarget, () => ejecutarEfectoConjuroFinal(tf, tc, vieneDeRed, false));
+            } 
+            else if (modoTargetConjuro === 'MR_rayo') {
+                let caminoIds = [];
+                let dirF = tf - celdaSeleccionada.fila; 
+                let dirC = tc - celdaSeleccionada.col;
+                let curF = celdaSeleccionada.fila + dirF; 
+                let curC = celdaSeleccionada.col + dirC;
+                let orientacion = dirF === 0 ? 'horizontal' : 'vertical';
+
+                while(curF >= 0 && curF <= 8 && curC >= 0 && curC <= 8) {
+                    let idRay = `${curF}-${curC}`;
+                    if (casillasAgua.includes(idRay) || (celdasBloqueadas[idRay] && celdasBloqueadas[idRay].tipo === 'muro-arbol')) break;
+                    caminoIds.push(idRay);
+                    curF += dirF; curC += dirC;
+                }
+                animarRayo(caminoIds, orientacion, () => ejecutarEfectoConjuroFinal(tf, tc, vieneDeRed, false));
+            } 
+            else if (['MA_elemental', 'DR_revivir'].includes(modoTargetConjuro)) {
+                ejecutarEfectoConjuroFinal(tf, tc, vieneDeRed, true); // Pasamos true para aplicar Spawn
+            } 
+            else if (modoTargetConjuro === 'AP_telequinesis_paso2' && !memoriaConjuro.esArbol) {
+                animarDesplazamiento(memoriaConjuro.origen, idTarget, () => ejecutarEfectoConjuroFinal(tf, tc, vieneDeRed, false));
+            } 
+            else {
+                ejecutarEfectoConjuroFinal(tf, tc, vieneDeRed, false);
+            }
+        }
+
+        function ejecutarEfectoConjuroFinal(tf, tc, vieneDeRed, esSpawnEffect) {
             const idTarget = `${tf}-${tc}`;
             const p = celdaSeleccionada ? celdaSeleccionada.pieza : {jugador: turnoActual};
             const conj = conjurosUsados[p.jugador];
@@ -652,10 +798,10 @@ if (pieza.faccion === 'coloso') {
             } 
             else if (modoTargetConjuro === 'DR_revivir') {
                 let tipoRevivir = 'GU'; if (cementerioElfos[p.jugador].length > 0) tipoRevivir = cementerioElfos[p.jugador].pop();
-                colocarPiezaBase(tf, tc, 'elfos', tipoRevivir, `Elfo - ${nombresPiezas[tipoRevivir]}`, p.orientacion, p.jugador);
+                colocarPiezaBase(tf, tc, 'elfos', tipoRevivir, `Elfo - ${nombresPiezas[tipoRevivir]}`, p.orientacion, p.jugador, 0, 0, esSpawnEffect);
                 conj['DR_usos_revivir']++;
             } 
-            else if (modoTargetConjuro === 'MA_elemental') { colocarPiezaBase(tf, tc, 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador); conj['MA_elemental'] = true; } 
+            else if (modoTargetConjuro === 'MA_elemental') { colocarPiezaBase(tf, tc, 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador, 0, 0, esSpawnEffect); conj['MA_elemental'] = true; } 
             else if (modoTargetConjuro === 'MR_bola_fuego') { matarPieza(idTarget); conj['MR_bola_fuego'] = true; } 
             else if (modoTargetConjuro === 'MR_rayo') {
                 let dirF = tf - celdaSeleccionada.fila; let dirC = tc - celdaSeleccionada.col; let curF = celdaSeleccionada.fila + dirF; let curC = celdaSeleccionada.col + dirC;
@@ -855,7 +1001,6 @@ if (pieza.faccion === 'coloso') {
             }
         }
 
-        // --- INICIALIZACIÓN NUEVA MULTIJUGADOR ---
         function inicializarJuegoMulti() {
             const dataGuardada = localStorage.getItem('configuracionOnline');
             let minutosSeleccionados = 2; 
@@ -868,7 +1013,6 @@ if (pieza.faccion === 'coloso') {
                 miNumeroDeJugador = config.rol === 'crear' ? 1 : 2;
                 minutosSeleccionados = config.tiempoMinutos || 2;
 
-                // Formateamos las facciones para no arrastrar las "s" o "os"
                 const formatear = (f) => f.replace(/s$/, '').replace(/o$/, 'o');
                 let j1Temp = formatear(config.jugador1Faccion || 'coloso');
                 let j2Temp = formatear(config.jugador2Faccion || 'humanos');
@@ -880,9 +1024,7 @@ if (pieza.faccion === 'coloso') {
                 jugador2Faccion = j2Temp;
 
             } else {
-                alert("No se encontró sala. Volviendo al inicio.");
-                window.location.href = 'index.html';
-                return;
+                console.log("No se encontró sala online, usando modo de prueba local.");
             }
             
             document.getElementById('etiqueta-j1').innerText = `Jugador 1 (${jugador1Faccion.toUpperCase()}) ${miNumeroDeJugador === 1 ? '[TÚ]' : ''}`;
@@ -893,7 +1035,6 @@ if (pieza.faccion === 'coloso') {
             
             inicializarRelojes(minutosSeleccionados); actualizarUITurnoTiempo(); actualizarIndicadorTurno(); actualizarPanelHumanos(); actualizarPanelColoso();
 
-            // CONECTAR SOCKET AL TABLERO
             if (typeof io !== 'undefined') {
                 socket = io();
                 socket.on('connect', () => {
@@ -906,11 +1047,14 @@ if (pieza.faccion === 'coloso') {
                         const cDest = parseInt(data.destino.split('-')[1]);
                         const p = mapaPiezas[data.origen];
                         
-                        if (mapaPiezas[data.destino]) matarPieza(data.destino); 
-                        document.getElementById(`c-${data.origen}`).innerHTML = ''; delete mapaPiezas[data.origen];
-                        
-                        colocarPiezaBase(fDest, cDest, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
-                        finalizarTurno();
+                        // ANIMAR RECEPCIÓN DE MOVIMIENTO DE SOCKET
+                        animarDesplazamiento(data.origen, data.destino, () => {
+                            if (mapaPiezas[data.destino]) matarPieza(data.destino); 
+                            document.getElementById(`c-${data.origen}`).innerHTML = ''; delete mapaPiezas[data.origen];
+                            
+                            colocarPiezaBase(fDest, cDest, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
+                            finalizarTurno();
+                        });
 
                     } else if (data.tipo === 'conjuro') {
                         modoTargetConjuro = data.modo;
@@ -922,7 +1066,7 @@ if (pieza.faccion === 'coloso') {
                         const fDest = data.destino ? parseInt(data.destino.split('-')[0]) : -1;
                         const cDest = data.destino ? parseInt(data.destino.split('-')[1]) : -1;
                         
-                        ejecutarEfectoConjuro(fDest, cDest, true); 
+                        ejecutarEfectoConjuroWrapper(fDest, cDest, true); 
                     }
                 });
             }
