@@ -391,6 +391,67 @@
                 callback();
             }, 400); // El rayo queda instanciado 400ms
         }
+
+
+function mostrarAlertaEstetica(mensaje) {
+    // Crear el contenedor principal del modal
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '10000';
+    overlay.style.animation = 'fadeIn 0.2s ease-out';
+
+    // Crear la caja de contenido (estética y centrada)
+    const modal = document.createElement('div');
+    modal.style.backgroundColor = '#1a1d24';
+    modal.style.color = '#c5c6c7';
+    modal.style.padding = '20px 30px';
+    modal.style.borderRadius = '8px';
+    modal.style.border = '2px solid #c5a059';
+    modal.style.boxShadow = '0 10px 25px rgba(0,0,0,0.6)';
+    modal.style.textAlign = 'center';
+    modal.style.maxWidth = '400px';
+    modal.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+
+    // Texto del mensaje (reemplazando saltos de línea si los hay)
+    const texto = document.createElement('p');
+    texto.style.margin = '0 0 20px 0';
+    texto.style.fontSize = '1.05rem';
+    texto.style.lineHeight = '1.4';
+    texto.innerText = mensaje;
+
+    // Botón de aceptación estético
+    const boton = document.createElement('button');
+    boton.innerText = 'Aceptar';
+    boton.style.backgroundColor = '#2980b9';
+    boton.style.color = 'white';
+    boton.style.border = 'none';
+    boton.style.padding = '10px 20px';
+    boton.style.borderRadius = '6px';
+    boton.style.fontWeight = 'bold';
+    boton.style.cursor = 'pointer';
+    
+    boton.onmouseover = () => boton.style.backgroundColor = '#3498db';
+    boton.onmouseout = () => boton.style.backgroundColor = '#2980b9';
+    
+    boton.onclick = () => {
+        overlay.remove();
+    };
+
+    // Ensamblar y mostrar
+    modal.appendChild(texto);
+    modal.appendChild(boton);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+}
+
         // ----------------------------------------
 
         function formatearTiempo(segundos) {
@@ -516,10 +577,10 @@
             const piezaEnCelda = mapaPiezas[idClickeado];
 
             if (piezaEnCelda && piezaEnCelda.jugador === turnoActual) {
-                if (piezaEnCelda.inmovilizado > 0) { alert("Esta pieza está inmovilizada."); return; }
-                if (piezaEnCelda.texto === 'CI' && piezaEnCelda.faccion === 'humanos') { alert("El Científico está concentrado en su laboratorio."); return; }
+                if (piezaEnCelda.inmovilizado > 0) { mostrarAlertaEstetica("Esta pieza está inmovilizada."); return; }
+                if (piezaEnCelda.texto === 'CI' && piezaEnCelda.faccion === 'humanos') { mostrarAlertaEstetica("El Científico está concentrado en su laboratorio."); return; }
                 if (piezaEnCelda.texto === 'RO' && piezaEnCelda.faccion === 'coloso') {
-                    if (!tieneBrazoAdyacente(f, c, piezaEnCelda.jugador)) { alert("Necesita un Brazo del Coloso adyacente para arrojarse."); return; }
+                    if (!tieneBrazoAdyacente(f, c, piezaEnCelda.jugador)) { mostrarAlertaEstetica("Necesita un Brazo del Coloso adyacente para arrojarse."); return; }
                 }
 
                 limpiarDestacados();
@@ -936,7 +997,7 @@
                     if (turnoGlobalHumano % 3 === 0) {
                         nivelHumano++;
                         if (esPartidaLocal || turnoActual === miNumeroDeJugador) {
-                            alert(`¡EVOLUCIÓN HUMANA! Los humanos alcanzan el NIVEL ${nivelHumano}:\n${descripcionesNivelHumano[nivelHumano]}`);
+                            mostrarAlertaEstetica(`¡EVOLUCIÓN HUMANA! Los humanos alcanzan el NIVEL ${nivelHumano}:\n${descripcionesNivelHumano[nivelHumano]}`);
                         }
                     }
                 }
