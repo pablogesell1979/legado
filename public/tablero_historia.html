@@ -67,7 +67,6 @@
         .muro-arbol::before { content: '🌲'; position: absolute; font-size: 1.4rem; z-index: 5; opacity: 0.9; pointer-events: none; }
 
         .pieza-contenedor { width: 90%; height: 90%; display: flex; align-items: center; justify-content: center; position: relative; pointer-events: none; }
-        
         .pieza-contenedor img { width: 100%; height: 100%; object-fit: contain; display: none; z-index: 10; transform: scale(1.35); transform-origin: bottom center; }
         
         .ficha-texto { width: 75%; height: 75%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: #ffffff; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); box-shadow: 0 4px 8px rgba(0,0,0,0.6); border: 2px solid #ffffff; z-index: 5; position: absolute; text-align: center;}
@@ -114,6 +113,7 @@
         .reloj-activo { border-color: var(--accent-gold); color: var(--accent-gold); box-shadow: 0 0 15px rgba(197, 160, 89, 0.4); }
         .reloj-inactivo { border-color: #2a2d32; color: #555; opacity: 0.7; }
         .reloj-peligro { color: #e74c3c !important; animation: latido 1s infinite; border-color: #e74c3c; box-shadow: 0 0 15px rgba(231, 76, 60, 0.5); }
+        
         @keyframes latido { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
         .tiempo-display { font-family: monospace; font-size: 1.4rem; letter-spacing: 1px; }
 
@@ -122,16 +122,59 @@
             50% { transform: scale(1.5) translateY(-10px); opacity: 0.8; filter: drop-shadow(0 0 20px #e74c3c) brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(5); }
             100% { transform: scale(0.5) translateY(-30px); opacity: 0; filter: drop-shadow(0 0 30px #c0392b) brightness(0); }
         }
-        .animacion-muerte {
-            animation: muerteEfecto 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
-            pointer-events: none;
-            z-index: 100 !important;
-        }
+        .animacion-muerte { animation: muerteEfecto 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards !important; pointer-events: none; z-index: 100 !important; }
+        
         @keyframes flashSangre {
             0% { background-color: rgba(231, 76, 60, 0.8) !important; box-shadow: inset 0 0 20px #c0392b !important; }
             100% { background-color: transparent; box-shadow: none; }
         }
         .flash-sangre { animation: flashSangre 0.5s ease-out forwards; }
+
+        /* NUEVAS ANIMACIONES */
+        @keyframes moverPiezaAnim {
+            from { transform: translate(var(--dx), var(--dy)) scale(1.35); }
+            to { transform: translate(0, 0) scale(1.35); }
+        }
+        .animando-movimiento {
+            animation: moverPiezaAnim 0.25s linear forwards; 
+        }
+
+        @keyframes aparecerEscala {
+            0% { transform: scale(3); opacity: 0; filter: drop-shadow(0 0 15px #fff); }
+            100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0 transparent); }
+        }
+        .animacion-aparicion {
+            animation: aparecerEscala 0.4s ease-out forwards !important;
+        }
+
+        .efecto-proyectil {
+            position: fixed;
+            z-index: 1000;
+            pointer-events: none;
+            width: 40px;
+            height: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: all 0.25s linear;
+        }
+
+        @keyframes flashRayo {
+            0% { opacity: 0; filter: brightness(3); transform: scale(0.8) var(--rotacion); }
+            30% { opacity: 1; filter: brightness(1.5); transform: scale(1.5) var(--rotacion); }
+            100% { opacity: 0; filter: brightness(1); transform: scale(1) var(--rotacion); }
+        }
+        .rayo-proyectil {
+            position: absolute;
+            z-index: 150;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            background-image: url('rayo.png');
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            animation: flashRayo 0.4s ease-out forwards;
+        }
 
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -202,13 +245,68 @@
     </div>
 
     <script>
+        // FUNCIONES DE ANIMACIONES INYECTADAS
+        function dispararProyectil(fO, cO, fD, cD, imagenUrl) {
+            const origen = document.getElementById(`c-${fO}-${cO}`);
+            const destino = document.getElementById(`c-${fD}-${cD}`);
+            if(!origen || !destino) return;
+            
+            const rO = origen.getBoundingClientRect();
+            const rD = destino.getBoundingClientRect();
+            
+            const proyectil = document.createElement('div');
+            proyectil.className = 'efecto-proyectil';
+            proyectil.style.backgroundImage = `url('${imagenUrl}')`;
+            
+            document.body.appendChild(proyectil);
+            
+            const startX = rO.left + rO.width/2 - 20; 
+            const startY = rO.top + rO.height/2 - 20;
+            const endX = rD.left + rD.width/2 - 20;
+            const endY = rD.top + rD.height/2 - 20;
+            
+            proyectil.style.left = `${startX}px`;
+            proyectil.style.top = `${startY}px`;
+            
+            const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+            proyectil.style.transform = `rotate(${angle}deg)`;
+            
+            proyectil.getBoundingClientRect(); // Forzar reflow
+            
+            proyectil.style.left = `${endX}px`;
+            proyectil.style.top = `${endY}px`;
+            
+            setTimeout(() => { proyectil.remove(); }, 300);
+        }
+
+        function animarRayo(fO, cO, dirF, dirC) {
+            let curF = fO + dirF; let curC = cO + dirC;
+            while(curF >= 0 && curF <= 8 && curC >= 0 && curC <= 8) {
+                let idRay = `${curF}-${curC}`;
+                if (casillasAgua.includes(idRay) || (celdasBloqueadas[idRay] && celdasBloqueadas[idRay].tipo === 'muro-arbol')) break;
+                
+                const celda = document.getElementById(`c-${idRay}`);
+                if (celda) {
+                    const rayoDiv = document.createElement('div');
+                    rayoDiv.className = 'rayo-proyectil';
+                    if (dirF !== 0) rayoDiv.style.setProperty('--rotacion', 'rotate(90deg)');
+                    else rayoDiv.style.setProperty('--rotacion', 'rotate(0deg)');
+                    
+                    celda.appendChild(rayoDiv);
+                    setTimeout(() => { if(rayoDiv.parentNode) rayoDiv.remove(); }, 400);
+                }
+                curF += dirF; curC += dirC;
+            }
+        }
+        
+        // CÓDIGO ORIGINAL
         const casillasAgua = ['4-4', '4-0', '4-8', '0-4', '8-4'];
         
         let jugador1Faccion = 'magos'; 
         let jugador2Faccion = 'elemental'; 
         let turnoActual = 1; 
 
-        let nivelActual = 1; // <--- AGREGA ESTA LÍNEA AQUÍ
+        let nivelActual = 1; 
         
         let celdaSeleccionada = null;
         let modoTargetConjuro = null; 
@@ -349,7 +447,8 @@
             }
         }
 
-        function colocarPiezaBase(fila, col, faccion, texto, prefijoImagen, orientacion, jugador, inmune = 0, inmovilizado = 0) {
+        // FUNCIÓN ACTUALIZADA PARA RECIBIR PARÁMETROS DE ANIMACIÓN (origenPos, esAparicion)
+        function colocarPiezaBase(fila, col, faccion, texto, prefijoImagen, orientacion, jugador, inmune = 0, inmovilizado = 0, origenPos = null, esAparicion = false) {
             const id = `${fila}-${col}`;
             const celda = document.getElementById(`c-${id}`);
             if (!celda) return;
@@ -359,6 +458,19 @@
             const contenedor = document.createElement('div');
             contenedor.className = `pieza-contenedor ${faccion} j${jugador}`;
             contenedor.id = `pieza-${id}`;
+
+            if (origenPos) {
+                const celdaO = document.getElementById(`c-${origenPos.f}-${origenPos.c}`);
+                if (celdaO && celda) {
+                    const rO = celdaO.getBoundingClientRect();
+                    const rD = celda.getBoundingClientRect();
+                    contenedor.style.setProperty('--dx', `${rO.left - rD.left}px`);
+                    contenedor.style.setProperty('--dy', `${rO.top - rD.top}px`);
+                    contenedor.classList.add('animando-movimiento');
+                }
+            } else if (esAparicion) {
+                contenedor.classList.add('animacion-aparicion');
+            }
 
             const span = document.createElement('span');
             span.className = 'ficha-texto';
@@ -393,16 +505,12 @@
             
             if (!esVulnerable(p)) return; 
            
-
-// --- NUEVA LÓGICA NIVELES 19 Y 20: DERROTA INSTANTÁNEA ---
-    if (nivelActual === 19 || nivelActual === 20) {
-        if (p.jugador === 1) { // Si muere cualquier pieza tuya (Jugador 1)
-            declararVictoria(2); // Gana el enemigo inmediatamente
-            return;
-        }
-    }
-// ---------------------------------------------------------
-
+            if (nivelActual === 19 || nivelActual === 20) {
+                if (p.jugador === 1) { 
+                    declararVictoria(2); 
+                    return;
+                }
+            }
 
             if (p.faccion === 'elfos' && !p.texto.startsWith('Árbol') && p.texto !== 'AS') {
                 cementerioElfos[p.jugador].push(p.texto); 
@@ -497,7 +605,9 @@
                     if (mapaPiezas[idClickeado]) matarPieza(idClickeado); 
 
                     document.getElementById(`c-${idOrigen}`).innerHTML = ''; delete mapaPiezas[idOrigen];
-                    colocarPiezaBase(f, c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
+                    
+                    // PASAMOS EL ORIGEN PARA LA ANIMACIÓN DE MOVIMIENTO RÁPIDO Y RECTO
+                    colocarPiezaBase(f, c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado, {f: celdaSeleccionada.fila, c: celdaSeleccionada.col});
                     finalizarTurno();
                 } else { cancelarModoTarget(); }
             }
@@ -803,23 +913,32 @@
                 let origenAS = Object.keys(mapaPiezas).find(key => mapaPiezas[key].texto === 'AS' && mapaPiezas[key].jugador === p.jugador);
                 if (origenAS) {
                     const piezaAS = mapaPiezas[origenAS]; document.getElementById(`c-${origenAS}`).innerHTML = ''; delete mapaPiezas[origenAS];
-                    colocarPiezaBase(tf, tc, piezaAS.faccion, piezaAS.texto, piezaAS.prefijoImagen, piezaAS.orientacion, piezaAS.jugador);
+                    colocarPiezaBase(tf, tc, piezaAS.faccion, piezaAS.texto, piezaAS.prefijoImagen, piezaAS.orientacion, piezaAS.jugador, 0, 0, null, true);
                 }
             } 
             else if (modoTargetConjuro === 'DR_revivir') {
                 let tipoRevivir = 'GU'; if (cementerioElfos[p.jugador].length > 0) tipoRevivir = cementerioElfos[p.jugador].pop();
-                colocarPiezaBase(tf, tc, 'elfos', tipoRevivir, `Elfo - ${nombresPiezas[tipoRevivir]}`, p.orientacion, p.jugador);
+                // ANIMACIÓN DE APARICIÓN (true)
+                colocarPiezaBase(tf, tc, 'elfos', tipoRevivir, `Elfo - ${nombresPiezas[tipoRevivir]}`, p.orientacion, p.jugador, 0, 0, null, true);
                 conj['DR_usos_revivir']++;
             } 
             else if (modoTargetConjuro === 'MA_elemental') {
-                colocarPiezaBase(tf, tc, 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador); conj['MA_elemental'] = true;
+                // ANIMACIÓN DE APARICIÓN (true)
+                colocarPiezaBase(tf, tc, 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador, 0, 0, null, true); 
+                conj['MA_elemental'] = true;
             } 
             else if (modoTargetConjuro === 'MR_bola_fuego') {
+                // ANIMACIÓN BOLA DE FUEGO
+                dispararProyectil(celdaSeleccionada.fila, celdaSeleccionada.col, tf, tc, 'fuego.png');
                 matarPieza(idTarget); conj['MR_bola_fuego'] = true;
             } 
             else if (modoTargetConjuro === 'MR_rayo') {
                 let dirF = tf - celdaSeleccionada.fila; let dirC = tc - celdaSeleccionada.col;
                 let curF = celdaSeleccionada.fila + dirF; let curC = celdaSeleccionada.col + dirC;
+                
+                // ANIMACIÓN RAYO
+                animarRayo(celdaSeleccionada.fila, celdaSeleccionada.col, dirF, dirC);
+
                 while(curF >= 0 && curF <= 8 && curC >= 0 && curC <= 8) {
                     let idRay = `${curF}-${curC}`;
                     if (casillasAgua.includes(idRay) || (celdasBloqueadas[idRay] && celdasBloqueadas[idRay].tipo === 'muro-arbol')) break;
@@ -831,7 +950,7 @@
             else if (modoTargetConjuro === 'MR_teletransporte_paso2') {
                 const idOrig = memoriaConjuro.origen; const pMago = memoriaConjuro.pieza;
                 document.getElementById(`c-${idOrig}`).innerHTML = ''; delete mapaPiezas[idOrig];
-                colocarPiezaBase(tf, tc, pMago.faccion, pMago.texto, pMago.prefijoImagen, pMago.orientacion, pMago.jugador, pMago.inmune, pMago.inmovilizado);
+                colocarPiezaBase(tf, tc, pMago.faccion, pMago.texto, pMago.prefijoImagen, pMago.orientacion, pMago.jugador, pMago.inmune, pMago.inmovilizado, null, true);
                 conj['MR_teletransporte'] = true;
             }
             else if (modoTargetConjuro === 'MR_muro_fuego') {
@@ -859,7 +978,7 @@
                 if (memoriaConjuro.esArbol) { celdasBloqueadas[idTarget] = celdasBloqueadas[idOrig]; delete celdasBloqueadas[idOrig]; } 
                 else {
                     let pObj = mapaPiezas[idOrig]; document.getElementById(`c-${idOrig}`).innerHTML = ''; delete mapaPiezas[idOrig];
-                    colocarPiezaBase(tf, tc, pObj.faccion, pObj.texto, pObj.prefijoImagen, pObj.orientacion, pObj.jugador, pObj.inmune, pObj.inmovilizado);
+                    colocarPiezaBase(tf, tc, pObj.faccion, pObj.texto, pObj.prefijoImagen, pObj.orientacion, pObj.jugador, pObj.inmune, pObj.inmovilizado, {f: parseInt(idOrig.split('-')[0]), c: parseInt(idOrig.split('-')[1])});
                 }
                 conj['AP_telequinesis'] = true;
             }
@@ -916,64 +1035,50 @@
             window.location.href = 'victoria_historia.html'; 
         }
 
-function verificarVictoria() {
-    let j1Vivo = false; 
-    let j2Vivo = false;
-    let colosoJ1 = false, torsoJ1Vivo = false;
-    let colosoJ2 = false, torsoJ2Vivo = false;
+        function verificarVictoria() {
+            let j1Vivo = false; 
+            let j2Vivo = false;
+            let colosoJ1 = false, torsoJ1Vivo = false;
+            let colosoJ2 = false, torsoJ2Vivo = false;
 
-    for (const key in mapaPiezas) {
-        const p = mapaPiezas[key];
-        if (p.jugador === 1) {
-            j1Vivo = true;
-            if (p.faccion === 'coloso') colosoJ1 = true;
-            if (p.texto === 'TO') torsoJ1Vivo = true;
-        }
-        if (p.jugador === 2) {
-            j2Vivo = true;
-            if (p.faccion === 'coloso') colosoJ2 = true;
-            if (p.texto === 'TO') torsoJ2Vivo = true;
-        }
-    }
-
-    // --- LÓGICA EXCLUSIVA NIVELES 19 Y 20 ---
-    if (nivelActual === 19 || nivelActual === 20) {
-        let casillasObjetivo = ['2-2', '2-6', '6-2', '6-6']; 
-        
-        if (nivelActual === 20) {
-            casillasObjetivo.push('2-4', '6-4'); 
-        }
-        
-        let todasEnPosicion = true;
-        for (let id of casillasObjetivo) {
-            let p = mapaPiezas[id];
-            // Si falta una pieza tuya en las casillas, aún no ganaste
-            if (!p || p.jugador !== 1) { 
-                todasEnPosicion = false;
-                break;
+            for (const key in mapaPiezas) {
+                const p = mapaPiezas[key];
+                if (p.jugador === 1) {
+                    j1Vivo = true;
+                    if (p.faccion === 'coloso') colosoJ1 = true;
+                    if (p.texto === 'TO') torsoJ1Vivo = true;
+                }
+                if (p.jugador === 2) {
+                    j2Vivo = true;
+                    if (p.faccion === 'coloso') colosoJ2 = true;
+                    if (p.texto === 'TO') torsoJ2Vivo = true;
+                }
             }
-        }
-        
-        if (todasEnPosicion) {
-            declararVictoria(1); // Ganas tú por posición
-            return true;
-        }
-        
-        // AQUÍ ESTÁ EL TRUCO: 
-        // Si no están en las casillas, la función corta acá. 
-        // No importa si el Jugador 2 murió o no tiene movimientos, el juego sigue.
-        return false; 
-    }
-    // ---------------------------------------------------------
 
-    // --- RESTO DEL CÓDIGO ORIGINAL (Para niveles 1 al 18) ---
-    if (colosoJ1 && !torsoJ1Vivo) j1Vivo = false;
-    if (colosoJ2 && !torsoJ2Vivo) j2Vivo = false;
+            if (nivelActual === 19 || nivelActual === 20) {
+                let casillasObjetivo = ['2-2', '2-6', '6-2', '6-6']; 
+                if (nivelActual === 20) { casillasObjetivo.push('2-4', '6-4'); }
+                
+                let todasEnPosicion = true;
+                for (let id of casillasObjetivo) {
+                    let p = mapaPiezas[id];
+                    if (!p || p.jugador !== 1) { 
+                        todasEnPosicion = false;
+                        break;
+                    }
+                }
+                
+                if (todasEnPosicion) { declararVictoria(1); return true; }
+                return false; 
+            }
 
-    if (!j1Vivo) { declararVictoria(2); return true; }
-    if (!j2Vivo) { declararVictoria(1); return true; }
-    return false;
-}
+            if (colosoJ1 && !torsoJ1Vivo) j1Vivo = false;
+            if (colosoJ2 && !torsoJ2Vivo) j2Vivo = false;
+
+            if (!j1Vivo) { declararVictoria(2); return true; }
+            if (!j2Vivo) { declararVictoria(1); return true; }
+            return false;
+        }
 
         function actualizarPanelHumanos() {
             const panel = document.getElementById('panel-humanos');
@@ -1063,7 +1168,6 @@ function verificarVictoria() {
                     if (obtenerCasillasVaciasAdyacentes(f, c).length > 0) return true;
                 }
             }
-
             return false; 
         }
 
@@ -1087,23 +1191,19 @@ function verificarVictoria() {
                 turnoExtraActivo[turnoActual] = turnoExtraProgramado[turnoActual]; turnoExtraProgramado[turnoActual] = 0;
             }
 
-if (!tieneMovimientosDisponibles(turnoActual)) {
-                // --- NUEVA LÓGICA PARA NIVELES 19 Y 20 ---
+            if (!tieneMovimientosDisponibles(turnoActual)) {
                 if (nivelActual === 19 || nivelActual === 20) {
                     if (turnoActual === 2) {
-                        // Si el enemigo se queda sin piezas/movimientos, simplemente saltamos su turno
                         turnoActual = 1;
                         actualizarIndicadorTurno(false);
-                        return; // Salimos para que te vuelva a tocar a ti
+                        return; 
                     } else {
-                        // Si TÚ te quedas sin movimientos, sí pierdes
                         alert(`¡Te has quedado sin movimientos ni hechizos disponibles y pierdes la partida!`);
                         declararVictoria(2);
                         return;
                     }
                 }
                 
-                // --- LÓGICA ORIGINAL PARA NIVELES 1 al 18 ---
                 let ganador = (turnoActual === 1) ? 2 : 1;
                 alert(`¡El Jugador ${turnoActual} no tiene movimientos ni hechizos disponibles y pierde la partida!`);
                 declararVictoria(ganador);
@@ -1193,7 +1293,6 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
             if (esTurnoCPU && !procesandoCPU) { procesandoCPU = true; setTimeout(ejecutarJugadaCPU, 600); }
         }
 
-        // --- SISTEMA CEREBRAL DE LA CPU ACTUALIZADO Y MEJORADO ---
         function ejecutarJugadaCPU() {
             let mejoresAcciones = []; let mejorPuntuacion = -9999; const conj = conjurosUsados[turnoActual];
             let misPiezas = [];
@@ -1207,9 +1306,7 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                 const enPeligro = celdaBajoAmenazaMejorada(item.f, item.c, turnoActual); 
                 const p = item.pieza; 
 
-                // 1. LÓGICA DE CONJUROS (Ahora evalúa todos los poderes de Magos)
                 if (p.faccion === 'magos') {
-                    // MR - Bola de Fuego
                     if (p.texto === 'MR' && !conj['MR_bola_fuego']) {
                         let targets = obtenerEnemigosEnRango(item.f, item.c, 3, turnoActual);
                         if (targets.length > 0) {
@@ -1218,12 +1315,14 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                             if (['CO', 'AS', 'TO'].includes(target.pieza.texto)) ptos += 500; 
                             if (ptos > mejorPuntuacion) {
                                 mejorPuntuacion = ptos;
-                                mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { matarPieza(target.id); conj['MR_bola_fuego'] = true; }}];
+                                mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { 
+                                    dispararProyectil(item.f, item.c, target.f, target.c, 'fuego.png');
+                                    matarPieza(target.id); conj['MR_bola_fuego'] = true; 
+                                }}];
                             }
                         }
                     }
                     
-                    // MR - Rayo Arcano (Evalúa el mejor rayo sin dañar aliados)
                     if (p.texto === 'MR' && !conj['MR_rayo']) {
                         const dir = (p.jugador === 1) ? -1 : 1; 
                         const opcionesRayo = [ [item.f + dir, item.c], [item.f, item.c - 1], [item.f, item.c + 1] ];
@@ -1241,7 +1340,7 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                                         victimasRayo++; valorVictimas += (valorTactico[pr.texto] || 20);
                                         if (['CO', 'AS', 'TO'].includes(pr.texto)) valorVictimas += 500;
                                     } else if (pr.jugador === p.jugador) {
-                                        valorVictimas -= 1000; // Si hay un aliado no tira el rayo
+                                        valorVictimas -= 1000;
                                     }
                                 }
                                 curF += dirF; curC += dirC;
@@ -1252,6 +1351,7 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                                 if (ptos > mejorPuntuacion) {
                                     mejorPuntuacion = ptos;
                                     mejoresAcciones = [{ tipo: 'conjuro_auto', accion: () => { 
+                                        animarRayo(item.f, item.c, dirF, dirC);
                                         let cF = item.f + dirF; let cC = item.c + dirC;
                                         while(cF >= 0 && cF <= 8 && cC >= 0 && cC <= 8) {
                                             let idRy = `${cF}-${cC}`;
@@ -1266,7 +1366,6 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                         });
                     }
 
-                    // MA - Mago de Hielo (Doble Velocidad, prioridad alta si está disponible)
                     if (p.texto === 'MA' && !conj['MA_mov_veloz']) {
                         let ptos = 250; 
                         if (ptos > mejorPuntuacion) {
@@ -1275,46 +1374,35 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                         }
                     }
 
-// MA - Invocar Elemental
                     if (p.texto === 'MA' && !conj['MA_elemental']) {
-                        // 1. Verificar si el Mago está adyacente a una casilla de agua
                         let estaCercaDeAgua = false;
                         for(let af = Math.max(0, item.f - 1); af <= Math.min(8, item.f + 1); af++) {
                             for(let ac = Math.max(0, item.c - 1); ac <= Math.min(8, item.c + 1); ac++) { 
-                                if(casillasAgua.includes(`${af}-${ac}`)) {
-                                    estaCercaDeAgua = true;
-                                    break;
-                                }
+                                if(casillasAgua.includes(`${af}-${ac}`)) { estaCercaDeAgua = true; break; }
                             }
                             if(estaCercaDeAgua) break;
                         }
 
-                        // 2. Si está en la orilla, buscar una casilla vacía adyacente al mago (que NO sea agua)
                         if (estaCercaDeAgua) {
                             let casillasValidas = [];
                             for(let vf = Math.max(0, item.f - 1); vf <= Math.min(8, item.f + 1); vf++) {
                                 for(let vc = Math.max(0, item.c - 1); vc <= Math.min(8, item.c + 1); vc++) {
                                     let idDestino = `${vf}-${vc}`;
-                                    // Evitar la casilla del mago, casillas de agua, piezas existentes o muros
-                                    if ((vf !== item.f || vc !== item.c) && 
-                                        !casillasAgua.includes(idDestino) && 
-                                        !mapaPiezas[idDestino] && 
-                                        !celdasBloqueadas[idDestino]) {
+                                    if ((vf !== item.f || vc !== item.c) && !casillasAgua.includes(idDestino) && !mapaPiezas[idDestino] && !celdasBloqueadas[idDestino]) {
                                         casillasValidas.push(idDestino);
                                     }
                                 }
                             }
-
                             if (casillasValidas.length > 0) {
                                 let ptos = 150;
                                 if (ptos > mejorPuntuacion) {
                                     mejorPuntuacion = ptos;
-                                    // Toma la primera casilla válida encontrada
                                     let objDestino = casillasValidas[0].split('-');
                                     mejoresAcciones = [{ 
                                         tipo: 'conjuro_auto', 
                                         accion: () => { 
-                                            colocarPiezaBase(parseInt(objDestino[0]), parseInt(objDestino[1]), 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador); 
+                                            // ANIMACIÓN DE APARICIÓN (true)
+                                            colocarPiezaBase(parseInt(objDestino[0]), parseInt(objDestino[1]), 'elemental', 'EL', 'Mago - Elemental', p.orientacion, p.jugador, 0, 0, null, true); 
                                             conj['MA_elemental'] = true; 
                                         }
                                     }];
@@ -1323,7 +1411,6 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                         }
                     }
 
-                    // AP - Aprendiz Inmovilizar a un enemigo pesado
                     if (p.texto === 'AP' && !conj['AP_inmovilizar']) {
                         let targets = obtenerEnemigosEnRango(item.f, item.c, 3, turnoActual); 
                         targets = targets.filter(t => t.pieza.inmovilizado <= 0);
@@ -1337,16 +1424,13 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                         }
                     }
                     
-                    // AP - Aprendiz Escudar aliado en peligro (Piel de Piedra)
                     if (p.texto === 'AP' && !conj['AP_piel_piedra']) {
                         let aliadoEnPeligro = null;
                         for (let idAliado in mapaPiezas) {
                             if (mapaPiezas[idAliado].jugador === turnoActual && mapaPiezas[idAliado].inmune <= 0) {
                                 let [af, ac] = idAliado.split('-').map(Number);
                                 if (Math.abs(af - item.f) <= 3 && Math.abs(ac - item.c) <= 3) {
-                                    if (celdaBajoAmenazaMejorada(af, ac, turnoActual)) {
-                                        aliadoEnPeligro = idAliado; break;
-                                    }
+                                    if (celdaBajoAmenazaMejorada(af, ac, turnoActual)) { aliadoEnPeligro = idAliado; break; }
                                 }
                             }
                         }
@@ -1360,7 +1444,6 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                     }
                 }
 
-                // 2. LÓGICA FÍSICA (Ataque y Movimiento)
                 limpiarDestacados(); calcularYMostrarMovimientos(item.f, item.c, item.pieza);
                 
                 document.querySelectorAll('.destino-valido, .captura-valida').forEach(celdaDest => {
@@ -1368,7 +1451,6 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                     let puntuacion = Math.random() * 5; 
                     
                     if (piezaDest && piezaDest.jugador !== turnoActual) {
-                        // AQUÍ ESTABA LA FALLA PRINCIPAL: El multiplicador era bajo comparado con huir. ¡Ahora es letal!
                         puntuacion += (valorTactico[piezaDest.texto] || 20) * 5; 
                         if (['CO', 'AS', 'TO'].includes(piezaDest.texto)) { puntuacion += 2000; } 
                     }
@@ -1397,7 +1479,8 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                     const idDestino = `${dest.f}-${dest.c}`;
                     if (mapaPiezas[idDestino]) matarPieza(idDestino);
                     document.getElementById(`c-${orig.id}`).innerHTML = ''; delete mapaPiezas[orig.id];
-                    colocarPiezaBase(dest.f, dest.c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado);
+                    // ANIMACIÓN DE MOVIMIENTO DE LA CPU
+                    colocarPiezaBase(dest.f, dest.c, p.faccion, p.texto, p.prefijoImagen, p.orientacion, p.jugador, p.inmune, p.inmovilizado, {f: orig.f, c: orig.c});
                 } else if (accionElegida.tipo === 'conjuro_auto') { 
                     accionElegida.accion(); 
                 }
@@ -1408,20 +1491,17 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
 
         function inicializarNivelHistoria(nivel) {
             nivel = parseInt(nivel) || 1;
-            nivelActual = nivel; // <--- AGREGA ESTA LÍNEA AQUÍ
+            nivelActual = nivel; 
             document.getElementById('indicador-sub').innerText = `Modo Historia - Nivel ${nivel}`;
 
-
-// --- INICIO CÓDIGO NUEVO: CAMBIAR TABLERO SEGÚN NIVEL ---
             const tableroFondo = document.querySelector('.tablero-contenedor');
             if (nivelActual === 19) {
                 tableroFondo.style.backgroundImage = "url('TABLERO 9x9_3.jpg')";
             } else if (nivelActual === 20) {
                 tableroFondo.style.backgroundImage = "url('TABLERO 9x9_4.jpg')";
             } else {
-                tableroFondo.style.backgroundImage = "url('TABLERO 9x9_2.jpg')"; // Tablero por defecto
+                tableroFondo.style.backgroundImage = "url('TABLERO 9x9_2.jpg')"; 
             }
-            // --- FIN CÓDIGO NUEVO ---
 
             jugador1Faccion = 'magos'; 
             jugador2Faccion = 'elemental';
@@ -1431,15 +1511,12 @@ if (!tieneMovimientosDisponibles(turnoActual)) {
                     jugador1Faccion = 'magos'; jugador2Faccion = 'elemental';
                     colocarPiezaBase(7, 4, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
                     colocarPiezaBase(1, 4, 'elemental', 'EL', 'Mago - Elemental', 'Frente', 2);
-
-alert("¡Vamos a probar algunos hechizos!");
-
+                    alert("¡Vamos a probar algunos hechizos!");
                     break;
                 case 2:
                     jugador1Faccion = 'magos'; jugador2Faccion = 'humanos';
                     colocarPiezaBase(7, 4, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
                     for (let c = 0; c < 9; c++) { colocarPiezaBase(1, c, 'humanos', 'MI', 'Humano - Miliciano', 'Frente', 2); }
-
                     break;
                 case 3:
                     jugador1Faccion = 'magos'; jugador2Faccion = 'humanos'; 
@@ -1448,7 +1525,6 @@ alert("¡Vamos a probar algunos hechizos!");
                     colocarPiezaBase(2, 3, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2);
                     colocarPiezaBase(7, 3, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
                     colocarPiezaBase(7, 5, 'magos', 'MA', 'Mago - Hielo', 'Atras', 1);
-
                     break;
                 case 4:
                     jugador1Faccion = 'magos'; jugador2Faccion = 'elfos';
@@ -1459,9 +1535,7 @@ alert("¡Vamos a probar algunos hechizos!");
                     colocarPiezaBase(0, 1, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
                     colocarPiezaBase(0, 3, 'elfos', 'AR', 'Elfo - Arquero', 'Frente', 2);
                     colocarPiezaBase(0, 6, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
-
-alert("¡Cuidado con las flechas!");
-
+                    alert("¡Cuidado con las flechas!");
                     break;
                 case 5:
                     jugador1Faccion = 'magos'; jugador2Faccion = 'elfos';
@@ -1480,9 +1554,7 @@ alert("¡Cuidado con las flechas!");
                     colocarPiezaBase(7, 4, 'humanos', 'CO', 'Humano - Comandante', 'Atras', 1);
                     colocarPiezaBase(0, 0, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
                     colocarPiezaBase(0, 8, 'elfos', 'EX', 'Elfo - Explorador', 'Frente', 2);
-
-alert("¡Los humanos evolucionan con el tiempo!");
-
+                    alert("¡Los humanos evolucionan con el tiempo!");
                     break;
                 case 7:
                     jugador1Faccion = 'humanos'; jugador2Faccion = 'elfos';
@@ -1508,12 +1580,10 @@ alert("¡Los humanos evolucionan con el tiempo!");
                     colocarPiezaBase(8, 3, 'coloso', 'PI', 'Coloso - PieIzquierdo', 'Atras', 1);
                     colocarPiezaBase(8, 5, 'coloso', 'PD', 'Coloso - PieDerecho', 'Atras', 1);
 
-
                     colocarPiezaBase(5, 0, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(5, 1, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(5, 6, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(5, 7, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
-
 
                     colocarPiezaBase(6, 3, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(6, 5, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
@@ -1525,18 +1595,14 @@ alert("¡Los humanos evolucionan con el tiempo!");
                     colocarPiezaBase(0, 2, 'humanos', 'GU', 'Humano - Guardián', 'Frente', 2);
                     colocarPiezaBase(0, 3, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2);
                     colocarPiezaBase(0, 7, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2);
-
-alert("¡Las rocas pueden arrojarse acercando las manos!");
-
+                    alert("¡Las rocas pueden arrojarse acercando las manos!");
                     break;
                 case 9:
                     jugador1Faccion = 'coloso'; jugador2Faccion = 'humanos';
-
                     colocarPiezaBase(6, 1, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(6, 7, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(7, 1, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
                     colocarPiezaBase(7, 7, 'coloso', 'RO', 'Coloso - Piedra', 'Atras', 1);
-
 
                     colocarPiezaBase(7, 4, 'coloso', 'TO', 'Coloso - Torso', 'Atras', 1);
                     colocarPiezaBase(7, 3, 'coloso', 'BI', 'Coloso - ManoIzquierda', 'Atras', 1);
@@ -1559,29 +1625,14 @@ alert("¡Las rocas pueden arrojarse acercando las manos!");
                     colocarPiezaBase(7, 3, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
                     colocarPiezaBase(7, 5, 'magos', 'MA', 'Mago - Hielo', 'Atras', 1);
                     break;
-                default:
-                    colocarPiezaBase(7, 4, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
-                    colocarPiezaBase(1, 4, 'elemental', 'EL', 'Mago - Elemental', 'Frente', 2);
-                    break;
-
-case 11:
-    jugador1Faccion = 'magos';
-    jugador2Faccion = 'humanos';
-
-    colocarPiezaBase(8, 1, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
-
-    for (let f = 0; f <= 4; f++) {
-        colocarPiezaBase(f, 1, 'humanos', 'CO', 'Humano - Comandante', 'Frente', 2);
-    }
-
-    colocarPiezaBase(8, 6, 'magos', 'MA', 'Mago - Hielo', 'Atras', 1);
-
-    for (let f = 0; f <= 3; f++) {
-        colocarPiezaBase(f, 6, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2);
-    }
-
-    colocarPiezaBase(4, 2, 'humanos', 'GU', 'Humano - Guardián', 'Frente', 2);
-    colocarPiezaBase(4, 6, 'humanos', 'CI', 'Humano - Científico', 'Frente', 2);
+                case 11:
+                    jugador1Faccion = 'magos'; jugador2Faccion = 'humanos';
+                    colocarPiezaBase(8, 1, 'magos', 'MR', 'Mago - Fuego', 'Atras', 1);
+                    for (let f = 0; f <= 4; f++) { colocarPiezaBase(f, 1, 'humanos', 'CO', 'Humano - Comandante', 'Frente', 2); }
+                    colocarPiezaBase(8, 6, 'magos', 'MA', 'Mago - Hielo', 'Atras', 1);
+                    for (let f = 0; f <= 3; f++) { colocarPiezaBase(f, 6, 'humanos', 'CE', 'Humano - Centinela', 'Frente', 2); }
+                    colocarPiezaBase(4, 2, 'humanos', 'GU', 'Humano - Guardián', 'Frente', 2);
+                    colocarPiezaBase(4, 6, 'humanos', 'CI', 'Humano - Científico', 'Frente', 2);
 
 alert("¡Usa tus hechizos con inteligencia, si muere el científico se detiene la evolución!");
 
