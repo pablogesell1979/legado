@@ -6,6 +6,8 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Evita que el "Modo oscuro" del celular oscurezca la web forzosamente -->
+    <meta name="color-scheme" content="dark">
     <title>LEGADOS - Menú Principal</title>
     
     <!-- Librería de Supabase -->
@@ -20,6 +22,11 @@
         }
         
         /* --- ESTILO DEL FONDO GLOBAL --- */
+        * {
+            /* Quita el sombreado gris al tocar botones en móviles */
+            -webkit-tap-highlight-color: transparent; 
+        }
+
         body { 
             background-color: var(--bg);
             background-image: url('fondoindex.jpg'); 
@@ -33,11 +40,10 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: center; 
+            justify-content: flex-start; /* Cambiado para poder empujar el main-screen */
             min-height: 100vh; 
-            padding: 20px 10px; 
             box-sizing: border-box;
-            overflow-x: hidden; 
+            overflow: hidden; /* Evita cualquier scroll */
         }
 
         @media (min-width: 768px) {
@@ -64,13 +70,22 @@
         .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #bdc3c7; display: flex; align-items: center; gap: 5px; text-shadow: 1px 1px 2px #000; }
         .dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
 
-        .logo-img { width: 80%; max-width: 280px; margin: 0 0 15px 0; border-radius: 8px; filter: drop-shadow(0 4px 15px rgba(0,0,0,0.8)); }
-
-        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; }
+        #login-screen { margin-top: 30vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-google { background: #ea4335; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); transition: 0.2s; }
         .btn-google:hover { background: #c0392b; transform: scale(1.05); }
 
-        #main-screen { display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; padding: 5px; box-sizing: border-box; }
+        /* --- CONTENEDOR PRINCIPAL --- */
+        #main-screen { 
+            display: none; 
+            width: 100%; 
+            max-width: 380px; /* Reducido levemente para asegurar que no haya scroll y escale todo junto */
+            flex-direction: column; 
+            align-items: center; 
+            padding: 0 5px; 
+            box-sizing: border-box;
+            margin-top: 16vh; /* Este margen empuja todo hacia abajo librando el logo del fondo */
+            margin-bottom: 2vh;
+        }
 
         /* --- CONTENEDOR INFO DEL JUGADOR CON CAPA JUGADOR --- */
         .player-status { 
@@ -81,7 +96,7 @@
             background-size: 100% 100%;
             background-repeat: no-repeat;
             background-color: transparent;
-            margin-bottom: 15px; 
+            margin-bottom: 2vh; 
             display: flex; 
             border: none;
             box-shadow: none;
@@ -102,7 +117,7 @@
         .player-name { 
             font-size: 1.1rem; 
             font-weight: bold; 
-            color: #ebdca8; /* Tono dorado para que coincida con la UI */
+            color: #ebdca8; 
             text-shadow: 1px 1px 3px #000; 
             letter-spacing: 1px;
             white-space: nowrap;
@@ -128,9 +143,39 @@
         .stat-elo { color: var(--elo); }
         .stat-gold { color: var(--gold); }
 
-        /* --- FACCIONES (CIRCULOS EN EL MEDIO) --- */
-        .facciones-container { display: flex; gap: 15px; margin-bottom: 20px; justify-content: center; }
-        .circulo-faccion { width: 45px; height: 45px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8); transition: 0.3s; background-size: cover; background-position: center; border: 2px solid; }
+        /* --- FACCIONES (CÍRCULOS Y TEXTOS) --- */
+        .facciones-container { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 1.5vh; 
+            justify-content: center; 
+        }
+        
+        .faccion-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .faccion-label {
+            font-size: 0.55rem;
+            color: #d1d1d1;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .circulo-faccion { 
+            width: 42px; 
+            height: 42px; 
+            border-radius: 50%; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.8); 
+            transition: 0.3s; 
+            background-size: cover; 
+            background-position: center; 
+            border: 2px solid; 
+        }
         .faccion-humanos { background-image: url('caphumano.jpg'); border-color: var(--humanos); }
         .faccion-magos { background-image: url('capmago.jpg'); border-color: var(--magos); }
         .faccion-elfos { background-image: url('capelfo.jpg'); border-color: var(--elfos); }
@@ -139,9 +184,9 @@
 
         /* --- BOTONES PRINCIPALES (TODOS DEL MISMO TAMAÑO) --- */
         .menu-btn-img {
-            width: 94%; 
+            width: 96%; 
             aspect-ratio: 800 / 170; /* Proporción basada en btn-online.png */
-            margin: 6px auto;
+            margin: 0.8vh auto;
             border: none;
             background-color: transparent;
             background-size: 100% 100%;
@@ -167,9 +212,9 @@
         .bottom-buttons-container {
             display: flex;
             justify-content: space-between;
-            width: 94%;
+            width: 96%;
             gap: 15px;
-            margin: 15px auto 10px auto;
+            margin: 1.5vh auto 0 auto;
         }
 
         .btn-bottom {
@@ -232,10 +277,22 @@
 
         <!-- FACCIONES EN EL MEDIO -->
         <div class="facciones-container">
-            <div id="fac-humanos" class="circulo-faccion faccion-humanos bloqueada" title="Humanos"></div>
-            <div id="fac-magos" class="circulo-faccion faccion-magos bloqueada" title="Magos"></div>
-            <div id="fac-elfos" class="circulo-faccion faccion-elfos bloqueada" title="Elfos"></div>
-            <div id="fac-coloso" class="circulo-faccion faccion-coloso bloqueada" title="Coloso"></div>
+            <div class="faccion-wrapper">
+                <div id="fac-humanos" class="circulo-faccion faccion-humanos bloqueada" title="Humanos"></div>
+                <span class="faccion-label">HUMANOS</span>
+            </div>
+            <div class="faccion-wrapper">
+                <div id="fac-magos" class="circulo-faccion faccion-magos bloqueada" title="Magos"></div>
+                <span class="faccion-label">MAGOS</span>
+            </div>
+            <div class="faccion-wrapper">
+                <div id="fac-elfos" class="circulo-faccion faccion-elfos bloqueada" title="Elfos"></div>
+                <span class="faccion-label">ELFOS</span>
+            </div>
+            <div class="faccion-wrapper">
+                <div id="fac-coloso" class="circulo-faccion faccion-coloso bloqueada" title="Coloso"></div>
+                <span class="faccion-label">COLOSO</span>
+            </div>
         </div>
 
         <!-- BOTONES PRINCIPALES EN PILA -->
