@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
-<link rel="manifest" href="/manifest.json">
-
+    <link rel="manifest" href="/manifest.json">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- TRUCO PARA MÓVILES: Forzamos 'only light' para que el celular NO aplique filtros de contraste/opacidad -->
+    <!-- TRUCOS PWA/APP: viewport-fit=cover expande la app detrás del notch de la cámara -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- Forzar modo claro en WebViews rebeldes -->
     <meta name="color-scheme" content="only light">
-    <!-- Pinta la barra superior del navegador/celular de negro para evitar franjas blancas -->
+    <meta name="supported-color-schemes" content="light">
+    
+    <!-- Configuración para barra de estado en móviles -->
     <meta name="theme-color" content="#050608">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     
     <title>LEGADOS - Menú Principal</title>
     
-    <!-- Librería de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
 
@@ -25,19 +29,20 @@
             --magos: #8e44ad; --elfos: #27ae60; --coloso: #c0392b;
         }
         
-        /* --- ESTILO DEL FONDO GLOBAL --- */
         * {
             -webkit-tap-highlight-color: transparent; 
+            box-sizing: border-box;
         }
 
         html, body {
             background-color: var(--bg);
             margin: 0;
             padding: 0;
-            /* Usamos dvh (Dynamic Viewport) para que el celular calcule bien el alto sin cortar abajo */
-            height: 100dvh; 
             width: 100vw;
+            height: 100dvh;
             overflow: hidden; 
+            /* CLAVE PARA LA BARRA BLANCA: Evita el rebote de la pantalla en móviles al hacer scroll */
+            overscroll-behavior-y: none; 
         }
 
         body { 
@@ -47,35 +52,37 @@
             flex-direction: column; 
             align-items: center; 
             justify-content: flex-start;
-            box-sizing: border-box;
             position: relative;
         }
 
-        /* FONDO REESTRUCTURADO: Evita el bug de la barra blanca en móviles */
-        body::before {
-            content: "";
-            position: absolute;
-            top: 0; 
-            left: 0; 
-            width: 100vw; 
+        /* --- NUEVO SISTEMA DE FONDO (Garantiza que se vea) --- */
+        #fondo-app {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
             height: 100dvh;
-            background-image: url('fondoindex.jpg'); 
+            background-image: url('fondoindex.jpg');
             background-size: cover;
             background-position: center top;
             background-repeat: no-repeat;
-            z-index: -1;
+            z-index: 0;
+            pointer-events: none; /* Para que no bloquee los clics a los botones */
+        }
+        @media (min-width: 768px) {
+            #fondo-app { background-size: auto 100%; }
         }
 
-        @media (min-width: 768px) {
-            body::before { background-size: auto 100%; }
-        }
+        /* Elevamos las pantallas para que queden sobre el fondo */
+        #loading-screen { z-index: 9999; }
+        #login-screen, #main-screen { z-index: 10; position: relative; }
         
         /* --- ESTILOS DE LA PANTALLA DE CARGA --- */
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
             background-image: url('portada1.jpg'); background-size: cover; 
             background-position: center; background-repeat: no-repeat; 
-            z-index: 9999; display: flex; flex-direction: column;
+            display: flex; flex-direction: column;
             justify-content: flex-end; align-items: center;
             padding-bottom: 60px; transition: opacity 0.5s ease;
             background-color: var(--bg);
@@ -87,7 +94,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-        .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #bdc3c7; display: flex; align-items: center; gap: 5px; text-shadow: 1px 1px 2px #000; }
+        .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #bdc3c7; display: flex; align-items: center; gap: 5px; text-shadow: 1px 1px 2px #000; z-index: 20;}
         .dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
 
         #login-screen { margin-top: 30dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -102,13 +109,11 @@
             flex-direction: column; 
             align-items: center; 
             padding: 0 5px; 
-            box-sizing: border-box;
-            /* Ajustado levemente y usando dvh para que todo cuadre perfecto */
             margin-top: 15dvh; 
             margin-bottom: 2dvh;
         }
 
-        /* --- CONTENEDOR INFO DEL JUGADOR CON CAPA JUGADOR --- */
+        /* --- CONTENEDOR INFO DEL JUGADOR --- */
         .player-status { 
             position: relative;
             width: 94%; 
@@ -121,7 +126,6 @@
             display: flex; 
             border: none;
             box-shadow: none;
-            box-sizing: border-box; 
         }
         
         .player-info-content {
@@ -146,56 +150,23 @@
             text-overflow: ellipsis;
         }
         
-        .stats-row { 
-            display: flex; 
-            gap: 20px; 
-        }
+        .stats-row { display: flex; gap: 20px; }
         
         .stat-badge { 
-            display: flex; 
-            align-items: center; 
-            gap: 5px; 
-            font-size: 1rem; 
-            font-weight: bold; 
-            color: #fff;
-            text-shadow: 1px 1px 2px #000;
+            display: flex; align-items: center; gap: 5px; 
+            font-size: 1rem; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
         }
         
         .stat-elo { color: var(--elo); }
         .stat-gold { color: var(--gold); }
 
-        /* --- FACCIONES (CÍRCULOS Y TEXTOS) --- */
-        .facciones-container { 
-            display: flex; 
-            gap: 12px; 
-            margin-bottom: 1.5dvh; 
-            justify-content: center; 
-        }
-        
-        .faccion-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .faccion-label {
-            font-size: 0.55rem;
-            color: #d1d1d1;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            text-shadow: 1px 1px 2px #000;
-        }
-
+        /* --- FACCIONES --- */
+        .facciones-container { display: flex; gap: 12px; margin-bottom: 1.5dvh; justify-content: center; }
+        .faccion-wrapper { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .faccion-label { font-size: 0.55rem; color: #d1d1d1; font-weight: bold; letter-spacing: 0.5px; text-shadow: 1px 1px 2px #000; }
         .circulo-faccion { 
-            width: 42px; 
-            height: 42px; 
-            border-radius: 50%; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.8); 
-            transition: 0.3s; 
-            background-size: cover; 
-            background-position: center; 
-            border: 2px solid; 
+            width: 42px; height: 42px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8); 
+            transition: 0.3s; background-size: cover; background-position: center; border: 2px solid; 
         }
         .faccion-humanos { background-image: url('caphumano.jpg'); border-color: var(--humanos); }
         .faccion-magos { background-image: url('capmago.jpg'); border-color: var(--magos); }
@@ -203,64 +174,36 @@
         .faccion-coloso { background-image: url('capcoloso.jpg'); border-color: var(--coloso); }
         .bloqueada { filter: grayscale(100%) opacity(0.4); border: 2px dashed #666; box-shadow: none; }
 
-        /* --- BOTONES PRINCIPALES (TODOS DEL MISMO TAMAÑO) --- */
+        /* --- BOTONES PRINCIPALES --- */
         .menu-btn-img {
-            width: 96%; 
-            aspect-ratio: 800 / 170; 
-            margin: 0.6dvh auto;
-            border: none;
-            background-color: transparent;
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            background-position: center;
-            cursor: pointer;
-            transition: transform 0.2s, filter 0.2s;
-            display: block;
+            width: 96%; aspect-ratio: 800 / 170; margin: 0.6dvh auto; border: none;
+            background-color: transparent; background-size: 100% 100%; background-repeat: no-repeat;
+            background-position: center; cursor: pointer; transition: transform 0.2s, filter 0.2s; display: block;
         }
-        .menu-btn-img:hover {
-            transform: scale(1.03);
-            filter: brightness(1.1);
-        }
-
-        /* Asignación de imágenes */
+        .menu-btn-img:hover { transform: scale(1.03); filter: brightness(1.1); }
         .btn-online   { background-image: url('btn-online.png'); }
         .btn-historia { background-image: url('btn-historia.png'); }
         .btn-local    { background-image: url('btn-local.png'); }
         .btn-cpu      { background-image: url('btn-cpu.png'); }
         .btn-tienda   { background-image: url('btn-facciones.png'); }
 
-        /* --- BOTONES INFERIORES (REGLAS Y CERRAR SESIÓN) --- */
-        .bottom-buttons-container {
-            display: flex;
-            justify-content: space-between;
-            width: 96%;
-            gap: 15px;
-            margin: 1.2dvh auto 0 auto;
-        }
-
+        /* --- BOTONES INFERIORES --- */
+        .bottom-buttons-container { display: flex; justify-content: space-between; width: 96%; gap: 15px; margin: 1.2dvh auto 0 auto; }
         .btn-bottom {
-            flex: 1;
-            aspect-ratio: 350 / 100; 
-            border: none;
-            background-color: transparent;
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            background-position: center;
-            cursor: pointer;
-            transition: transform 0.2s, filter 0.2s;
+            flex: 1; aspect-ratio: 350 / 100; border: none; background-color: transparent;
+            background-size: 100% 100%; background-repeat: no-repeat; background-position: center;
+            cursor: pointer; transition: transform 0.2s, filter 0.2s;
         }
-
-        .btn-bottom:hover {
-            transform: scale(1.03);
-            filter: brightness(1.1);
-        }
-
+        .btn-bottom:hover { transform: scale(1.03); filter: brightness(1.1); }
         .btn-comojugar { background-image: url('btn-comojugar.png'); }
         .btn-cerrar    { background-image: url('btn-cerrar.png'); }
 
     </style>
 </head>
 <body>
+
+    <!-- FONDO INDEPENDIENTE -->
+    <div id="fondo-app"></div>
 
     <!-- PANTALLA DE CARGA INICIAL -->
     <div id="loading-screen">
@@ -271,7 +214,6 @@
     <div class="online-indicator">
         <div class="dot"></div> <span id="online-count">Cargando...</span>
     </div>
-
 
     <!-- PANTALLA DE LOGIN -->
     <div id="login-screen">
@@ -285,7 +227,6 @@
     <!-- PANTALLA PRINCIPAL -->
     <div id="main-screen">
         
-        <!-- ESTADO DEL JUGADOR (CAPA JUGADOR) -->
         <div class="player-status">
             <div class="player-info-content">
                 <div class="player-name" id="ui-nombre">Cargando...</div>
@@ -296,7 +237,6 @@
             </div>
         </div>
 
-        <!-- FACCIONES EN EL MEDIO -->
         <div class="facciones-container">
             <div class="faccion-wrapper">
                 <div id="fac-humanos" class="circulo-faccion faccion-humanos bloqueada" title="Humanos"></div>
@@ -316,14 +256,12 @@
             </div>
         </div>
 
-        <!-- BOTONES PRINCIPALES EN PILA -->
         <button class="menu-btn-img btn-online" aria-label="Jugar Online" onclick="irA('seleccion_multi.html', 'online')"></button>
         <button class="menu-btn-img btn-historia" aria-label="Modo Historia" onclick="irA('seleccion_historia.html', 'historia')"></button>
         <button class="menu-btn-img btn-local" aria-label="1VS1 Local" onclick="irA('seleccion_1vs1.html', '1vs1')"></button>
         <button class="menu-btn-img btn-cpu" aria-label="Entrenamiento" onclick="irA('seleccion_cpu.html', 'cpu')"></button>
         <button class="menu-btn-img btn-tienda" aria-label="Tienda" onclick="irA('galeria.html')"></button>
 
-        <!-- BOTONES INFERIORES: REGLAS Y CERRAR SESIÓN -->
         <div class="bottom-buttons-container">
             <button class="btn-bottom btn-comojugar" aria-label="Reglas" onclick="irA('reglas.html')"></button>
             <button class="btn-bottom btn-cerrar" aria-label="Cerrar Sesión" onclick="cerrarSesion()"></button>
@@ -437,7 +375,6 @@
                     .catch((err) => { console.log('Error al registrar el Service Worker:', err); });
             });
         }
-
     </script>
 </body>
 </html>
