@@ -64,7 +64,7 @@
         .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #bdc3c7; display: flex; align-items: center; gap: 5px; text-shadow: 1px 1px 2px #000; }
         .dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
 
-        .logo-img { width: 80%; max-width: 280px; margin: 0 0 15px 0; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+        .logo-img { width: 80%; max-width: 280px; margin: 0 0 15px 0; border-radius: 8px; filter: drop-shadow(0 4px 15px rgba(0,0,0,0.8)); }
 
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; }
         .btn-google { background: #ea4335; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); transition: 0.2s; }
@@ -72,24 +72,75 @@
 
         #main-screen { display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; padding: 5px; box-sizing: border-box; }
 
-        .player-status { background: var(--panel); width: 94%; padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; }
-        .player-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; color: #fff; text-shadow: 1px 1px 3px #000; }
-        .stats-row { display: flex; gap: 20px; }
-        .stat-badge { display: flex; align-items: center; gap: 5px; font-size: 1.1rem; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px; border: 1px solid #444; }
+        /* --- CONTENEDOR INFO DEL JUGADOR CON CAPA JUGADOR --- */
+        .player-status { 
+            position: relative;
+            width: 94%; 
+            aspect-ratio: 1000 / 270; /* Proporción basada en capajugador.png */
+            background-image: url('capajugador.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-color: transparent;
+            margin-bottom: 15px; 
+            display: flex; 
+            border: none;
+            box-shadow: none;
+            box-sizing: border-box; 
+        }
+        
+        .player-info-content {
+            position: absolute;
+            left: 28%; /* Posiciona el texto a la derecha del escudo */
+            top: 25%;
+            width: 65%;
+            height: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .player-name { 
+            font-size: 1.1rem; 
+            font-weight: bold; 
+            color: #ebdca8; /* Tono dorado para que coincida con la UI */
+            text-shadow: 1px 1px 3px #000; 
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .stats-row { 
+            display: flex; 
+            gap: 20px; 
+        }
+        
+        .stat-badge { 
+            display: flex; 
+            align-items: center; 
+            gap: 5px; 
+            font-size: 1rem; 
+            font-weight: bold; 
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
+        
         .stat-elo { color: var(--elo); }
         .stat-gold { color: var(--gold); }
 
-        .facciones-container { display: flex; gap: 15px; margin-bottom: 15px; }
-        .circulo-faccion { width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8); transition: 0.3s; background-size: cover; background-position: center; border: 3px solid; }
+        /* --- FACCIONES (CIRCULOS EN EL MEDIO) --- */
+        .facciones-container { display: flex; gap: 15px; margin-bottom: 20px; justify-content: center; }
+        .circulo-faccion { width: 45px; height: 45px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8); transition: 0.3s; background-size: cover; background-position: center; border: 2px solid; }
         .faccion-humanos { background-image: url('caphumano.jpg'); border-color: var(--humanos); }
         .faccion-magos { background-image: url('capmago.jpg'); border-color: var(--magos); }
         .faccion-elfos { background-image: url('capelfo.jpg'); border-color: var(--elfos); }
         .faccion-coloso { background-image: url('capcoloso.jpg'); border-color: var(--coloso); }
         .bloqueada { filter: grayscale(100%) opacity(0.4); border: 2px dashed #666; box-shadow: none; }
 
-        /* --- BOTONES PRINCIPALES --- */
+        /* --- BOTONES PRINCIPALES (TODOS DEL MISMO TAMAÑO) --- */
         .menu-btn-img {
             width: 94%; 
+            aspect-ratio: 800 / 170; /* Proporción basada en btn-online.png */
             margin: 6px auto;
             border: none;
             background-color: transparent;
@@ -97,82 +148,50 @@
             background-repeat: no-repeat;
             background-position: center;
             cursor: pointer;
-            color: white;
-            font-size: 1.1rem;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.8);
             transition: transform 0.2s, filter 0.2s;
+            display: block;
         }
         .menu-btn-img:hover {
             transform: scale(1.03);
             filter: brightness(1.1);
         }
 
-        .btn-tienda { background-image: url('btn-facciones.png'); height: 75px; }
-        .btn-historia { background-image: url('btn-historia.png'); height: 90px; font-size: 1.25rem; }
-        .btn-online { background-image: url('btn-online.png'); height: 90px; font-size: 1.35rem; }
-        .btn-comojugar { background-image: url('btn-comojugar.png'); height: 75px; margin-top: 5px; }
+        /* Asignación de imágenes */
+        .btn-online   { background-image: url('btn-online.png'); }
+        .btn-historia { background-image: url('btn-historia.png'); }
+        .btn-local    { background-image: url('btn-local.png'); }
+        .btn-cpu      { background-image: url('btn-cpu.png'); }
+        .btn-tienda   { background-image: url('btn-facciones.png'); }
 
-        .btn-content {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            height: 100%; 
-            padding: 0 10%;
-            box-sizing: border-box;
-        }
-        
-        .btn-content.center { justify-content: center; gap: 15px; }
-        .btn-content.space-between { justify-content: space-between; }
-
-        /* --- BOTONES DIVIDIDOS (1vs1 y CPU) --- */
-        .split-buttons-container {
+        /* --- BOTONES INFERIORES (REGLAS Y CERRAR SESIÓN) --- */
+        .bottom-buttons-container {
             display: flex;
             justify-content: space-between;
-            width: 94%; /* Mismo ancho que los demás botones */
-            gap: 10px;
-            margin: 6px auto;
+            width: 94%;
+            gap: 15px;
+            margin: 15px auto 10px auto;
         }
 
-        .btn-half {
+        .btn-bottom {
             flex: 1;
-            height: 70px;
+            aspect-ratio: 350 / 100; /* Proporción basada en btn-comojugar.png */
             border: none;
             background-color: transparent;
             background-size: 100% 100%;
             background-repeat: no-repeat;
             background-position: center;
             cursor: pointer;
-            color: white;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.8);
             transition: transform 0.2s, filter 0.2s;
-            padding: 0;
         }
 
-        .btn-half:hover {
+        .btn-bottom:hover {
             transform: scale(1.03);
             filter: brightness(1.1);
         }
 
-        .btn-local { background-image: url('btn-local.png'); }
-        .btn-cpu { background-image: url('btn-cpu.png'); }
+        .btn-comojugar { background-image: url('btn-comojugar.png'); }
+        .btn-cerrar    { background-image: url('btn-cerrar.png'); }
 
-        .half-btn-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            /* El padding izquierdo empuja el texto para que no pise los íconos impresos en el PNG */
-            padding-left: 28px; 
-            box-sizing: border-box;
-        }
-
-        .reward { font-size: 0.9rem; color: var(--gold); background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 4px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
-        
-        .btn-logout { margin-top: 20px; background: rgba(0,0,0,0.5); border: 1px solid #c0392b; color: #ff7675; padding: 8px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-logout:hover { background: #c0392b; color: white; }
     </style>
 </head>
 <body>
@@ -200,14 +219,19 @@
 
     <!-- PANTALLA PRINCIPAL -->
     <div id="main-screen">
+        
+        <!-- ESTADO DEL JUGADOR (CAPA JUGADOR) -->
         <div class="player-status">
-            <div class="player-name" id="ui-nombre">Cargando...</div>
-            <div class="stats-row">
-                <div class="stat-badge stat-elo">🏆 <span id="ui-elo">--</span></div>
-                <div class="stat-badge stat-gold">🪙 <span id="ui-oro">--</span></div>
+            <div class="player-info-content">
+                <div class="player-name" id="ui-nombre">Cargando...</div>
+                <div class="stats-row">
+                    <div class="stat-badge stat-elo">🏆 <span id="ui-elo">--</span></div>
+                    <div class="stat-badge stat-gold">🪙 <span id="ui-oro">--</span></div>
+                </div>
             </div>
         </div>
 
+        <!-- FACCIONES EN EL MEDIO -->
         <div class="facciones-container">
             <div id="fac-humanos" class="circulo-faccion faccion-humanos bloqueada" title="Humanos"></div>
             <div id="fac-magos" class="circulo-faccion faccion-magos bloqueada" title="Magos"></div>
@@ -215,51 +239,19 @@
             <div id="fac-coloso" class="circulo-faccion faccion-coloso bloqueada" title="Coloso"></div>
         </div>
 
-        <button class="menu-btn-img btn-tienda" onclick="irA('galeria.html')">
-            <div class="btn-content center">
-                <span>Conseguir Facciones</span>
-            </div>
-        </button>
+        <!-- BOTONES PRINCIPALES EN PILA -->
+        <button class="menu-btn-img btn-online" aria-label="Jugar Online" onclick="irA('seleccion_multi.html', 'online')"></button>
+        <button class="menu-btn-img btn-historia" aria-label="Modo Historia" onclick="irA('seleccion_historia.html', 'historia')"></button>
+        <button class="menu-btn-img btn-local" aria-label="1VS1 Local" onclick="irA('seleccion_1vs1.html', '1vs1')"></button>
+        <button class="menu-btn-img btn-cpu" aria-label="Entrenamiento" onclick="irA('seleccion_cpu.html', 'cpu')"></button>
+        <button class="menu-btn-img btn-tienda" aria-label="Tienda" onclick="irA('galeria.html')"></button>
 
-        <button class="menu-btn-img btn-historia" onclick="irA('seleccion_historia.html', 'historia')">
-            <div class="btn-content space-between">
-                <span>Modo Historia</span>
-                <div class="reward">🪙 +10</div>
-            </div>
-        </button>
-
-        <button class="menu-btn-img btn-online" onclick="irA('seleccion_multi.html', 'online')">
-            <div class="btn-content center">
-                <span>Jugar Online</span>
-                <div class="reward">🪙 +25</div>
-            </div>
-        </button>
-
-        <!-- CONTENEDOR DE BOTONES SEPARADOS: 1vs1 y CPU -->
-        <div class="split-buttons-container">
-            
-            <button class="btn-half btn-local" onclick="irA('seleccion_1vs1.html', '1vs1')">
-                <div class="half-btn-content">
-                    <span style="font-size: 1rem;">1vs1 Local</span>
-                </div>
-            </button>
-            
-            <button class="btn-half btn-cpu" onclick="irA('seleccion_cpu.html', 'cpu')">
-                <div class="half-btn-content" style="flex-direction: column; gap: 4px;">
-                    <span style="font-size: 0.85rem;">Entrenamiento</span>
-                    <div class="reward" style="font-size: 0.75rem; padding: 2px 6px;">🪙 +5</div>
-                </div>
-            </button>
-            
+        <!-- BOTONES INFERIORES: REGLAS Y CERRAR SESIÓN -->
+        <div class="bottom-buttons-container">
+            <button class="btn-bottom btn-comojugar" aria-label="Reglas" onclick="irA('reglas.html')"></button>
+            <button class="btn-bottom btn-cerrar" aria-label="Cerrar Sesión" onclick="cerrarSesion()"></button>
         </div>
 
-        <button class="menu-btn-img btn-comojugar" onclick="irA('reglas.html')">
-            <div class="btn-content center">
-                <span>Cómo Jugar</span>
-            </div>
-        </button>
-
-        <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
 
     <script>
