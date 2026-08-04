@@ -6,8 +6,12 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Evita que el "Modo oscuro" del celular oscurezca la web forzosamente -->
-    <meta name="color-scheme" content="dark">
+    
+    <!-- TRUCO PARA MÓVILES: Forzamos 'only light' para que el celular NO aplique filtros de contraste/opacidad -->
+    <meta name="color-scheme" content="only light">
+    <!-- Pinta la barra superior del navegador/celular de negro para evitar franjas blancas -->
+    <meta name="theme-color" content="#050608">
+    
     <title>LEGADOS - Menú Principal</title>
     
     <!-- Librería de Supabase -->
@@ -23,36 +27,52 @@
         
         /* --- ESTILO DEL FONDO GLOBAL --- */
         * {
-            /* Quita el sombreado gris al tocar botones en móviles */
             -webkit-tap-highlight-color: transparent; 
         }
 
-        body { 
+        html, body {
             background-color: var(--bg);
-            background-image: url('fondoindex.jpg'); 
-            background-size: cover;
-            background-position: center top;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
+            margin: 0;
+            padding: 0;
+            /* Usamos dvh (Dynamic Viewport) para que el celular calcule bien el alto sin cortar abajo */
+            height: 100dvh; 
+            width: 100vw;
+            overflow: hidden; 
+        }
+
+        body { 
             color: var(--text); 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: flex-start; /* Cambiado para poder empujar el main-screen */
-            min-height: 100vh; 
+            justify-content: flex-start;
             box-sizing: border-box;
-            overflow: hidden; /* Evita cualquier scroll */
+            position: relative;
+        }
+
+        /* FONDO REESTRUCTURADO: Evita el bug de la barra blanca en móviles */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100dvh;
+            background-image: url('fondoindex.jpg'); 
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            z-index: -1;
         }
 
         @media (min-width: 768px) {
-            body { background-size: auto 100%; }
+            body::before { background-size: auto 100%; }
         }
         
         /* --- ESTILOS DE LA PANTALLA DE CARGA --- */
         #loading-screen {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
             background-image: url('portada1.jpg'); background-size: cover; 
             background-position: center; background-repeat: no-repeat; 
             z-index: 9999; display: flex; flex-direction: column;
@@ -70,7 +90,7 @@
         .online-indicator { position: absolute; top: 10px; right: 15px; font-size: 0.8rem; color: #bdc3c7; display: flex; align-items: center; gap: 5px; text-shadow: 1px 1px 2px #000; }
         .dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
 
-        #login-screen { margin-top: 30vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #login-screen { margin-top: 30dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-google { background: #ea4335; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); transition: 0.2s; }
         .btn-google:hover { background: #c0392b; transform: scale(1.05); }
 
@@ -78,25 +98,26 @@
         #main-screen { 
             display: none; 
             width: 100%; 
-            max-width: 380px; /* Reducido levemente para asegurar que no haya scroll y escale todo junto */
+            max-width: 380px; 
             flex-direction: column; 
             align-items: center; 
             padding: 0 5px; 
             box-sizing: border-box;
-            margin-top: 16vh; /* Este margen empuja todo hacia abajo librando el logo del fondo */
-            margin-bottom: 2vh;
+            /* Ajustado levemente y usando dvh para que todo cuadre perfecto */
+            margin-top: 15dvh; 
+            margin-bottom: 2dvh;
         }
 
         /* --- CONTENEDOR INFO DEL JUGADOR CON CAPA JUGADOR --- */
         .player-status { 
             position: relative;
             width: 94%; 
-            aspect-ratio: 1000 / 270; /* Proporción basada en capajugador.png */
+            aspect-ratio: 1000 / 270; 
             background-image: url('capajugador.png');
             background-size: 100% 100%;
             background-repeat: no-repeat;
             background-color: transparent;
-            margin-bottom: 2vh; 
+            margin-bottom: 1.5dvh; 
             display: flex; 
             border: none;
             box-shadow: none;
@@ -105,7 +126,7 @@
         
         .player-info-content {
             position: absolute;
-            left: 28%; /* Posiciona el texto a la derecha del escudo */
+            left: 28%; 
             top: 25%;
             width: 65%;
             height: 50%;
@@ -147,7 +168,7 @@
         .facciones-container { 
             display: flex; 
             gap: 12px; 
-            margin-bottom: 1.5vh; 
+            margin-bottom: 1.5dvh; 
             justify-content: center; 
         }
         
@@ -185,8 +206,8 @@
         /* --- BOTONES PRINCIPALES (TODOS DEL MISMO TAMAÑO) --- */
         .menu-btn-img {
             width: 96%; 
-            aspect-ratio: 800 / 170; /* Proporción basada en btn-online.png */
-            margin: 0.8vh auto;
+            aspect-ratio: 800 / 170; 
+            margin: 0.6dvh auto;
             border: none;
             background-color: transparent;
             background-size: 100% 100%;
@@ -214,12 +235,12 @@
             justify-content: space-between;
             width: 96%;
             gap: 15px;
-            margin: 1.5vh auto 0 auto;
+            margin: 1.2dvh auto 0 auto;
         }
 
         .btn-bottom {
             flex: 1;
-            aspect-ratio: 350 / 100; /* Proporción basada en btn-comojugar.png */
+            aspect-ratio: 350 / 100; 
             border: none;
             background-color: transparent;
             background-size: 100% 100%;
