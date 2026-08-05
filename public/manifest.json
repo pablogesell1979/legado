@@ -1,7 +1,7 @@
 {
-  "id": "com.legado.game",
-  "name": "Legados",
-  "short_name": "Legados",
+  "id": "com.legado.juego",
+  "name": "Legado Asymmetric Chess",
+  "short_name": "Legado",
   "start_url": "/",
   "display": "fullscreen",
   "orientation": "portrait",
